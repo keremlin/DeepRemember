@@ -509,7 +509,11 @@
         function updateSubtitleList() {
             const items = document.querySelectorAll('.subtitle-item');
             items.forEach((item, index) => {
-                item.classList.toggle('active', index === currentSubtitleIndex);
+                const isActive = index === currentSubtitleIndex;
+                item.classList.toggle('active', isActive);
+                if (isActive) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             });
         }
 
