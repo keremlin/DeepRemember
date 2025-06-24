@@ -225,6 +225,34 @@
             border: 1px solid #c3e6cb;
         }
 
+        .subtitle-word {
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+        .subtitle-word:hover {
+            background: #e3f2fd;
+        }
+        .subtitle-tooltip {
+            display: none;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 120%;
+            background: #333;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            white-space: nowrap;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .subtitle-word.show-tooltip .subtitle-tooltip {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .file-inputs {
                 grid-template-columns: 1fr;
@@ -477,7 +505,14 @@
             const subtitleText = document.querySelector('.subtitle-text');
 
             if (currentSubtitleIndex >= 0) {
-                subtitleText.textContent = subtitles[currentSubtitleIndex].text;
+                const text = subtitles[currentSubtitleIndex].text;
+                // Split by spaces, keep punctuation attached to words
+                const words = text.split(/(\s+)/);
+                subtitleText.innerHTML = words.map(word => {
+                    if (word.trim() === '') return word;
+                    // For demo, alt-text is 'Alt: ' + word
+                    return `<span class="subtitle-word" data-word="${word}">${word}<span class="subtitle-tooltip">Alt: ${word}</span></span>`;
+                }).join('');
             } else {
                 subtitleText.textContent = '';
             }
@@ -599,6 +634,53 @@
                         toggleMute();
                         break;
                 }
+            }
+        });
+
+        // Delegate click event for subtitle words
+        document.addEventListener('click', async function(e) {
+            if (e.target.classList.contains('subtitle-word')) {
+                // Hide all other tooltips
+                document.querySelectorAll('.subtitle-word.show-tooltip').forEach(el => el.classList.remove('show-tooltip'));
+                // Show tooltip for clicked word
+                e.target.classList.add('show-tooltip');
+                const tooltip = e.target.querySelector('.subtitle-tooltip');
+                const word = e.target.getAttribute('data-word');
+                tooltip.textContent = 'Loading...';
+                // Fetch translation from Ollama
+                try {
+                    const response = await fetch('http://localhost:11434/api/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: 'llama3.2',
+                            prompt: `answer in this format {\"translation\":\"string\", \"word\":\"realWord\"} , what is the translation of \"${word}\"`,
+                            stream: false
+                        })
+                    });
+                    const data = await response.json();
+                    // Try to extract translation from the response
+                    let translation = 'No translation found.';
+                    if (data.response) {
+                        try {
+                            const match = data.response.match(/\{[^}]+\}/);
+                            if (match) {
+                                const parsed = JSON.parse(match[0]);
+                                translation = parsed.translation || translation;
+                            }
+                        } catch (e) {}
+                    }
+                    tooltip.textContent = translation;
+                } catch (err) {
+                    tooltip.textContent = 'Error fetching translation.';
+                }
+                // Hide tooltip after 5 seconds
+                setTimeout(() => {
+                    e.target.classList.remove('show-tooltip');
+                }, 5000);
+            } else {
+                // Clicked outside, hide all tooltips
+                document.querySelectorAll('.subtitle-word.show-tooltip').forEach(el => el.classList.remove('show-tooltip'));
             }
         });
     </script>
