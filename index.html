@@ -253,6 +253,22 @@
             display: block;
         }
 
+        .sentence-translation-display {
+            display: none;
+            background: #f5f5f5;
+            color: #333;
+            padding: 18px;
+            border-radius: 12px;
+            margin-top: 18px;
+            font-size: 1.1rem;
+            text-align: center;
+            min-height: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .sentence-translation-display.active {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .file-inputs {
                 grid-template-columns: 1fr;
@@ -309,6 +325,7 @@
                     Subtitles will appear here when playing media
                 </div>
             </div>
+            <div class="sentence-translation-display" id="sentenceTranslationDisplay"></div>
 
             <div class="subtitle-info" id="subtitleInfo" style="display: none;">
                 <h3>📊 Subtitle Information</h3>
@@ -681,6 +698,59 @@
             } else {
                 // Clicked outside, hide all tooltips
                 document.querySelectorAll('.subtitle-word.show-tooltip').forEach(el => el.classList.remove('show-tooltip'));
+            }
+        });
+
+        // Sentence translation display logic
+        let ctrlPressed = false;
+        document.addEventListener('keydown', async function(e) {
+            if (e.key === 'Control' && !ctrlPressed) {
+                ctrlPressed = true;
+                const translationDiv = document.getElementById('sentenceTranslationDisplay');
+                translationDiv.classList.add('active');
+                translationDiv.textContent = 'Loading translation...';
+                // Get current subtitle sentence
+                let sentence = '';
+                if (currentSubtitleIndex >= 0 && subtitles[currentSubtitleIndex]) {
+                    sentence = subtitles[currentSubtitleIndex].text;
+                }
+                if (!sentence) {
+                    translationDiv.textContent = 'No sentence to translate.';
+                    return;
+                }
+                try {
+                    const response = await fetch('http://localhost:11434/api/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: 'llama3.2',
+                            prompt: `answer in this format {\"translation\":\"string\", \"sentence\":\"realSentence\"} , what is the translation of \"${sentence}\"`,
+                            stream: false
+                        })
+                    });
+                    const data = await response.json();
+                    let translation = 'No translation found.';
+                    if (data.response) {
+                        try {
+                            const match = data.response.match(/\{[^}]+\}/);
+                            if (match) {
+                                const parsed = JSON.parse(match[0]);
+                                translation = parsed.translation || translation;
+                            }
+                        } catch (e) {}
+                    }
+                    translationDiv.textContent = translation;
+                } catch (err) {
+                    translationDiv.textContent = 'Error fetching translation.';
+                }
+            }
+        });
+        document.addEventListener('keyup', function(e) {
+            if (e.key === 'Control') {
+                ctrlPressed = false;
+                const translationDiv = document.getElementById('sentenceTranslationDisplay');
+                translationDiv.classList.remove('active');
+                translationDiv.textContent = '';
             }
         });
     </script>
