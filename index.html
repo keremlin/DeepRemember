@@ -346,6 +346,8 @@
         let subtitleFile = null;
 
         function loadFiles() {
+            console.log('Loading files...');
+            uploadFiles();
             const mediaInput = document.getElementById('mediaFile');
             const subtitleInput = document.getElementById('subtitleFile');
             
@@ -363,6 +365,34 @@
                 loadSubtitles();
             } else {
                 showSuccess('Media file loaded successfully! Subtitle file is optional.');
+            }
+        }
+        async function uploadFiles(){
+            console.log('Uploading files...');
+            const mediaInput = document.getElementById('mediaFile');
+            const subtitleInput = document.getElementById('subtitleFile');
+            if (!mediaInput.files[0] || !subtitleInput.files[0]) {
+                alert('Please select both media and subtitle files.');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('mediaFile', mediaInput.files[0]);
+            formData.append('subtitleFile', subtitleInput.files[0]);
+
+            try {
+                const response = await fetch('/upload-files', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Files uploaded successfully!');
+                    // Now you can start playback using files/filesName
+                } else {
+                    alert('Upload failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Error uploading files: ' + err.message);
             }
         }
 
