@@ -269,6 +269,45 @@
             display: block;
         }
 
+        .playlist-section {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-top: 2px solid #eee;
+        }
+        .playlist-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .playlist-list {
+            list-style: none;
+            padding: 0;
+        }
+        .playlist-item {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .playlist-item .file-names {
+            flex: 1;
+        }
+        .playlist-item button {
+            padding: 6px 16px;
+            border: none;
+            background: #0078d4;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .playlist-item button:hover {
+            background: #005fa3;
+        }
+
         @media (max-width: 768px) {
             .file-inputs {
                 grid-template-columns: 1fr;
@@ -326,6 +365,12 @@
                 </div>
             </div>
             <div class="sentence-translation-display" id="sentenceTranslationDisplay"></div>
+
+            <!-- Playlist Section -->
+            <div class="playlist-section" id="playlistSection">
+                <div class="playlist-title">Playlist</div>
+                <ul class="playlist-list" id="playlistList"></ul>
+            </div>
 
             <div class="subtitle-info" id="subtitleInfo" style="display: none;">
                 <h3>📊 Subtitle Information</h3>
@@ -783,6 +828,90 @@
                 translationDiv.textContent = '';
             }
         });
+
+        // Playlist logic
+        async function loadPlaylist() {
+            const playlistList = document.getElementById('playlistList');
+            playlistList.innerHTML = '<li>Loading...</li>';
+            try {
+                const res = await fetch('/files-list');
+                const data = await res.json();
+                if (!data.playlist || data.playlist.length === 0) {
+                    playlistList.innerHTML = '<li>No files uploaded yet.</li>';
+                    return;
+                }
+                playlistList.innerHTML = '';
+                data.playlist.forEach((item, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'playlist-item';
+                    const fileNames = document.createElement('span');
+                    fileNames.className = 'file-names';
+                    fileNames.textContent = `${item.media}${item.subtitle ? ' + ' + item.subtitle : ''}`;
+                    const playBtn = document.createElement('button');
+                    playBtn.textContent = 'Play';
+                    playBtn.onclick = () => {
+                        // Use the main player in .media-player
+                        const playerContainer = document.getElementById('mediaPlayer');
+                        playerContainer.innerHTML = '';
+                        let mediaType = item.media.match(/\.(mp4|webm)$/i) ? 'video' : 'audio';
+                        let player;
+                        if (mediaType === 'video') {
+                            player = document.createElement('video');
+                            player.controls = true;
+                            player.style.maxHeight = '400px';
+                        } else {
+                            player = document.createElement('audio');
+                            player.controls = true;
+                        }
+                        player.style.width = '100%';
+                        player.style.borderRadius = '15px';
+                        player.src = '/files/' + item.media;
+
+                        // Remove any previous subtitle logic
+                        player.addEventListener('timeupdate', updateSubtitles);
+                        player.addEventListener('loadedmetadata', () => {
+                            showSuccess('Media loaded: ' + item.media);
+                        });
+
+                        // Add subtitle track if available
+                        if (item.subtitle) {
+                            let track = document.createElement('track');
+                            track.kind = 'subtitles';
+                            track.label = 'Subtitle';
+                            track.srclang = 'en';
+                            track.src = '/files/' + item.subtitle;
+                            track.default = true;
+                            player.appendChild(track);
+
+                            // Also load and parse the subtitle file for custom display
+                            fetch('/files/' + item.subtitle)
+                                .then(res => res.text())
+                                .then(content => {
+                                    subtitleFile = { name: item.subtitle };
+                                    parseSubtitles(content);
+                                    displaySubtitleInfo();
+                                });
+                        } else {
+                            subtitles = [];
+                            subtitleFile = { name: '' };
+                            displaySubtitleInfo();
+                        }
+
+                        playerContainer.appendChild(player);
+                        mediaElement = player;
+                        currentSubtitleIndex = -1;
+                        player.load();
+                        player.play();
+                    };
+                    li.appendChild(fileNames);
+                    li.appendChild(playBtn);
+                    playlistList.appendChild(li);
+                });
+            } catch (err) {
+                playlistList.innerHTML = '<li>Error loading playlist.</li>';
+            }
+        }
+        window.addEventListener('DOMContentLoaded', loadPlaylist);
     </script>
 </body>
 </html> 
