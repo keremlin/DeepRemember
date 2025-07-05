@@ -459,30 +459,87 @@
             console.log('Uploading files...');
             const mediaInput = document.getElementById('mediaFile');
             const subtitleInput = document.getElementById('subtitleFile');
-            if (!mediaInput.files[0] || !subtitleInput.files[0]) {
-                alert('Please select both media and subtitle files.');
+            
+            if (!mediaInput.files[0]) {
+                alert('Please select a media file.');
                 return;
             }
-            const formData = new FormData();
-            formData.append('mediaFile', mediaInput.files[0]);
-            formData.append('subtitleFile', subtitleInput.files[0]);
 
-            try {
-                const response = await fetch('/upload-files', {
-                    method: 'POST',
-                    body: formData
+            // Check if subtitle file is provided
+            const hasSubtitleFile = subtitleInput.files[0];
+            
+            if (hasSubtitleFile) {
+                // Original logic for both files
+                const mediaFileName = mediaInput.files[0].name;
+                const mediaBaseName = mediaFileName.substring(0, mediaFileName.lastIndexOf('.'));
+                
+                const subtitleFileName = subtitleInput.files[0].name;
+                const subtitleExtension = subtitleFileName.substring(subtitleFileName.lastIndexOf('.'));
+                
+                const renamedSubtitleFile = new File([subtitleInput.files[0]], mediaBaseName + subtitleExtension, {
+                    type: subtitleInput.files[0].type
                 });
-                const result = await response.json();
-                if (result.success) {
-                    alert('Files uploaded successfully!');
-                    // Update playlist automatically after successful upload
-                    loadPlaylist();
-                    // Now you can start playback using files/filesName
-                } else {
-                    alert('Upload failed: ' + (result.error || 'Unknown error'));
+                
+                const formData = new FormData();
+                formData.append('mediaFile', mediaInput.files[0]);
+                formData.append('subtitleFile', renamedSubtitleFile);
+
+                try {
+                    const response = await fetch('/upload-files', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Files uploaded successfully!');
+                        loadPlaylist();
+                    } else {
+                        alert('Upload failed: ' + (result.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    alert('Error uploading files: ' + err.message);
                 }
-            } catch (err) {
-                alert('Error uploading files: ' + err.message);
+            } else {
+                // Audio-only upload with Whisper subtitle generation
+                const mediaFile = mediaInput.files[0];
+                const mediaFileName = mediaFile.name;
+                
+                // Check if it's an audio file
+                if (!mediaFile.type.startsWith('audio/')) {
+                    alert('Please select an audio file for automatic subtitle generation.');
+                    return;
+                }
+
+                // Show loading message
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'success';
+                loadingDiv.textContent = 'Please wait for converting...';
+                document.querySelector('.content').insertBefore(loadingDiv, document.querySelector('.controls'));
+
+                const formData = new FormData();
+                formData.append('mediaFile', mediaFile);
+                formData.append('generateSubtitle', 'true');
+
+                try {
+                    const response = await fetch('/upload-files', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    
+                    // Remove loading message
+                    loadingDiv.remove();
+                    
+                    if (result.success) {
+                        alert('Audio uploaded and subtitle generated successfully!');
+                        loadPlaylist();
+                    } else {
+                        alert('Upload failed: ' + (result.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    loadingDiv.remove();
+                    alert('Error uploading files: ' + err.message);
+                }
             }
         }
 
