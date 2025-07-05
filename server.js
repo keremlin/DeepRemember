@@ -13,6 +13,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static(path.join(__dirname)));
+app.use(express.json()); // Add this to parse JSON bodies
 
 // Ensure files directory exists
 const filesDir = path.join(__dirname, 'files');
@@ -69,6 +70,26 @@ app.get('/files-list', (req, res) => {
     });
     console.log(playlist);
     res.json({ playlist });
+  });
+});
+
+// Delete files endpoint
+app.post('/delete-files', (req, res) => {
+  const { media, subtitle } = req.body;
+  if (!media) return res.status(400).json({ error: 'Media file is required.' });
+  const mediaPath = path.join(filesDir, media);
+  let deleted = { media: false, subtitle: false };
+  fs.unlink(mediaPath, err => {
+    deleted.media = !err;
+    if (subtitle) {
+      const subtitlePath = path.join(filesDir, subtitle);
+      fs.unlink(subtitlePath, err2 => {
+        deleted.subtitle = !err2;
+        res.json({ success: true, deleted });
+      });
+    } else {
+      res.json({ success: true, deleted });
+    }
   });
 });
 

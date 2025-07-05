@@ -284,28 +284,71 @@
             padding: 0;
         }
         .playlist-item {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: #fff;
-            border-radius: 6px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+            margin-bottom: 14px;
+            padding: 14px 18px;
+            background: linear-gradient(90deg, #e0e7ff 0%, #f3e8ff 100%);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.07);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 18px;
+            border: 1.5px solid #a5b4fc;
+            transition: box-shadow 0.2s, border 0.2s;
         }
-        .playlist-item .file-names {
-            flex: 1;
+        .playlist-item:hover {
+            box-shadow: 0 4px 16px rgba(102,126,234,0.18);
+            border: 1.5px solid #764ba2;
+            background: linear-gradient(90deg, #e0e7ff 0%, #d1c4e9 100%);
         }
-        .playlist-item button {
-            padding: 6px 16px;
-            border: none;
-            background: #0078d4;
+        .playlist-item .audio-name {
+            color: #5f3dc4;
+            font-weight: 600;
+            font-size: 1.08em;
+            letter-spacing: 0.5px;
+        }
+        .playlist-item .subtitle-name {
+            color: #764ba2;
+            font-size: 0.98em;
+            margin-left: 10px;
+            font-style: italic;
+        }
+        .playlist-item .btn {
+            margin-left: auto;
+            font-size: 1em;
+            padding: 8px 22px;
+            border-radius: 6px;
+        }
+        .playlist-item .btn-secondary {
+            background: #e53e3e;
             color: #fff;
-            border-radius: 4px;
+            margin-left: 10px;
+            border: none;
+            transition: background 0.2s;
+        }
+        .playlist-item .btn-secondary:hover {
+            background: #c53030;
+        }
+        .playlist-item .btn-delete {
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            padding: 0;
+            box-shadow: 0 1px 3px rgba(229,62,62,0.07);
+            transition: background 0.2s, box-shadow 0.2s;
             cursor: pointer;
         }
-        .playlist-item button:hover {
-            background: #005fa3;
+        .playlist-item .btn-delete svg {
+            display: block;
+        }
+        .playlist-item .btn-delete:hover {
+            background: #ffe5e5;
+            box-shadow: 0 2px 8px rgba(229,62,62,0.18);
         }
 
         @media (max-width: 768px) {
@@ -844,11 +887,14 @@
                 data.playlist.forEach((item, idx) => {
                     const li = document.createElement('li');
                     li.className = 'playlist-item';
+                    // Show only base name (no extension) for audio, full name for subtitle
+                    const audioBase = item.media.replace(/\.[^/.]+$/, '');
                     const fileNames = document.createElement('span');
                     fileNames.className = 'file-names';
-                    fileNames.textContent = `${item.media}${item.subtitle ? ' + ' + item.subtitle : ''}`;
+                    fileNames.innerHTML = `<span class="audio-name">🎵 ${audioBase}</span>` + (item.subtitle ? ` <span class="subtitle-name">📝 ${item.subtitle}</span>` : '');
                     const playBtn = document.createElement('button');
-                    playBtn.textContent = 'Play';
+                    playBtn.textContent = '▶ Play';
+                    playBtn.className = 'btn btn-primary';
                     playBtn.onclick = () => {
                         // Use the main player in .media-player
                         const playerContainer = document.getElementById('mediaPlayer');
@@ -903,8 +949,37 @@
                         player.load();
                         player.play();
                     };
+                    // Delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-delete';
+                    deleteBtn.title = 'Delete';
+                    deleteBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="9" cy="9" r="8" fill="white" stroke="#e53e3e" stroke-width="2"/>
+                      <path d="M6 6L12 12" stroke="#e53e3e" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M12 6L6 12" stroke="#e53e3e" stroke-width="2" stroke-linecap="round"/>
+                    </svg>`;
+                    deleteBtn.onclick = async () => {
+                        if (!confirm('Are you sure you want to delete this file and its subtitle?')) return;
+                        try {
+                            const res = await fetch('/delete-files', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ media: item.media, subtitle: item.subtitle })
+                            });
+                            const result = await res.json();
+                            if (result.success) {
+                                showSuccess('Files deleted successfully!');
+                                loadPlaylist();
+                            } else {
+                                showError('Delete failed.');
+                            }
+                        } catch (err) {
+                            showError('Error deleting files: ' + err.message);
+                        }
+                    };
                     li.appendChild(fileNames);
                     li.appendChild(playBtn);
+                    li.appendChild(deleteBtn);
                     playlistList.appendChild(li);
                 });
             } catch (err) {
