@@ -312,6 +312,13 @@
             margin-left: 10px;
             font-style: italic;
         }
+        .playlist-item .subtitle-icon {
+            color: #764ba2;
+            font-size: 0.9em;
+            margin-left: 8px;
+            opacity: 0.8;
+            cursor: help;
+        }
         .playlist-item .btn {
             margin-left: auto;
             font-size: 1em;
@@ -409,16 +416,16 @@
             </div>
             <div class="sentence-translation-display" id="sentenceTranslationDisplay"></div>
 
-            <!-- Playlist Section -->
-            <div class="playlist-section" id="playlistSection">
-                <div class="playlist-title">Playlist</div>
-                <ul class="playlist-list" id="playlistList"></ul>
-            </div>
-
             <div class="subtitle-info" id="subtitleInfo" style="display: none;">
                 <h3>📊 Subtitle Information</h3>
                 <div id="subtitleStats"></div>
                 <div class="subtitle-list" id="subtitleList"></div>
+            </div>
+
+            <!-- Playlist Section -->
+            <div class="playlist-section" id="playlistSection">
+                <div class="playlist-title">Playlist</div>
+                <ul class="playlist-list" id="playlistList"></ul>
             </div>
         </div>
     </div>
@@ -950,7 +957,16 @@
                     const audioBase = item.media.replace(/\.[^/.]+$/, '');
                     const fileNames = document.createElement('span');
                     fileNames.className = 'file-names';
-                    fileNames.innerHTML = `<span class="audio-name">🎵 ${audioBase}</span>` + (item.subtitle ? ` <span class="subtitle-name">📝 ${item.subtitle}</span>` : '');
+                    
+                    // Truncate audio name if longer than 50 characters
+                    const truncatedAudioName = audioBase.length > 50 ? audioBase.substring(0, 50) + '...' : audioBase;
+                    const audioTitle = audioBase.length > 50 ? audioBase : '';
+                    
+                    // Create subtitle icon if subtitle exists
+                    const subtitleIcon = item.subtitle ? '<span class="subtitle-icon" title="subtitle">📝</span>' : '';
+                    
+                    fileNames.innerHTML = `<span class="audio-name" title="${audioTitle}">🎵 ${truncatedAudioName}${subtitleIcon}</span>`;
+                    
                     const playBtn = document.createElement('button');
                     playBtn.textContent = '▶ Play';
                     playBtn.className = 'btn btn-primary';
