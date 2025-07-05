@@ -381,25 +381,8 @@
         </div>
 
         <div class="content">
-            <div class="file-inputs">
-                <div class="file-input-group">
-                    <label for="mediaFile">📁 Media File (Audio/Video)</label>
-                    <input type="file" id="mediaFile" accept="audio/*,video/*">
-                </div>
-                <div class="file-input-group">
-                    <label for="subtitleFile">📝 Subtitle File (SRT/VTT/TXT)</label>
-                    <input type="file" id="subtitleFile" accept=".srt,.vtt,.txt">
-                </div>
-            </div>
-
-            <div class="controls">
-                <button class="btn btn-primary" onclick="loadFiles()">🚀 Load Files</button>
-                <button class="btn btn-secondary" onclick="togglePlayPause()">⏯️ Play/Pause</button>
-                <button class="btn btn-secondary" onclick="skipBackward()">⏪ -10s</button>
-                <button class="btn btn-secondary" onclick="skipForward()">⏩ +10s</button>
-                <button class="btn btn-secondary" onclick="toggleMute()">🔇 Mute</button>
-            </div>
-
+            
+      
             <div class="player-section">
                 <div class="media-player" id="mediaPlayer">
                     <div style="text-align: center; padding: 50px; color: #6c757d;">
@@ -408,7 +391,13 @@
                     </div>
                 </div>
             </div>
-
+      <!--controls section-->
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="togglePlayPause()">⏯️ Play/Pause</button>
+                <button class="btn btn-secondary" onclick="skipBackward()">⏪ -10s</button>
+                <button class="btn btn-secondary" onclick="skipForward()">⏩ +10s</button>
+                <button class="btn btn-secondary" onclick="toggleMute()">🔇 Mute</button>
+            </div>
             <div class="subtitle-display" id="subtitleDisplay">
                 <div class="subtitle-text">
                     Subtitles will appear here when playing media
@@ -427,6 +416,22 @@
                 <div class="playlist-title">Playlist</div>
                 <ul class="playlist-list" id="playlistList"></ul>
             </div>
+      
+            <!--file inputs section-->
+            <div class="file-inputs">
+                <div class="file-input-group">
+                    <label for="mediaFile">📁 Media File (Audio/Video)</label>
+                    <input type="file" id="mediaFile" accept="audio/*,video/*">
+                </div>
+                <div class="file-input-group">
+                    <label for="subtitleFile">📝 Subtitle File (SRT/VTT/TXT)</label>
+                    <input type="file" id="subtitleFile" accept=".srt,.vtt,.txt">
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="loadFiles()">🚀 Load Files</button>
+            </div>
+
         </div>
     </div>
 
