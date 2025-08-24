@@ -8,12 +8,8 @@ const app = express();
 const PORT = 4004;
 
 // Serve static files (css, js, images, etc.)
-app.use((req, res, next) => {
-  const filePath = path.join(__dirname, req.path);
-  console.log(`[STATIC] Request for: ${filePath}`);
-  next();
-});
 app.use(express.static(path.join(__dirname)));
+
 app.use(express.json()); // Add this to parse JSON bodies
 
 // Ensure files directory exists
