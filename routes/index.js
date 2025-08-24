@@ -10,4 +10,11 @@ router.get('/', (req, res) => {
   res.sendFile(filePath);
 });
 
+// Serve SRS page
+router.get('/srs', (req, res) => {
+  const filePath = path.join(__dirname, '..', 'views', 'srs.html');
+  console.log(`[SRS] Request for: ${filePath}`);
+  res.sendFile(filePath);
+});
+
 module.exports = router;

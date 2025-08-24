@@ -5,6 +5,7 @@ const path = require('path');
 const indexRoutes = require('./routes/index');
 const uploadRoutes = require('./routes/upload');
 const filesRoutes = require('./routes/files');
+const srsRoutes = require('./routes/srs');
 
 // Import configuration
 const config = require('./config/app');
@@ -29,6 +30,7 @@ app.use('/files', express.static(path.join(__dirname, 'files')));
 app.use('/', indexRoutes);
 app.use('/', uploadRoutes);
 app.use('/', filesRoutes);
+app.use('/srs', srsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -8,6 +8,7 @@ A modern, modular Express.js web application for playing media files with AI-gen
 - **Subtitle Generation**: Automatic subtitle generation using Whisper AI
 - **Playlist Management**: Organize and manage your media files
 - **Interactive Subtitles**: Click on words for potential translations
+- **SRS Learning System**: Spaced repetition system for vocabulary learning
 - **Responsive Design**: Works on desktop and mobile devices
 - **Modular Architecture**: Clean, production-ready Express.js structure
 
@@ -72,8 +73,16 @@ The application will be available at: `http://localhost:4004`
 - `GET /files-list` - Get list of uploaded files as playlist
 - `POST /delete-files` - Delete uploaded files
 
+### SRS Routes (`/routes/srs.js`)
+- `POST /srs/create-card` - Create a new learning card
+- `GET /srs/review-cards/:userId` - Get cards due for review
+- `POST /srs/answer-card` - Answer a card with difficulty rating
+- `GET /srs/stats/:userId` - Get user learning statistics
+- `DELETE /srs/delete-card/:userId/:cardId` - Delete a learning card
+
 ### Index Routes (`/routes/index.js`)
 - `GET /` - Serve the main application
+- `GET /srs` - Serve the SRS learning system
 
 ## 🎯 Usage
 
@@ -82,6 +91,7 @@ The application will be available at: `http://localhost:4004`
 3. **Auto-Generate Subtitles**: For audio files, let Whisper generate subtitles automatically
 4. **Play**: Use the media player controls to play your files
 5. **Manage Playlist**: View, play, and delete files from your playlist
+6. **SRS Learning**: Access the spaced repetition system at `/srs` for vocabulary learning
 
 ## 🔧 Configuration
 

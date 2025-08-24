@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Remember</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Deep Remember</h1>
+            <p>Spaced Repetition System</p>
+            <div style="margin-top: 20px;">
+                <a href="/" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">🎵 Back to AI-title</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="srs-container">
+                <!-- User ID Input -->
+                <div class="srs-card">
+                    <h3>👤 User Setup</h3>
+                    <div class="card-form">
+                        <input type="text" id="userId" placeholder="Enter your user ID" value="user123">
+                        <button class="btn btn-primary" onclick="loadUserData()">Load My Data</button>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="srs-card">
+                    <h3>📊 Learning Statistics</h3>
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-item">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Total Cards</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Due Cards</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Learning</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Review</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create New Card -->
+                <div class="srs-card">
+                    <h3>➕ Create New Card</h3>
+                    <div class="card-form">
+                        <input type="text" id="newWord" placeholder="Enter word to learn">
+                        <input type="text" id="newTranslation" placeholder="Enter translation">
+                        <textarea id="newContext" placeholder="Enter context or example sentence"></textarea>
+                        <button class="btn btn-primary" onclick="createCard()">Create Card</button>
+                    </div>
+                </div>
+
+                <!-- Review Cards -->
+                <div class="srs-card" id="reviewSection" style="display: none;">
+                    <h3>🔄 Review Cards</h3>
+                    <div id="currentCard" class="srs-card">
+                        <h4 id="cardWord">Loading...</h4>
+                        <p id="cardTranslation"></p>
+                        <p id="cardContext"></p>
+                        <div class="rating-buttons">
+                            <button class="rating-btn rating-1" onclick="answerCard(1)">Again</button>
+                            <button class="rating-btn rating-2" onclick="answerCard(2)">Hard</button>
+                            <button class="rating-btn rating-3" onclick="answerCard(3)">Good</button>
+                            <button class="rating-btn rating-4" onclick="answerCard(4)">Easy</button>
+                            <button class="rating-btn rating-5" onclick="answerCard(5)">Perfect</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="loadReviewCards()">Load More Cards</button>
+                </div>
+
+                <!-- All Cards -->
+                <div class="srs-card">
+                    <h3>📚 All My Cards</h3>
+                    <div id="allCards"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/srs.js"></script>
+</body>
+</html>
