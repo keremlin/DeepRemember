@@ -7,17 +7,19 @@ const { exec } = require('child_process');
 const app = express();
 const PORT = 4004;
 
-// Serve static files (css, js, images, etc.)
-app.use(express.static(path.join(__dirname)));
+// Serve static files (HTML, CSS, JS) from "public"
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json()); // parse JSON bodies
+// Serve uploaded media files
+app.use("/files", express.static(path.join(__dirname, "files")));
 
-app.use(express.json()); // Add this to parse JSON bodies
-
-// Ensure files directory exists
+// Ensure "files" directory exists
 const filesDir = path.join(__dirname, 'files');
 if (!fs.existsSync(filesDir)) {
   fs.mkdirSync(filesDir);
 }
 
+// Multer setup for uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, filesDir);
@@ -28,6 +30,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// Upload endpoint
 app.post('/upload-files', (req, res, next) => {
   console.log('[UPLOAD] Starting file upload...');
   next();
@@ -45,30 +48,27 @@ app.post('/upload-files', (req, res, next) => {
 
   try {
     if (subtitleFile) {
-      // Both files provided - original logic
       console.log('[UPLOAD] Finished file upload:', mediaFile.originalname, subtitleFile.originalname);
       res.json({ success: true, files: {
         mediaFile: mediaFile.originalname,
         subtitleFile: subtitleFile.originalname
       }});
     } else if (generateSubtitle) {
-      // Audio-only upload with Whisper subtitle generation
       console.log('[UPLOAD] Audio uploaded, generating subtitle with Whisper:', mediaFile.originalname);
-      
+
       const mediaPath = path.join(filesDir, mediaFile.originalname);
       const baseName = path.basename(mediaFile.originalname, path.extname(mediaFile.originalname));
       const subtitlePath = path.join(filesDir, baseName + '.srt');
-      
-      // Run Whisper command
+
       const whisperCommand = `whisper --output_format srt "${mediaPath}"`;
       console.log('[WHISPER] Running command:', whisperCommand);
-      
+
       exec(whisperCommand, { cwd: filesDir }, (error, stdout, stderr) => {
         if (error) {
           console.error('[WHISPER] Error:', error);
           return res.status(500).json({ error: 'Failed to generate subtitle: ' + error.message });
         }
-        
+
         console.log('[WHISPER] Subtitle generated successfully');
         res.json({ success: true, files: {
           mediaFile: mediaFile.originalname,
@@ -76,7 +76,6 @@ app.post('/upload-files', (req, res, next) => {
         }});
       });
     } else {
-      // Only media file provided but no subtitle generation requested
       console.log('[UPLOAD] Media file uploaded without subtitle:', mediaFile.originalname);
       res.json({ success: true, files: {
         mediaFile: mediaFile.originalname,
@@ -89,11 +88,10 @@ app.post('/upload-files', (req, res, next) => {
   }
 });
 
-// List all uploaded files as playlist
+// List uploaded files as playlist
 app.get('/files-list', (req, res) => {
   fs.readdir(filesDir, (err, files) => {
     if (err) return res.status(500).json({ error: 'Failed to read files directory.' });
-    // Group files by base name (before extension)
     const mediaExts = ['.mp3', '.mp4', '.wav', '.ogg', '.webm', '.m4a'];
     const subtitleExts = ['.srt', '.vtt', '.txt'];
     const playlist = [];
@@ -101,15 +99,13 @@ app.get('/files-list', (req, res) => {
       const ext = path.extname(file).toLowerCase();
       const base = path.basename(file, ext);
       if (mediaExts.includes(ext)) {
-        // Try to find a matching subtitle
-        const subtitle = files.find(f => subtitleExts.includes(path.extname(f).toLowerCase()) && path.basename(f, path.extname(f)) === base);
-        playlist.push({
-          media: file,
-          subtitle: subtitle || null
-        });
+        const subtitle = files.find(f =>
+          subtitleExts.includes(path.extname(f).toLowerCase()) &&
+          path.basename(f, path.extname(f)) === base
+        );
+        playlist.push({ media: file, subtitle: subtitle || null });
       }
     });
-    console.log(playlist);
     res.json({ playlist });
   });
 });
@@ -134,13 +130,7 @@ app.post('/delete-files', (req, res) => {
   });
 });
 
-// Serve index.html for the root route
-app.get('/', (req, res) => {
-  const filePath = path.join(__dirname, 'index.html');
-  console.log(`[INDEX] Request for: ${filePath}`);
-  res.sendFile(filePath);
-});
-
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
-}); 
+});
