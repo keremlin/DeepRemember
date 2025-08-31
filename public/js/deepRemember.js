@@ -11,12 +11,28 @@ function hideUserSetup() {
     document.getElementById('userSetupModal').style.display = 'none';
 }
 
-// Close modal when clicking outside
+function showCreateCard() {
+    document.getElementById('createCardModal').style.display = 'block';
+}
+
+function hideCreateCard() {
+    document.getElementById('createCardModal').style.display = 'none';
+}
+
+// Close modals when clicking outside
 document.addEventListener('DOMContentLoaded', function() {
-    const modalOverlay = document.getElementById('userSetupModal');
-    modalOverlay.addEventListener('click', function(e) {
-        if (e.target === modalOverlay) {
+    const userSetupModal = document.getElementById('userSetupModal');
+    const createCardModal = document.getElementById('createCardModal');
+    
+    userSetupModal.addEventListener('click', function(e) {
+        if (e.target === userSetupModal) {
             hideUserSetup();
+        }
+    });
+    
+    createCardModal.addEventListener('click', function(e) {
+        if (e.target === createCardModal) {
+            hideCreateCard();
         }
     });
     
@@ -101,9 +117,12 @@ async function createCard() {
         const data = await response.json();
         if (data.success) {
             showSuccess('Card created successfully!');
+            // Clear form fields
             document.getElementById('newWord').value = '';
             document.getElementById('newTranslation').value = '';
             document.getElementById('newContext').value = '';
+            // Close modal and refresh data
+            hideCreateCard();
             loadUserData();
         } else {
             showError(data.error || 'Failed to create card');

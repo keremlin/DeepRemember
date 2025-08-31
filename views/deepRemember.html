@@ -43,6 +43,34 @@
             transform: translateY(-2px);
         }
         
+        /* Stats and Create Card section */
+        .stats-section {
+            margin-bottom: 30px;
+        }
+        
+        .create-card-button {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .btn-create-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-create-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
         /* Modal styles */
         .modal-overlay {
             display: none;
@@ -66,7 +94,7 @@
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             z-index: 1001;
-            max-width: 400px;
+            max-width: 500px;
             width: 90%;
             animation: modalSlideIn 0.3s ease-out;
         }
@@ -111,17 +139,25 @@
             gap: 15px;
         }
         
-        .modal-form input {
+        .modal-form input,
+        .modal-form textarea {
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s ease;
+            font-family: inherit;
         }
         
-        .modal-form input:focus {
+        .modal-form input:focus,
+        .modal-form textarea:focus {
             outline: none;
             border-color: #667eea;
+        }
+        
+        .modal-form textarea {
+            resize: vertical;
+            min-height: 80px;
         }
         
         .modal-buttons {
@@ -177,37 +213,34 @@
 
         <div class="content">
             <div class="srs-container">
-                <!-- Statistics -->
-                <div class="srs-card">
-                    <h3>📊 Learning Statistics</h3>
-                    <div class="stats-grid" id="statsGrid">
-                        <div class="stat-item">
-                            <div class="stat-number">0</div>
-                            <div class="stat-label">Total Cards</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">0</div>
-                            <div class="stat-label">Due Cards</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">0</div>
-                            <div class="stat-label">Learning</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">0</div>
-                            <div class="stat-label">Review</div>
+                <!-- Statistics and Create Card Button -->
+                <div class="stats-section">
+                    <div class="srs-card">
+                        <h3>📊 Learning Statistics</h3>
+                        <div class="stats-grid" id="statsGrid">
+                            <div class="stat-item">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Total Cards</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Due Cards</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Learning</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Review</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Create New Card -->
-                <div class="srs-card">
-                    <h3>➕ Create New Card</h3>
-                    <div class="card-form">
-                        <input type="text" id="newWord" placeholder="Enter word to learn">
-                        <input type="text" id="newTranslation" placeholder="Enter translation">
-                        <textarea id="newContext" placeholder="Enter context or example sentence"></textarea>
-                        <button class="btn btn-primary" onclick="createCard()">Create Card</button>
+                    
+                    <div class="create-card-button">
+                        <button class="btn-create-card" onclick="showCreateCard()">
+                            ➕ Create New Card
+                        </button>
                     </div>
                 </div>
 
@@ -250,6 +283,25 @@
                 <div class="modal-buttons">
                     <button class="btn-modal btn-modal-secondary" onclick="hideUserSetup()">Cancel</button>
                     <button class="btn-modal btn-modal-primary" onclick="loadUserData()">Load My Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create New Card Modal -->
+    <div class="modal-overlay" id="createCardModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>➕ Create New Card</h3>
+                <button class="modal-close" onclick="hideCreateCard()">&times;</button>
+            </div>
+            <div class="modal-form">
+                <input type="text" id="newWord" placeholder="Enter word to learn">
+                <input type="text" id="newTranslation" placeholder="Enter translation">
+                <textarea id="newContext" placeholder="Enter context or example sentence"></textarea>
+                <div class="modal-buttons">
+                    <button class="btn-modal btn-modal-secondary" onclick="hideCreateCard()">Cancel</button>
+                    <button class="btn-modal btn-modal-primary" onclick="createCard()">Create Card</button>
                 </div>
             </div>
         </div>
