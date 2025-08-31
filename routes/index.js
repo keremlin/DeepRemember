@@ -10,10 +10,10 @@ router.get('/', (req, res) => {
   res.sendFile(filePath);
 });
 
-// Serve SRS page
-router.get('/srs', (req, res) => {
-  const filePath = path.join(__dirname, '..', 'views', 'srs.html');
-  console.log(`[SRS] Request for: ${filePath}`);
+// Serve DeepRemember page
+router.get('/deepRemember', (req, res) => {
+  const filePath = path.join(__dirname, '..', 'views', 'deepRemember.html');
+  console.log(`[DeepRemember] Request for: ${filePath}`);
   res.sendFile(filePath);
 });
 

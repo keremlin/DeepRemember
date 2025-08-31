@@ -2,6 +2,28 @@ let currentUserId = 'user123';
 let currentCards = [];
 let currentCardIndex = 0;
 
+// Modal functions
+function showUserSetup() {
+    document.getElementById('userSetupModal').style.display = 'block';
+}
+
+function hideUserSetup() {
+    document.getElementById('userSetupModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const modalOverlay = document.getElementById('userSetupModal');
+    modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) {
+            hideUserSetup();
+        }
+    });
+    
+    // Load initial data
+    loadUserData();
+});
+
 // Load user data and statistics
 async function loadUserData() {
     const userId = document.getElementById('userId').value;
@@ -11,14 +33,18 @@ async function loadUserData() {
     }
     currentUserId = userId;
     
+    // Update username display in header
+    document.getElementById('currentUsername').textContent = userId;
+    
     try {
-        const response = await fetch(`/srs/stats/${userId}`);
+        const response = await fetch(`/deepRemember/stats/${userId}`);
         const data = await response.json();
         
         if (data.success) {
             updateStats(data.stats);
             loadAllCards();
             loadReviewCards();
+            hideUserSetup(); // Close modal after successful load
         }
     } catch (error) {
         console.error('Error loading user data:', error);
@@ -61,7 +87,7 @@ async function createCard() {
     }
     
     try {
-        const response = await fetch('/srs/create-card', {
+        const response = await fetch('/deepRemember/create-card', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -91,7 +117,7 @@ async function createCard() {
 // Load review cards
 async function loadReviewCards() {
     try {
-        const response = await fetch(`/srs/review-cards/${currentUserId}`);
+        const response = await fetch(`/deepRemember/review-cards/${currentUserId}`);
         const data = await response.json();
         
         if (data.success) {
@@ -134,7 +160,7 @@ async function answerCard(rating) {
     const card = currentCards[currentCardIndex];
     
     try {
-        const response = await fetch('/srs/answer-card', {
+        const response = await fetch('/deepRemember/answer-card', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -161,7 +187,7 @@ async function answerCard(rating) {
 // Load all cards
 async function loadAllCards() {
     try {
-        const response = await fetch(`/srs/review-cards/${currentUserId}`);
+        const response = await fetch(`/deepRemember/review-cards/${currentUserId}`);
         const data = await response.json();
         
         if (data.success) {
@@ -193,7 +219,7 @@ async function deleteCard(cardId) {
     if (!confirm('Are you sure you want to delete this card?')) return;
     
     try {
-        const response = await fetch(`/srs/delete-card/${currentUserId}/${cardId}`, {
+        const response = await fetch(`/deepRemember/delete-card/${currentUserId}/${cardId}`, {
             method: 'DELETE'
         });
         
@@ -236,8 +262,3 @@ function showError(message) {
     document.querySelector('.content').insertBefore(errorDiv, document.querySelector('.srs-container'));
     setTimeout(() => errorDiv.remove(), 3000);
 }
-
-// Load initial data
-document.addEventListener('DOMContentLoaded', function() {
-    loadUserData();
-});

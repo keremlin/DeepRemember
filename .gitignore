@@ -35,6 +35,12 @@ build/
 # Uploaded files (your "files/" dir)
 files/
 
+# Database files
+database/db/*.db
+database/db/*.db-journal
+database/db/*.db-wal
+database/db/*.db-shm
+
 # OS-specific
 .DS_Store
 Thumbs.db

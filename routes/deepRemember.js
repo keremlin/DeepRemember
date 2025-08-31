@@ -10,7 +10,7 @@ const fsrs = new FSRS();
 
 // Store for user cards (fallback to memory if database fails)
 const userCards = new Map();
-let srsRepository = null;
+let deepRememberRepository = null;
 let useDatabase = false;
 
 // Initialize sample data for user123
@@ -94,24 +94,24 @@ const initializeSampleData = () => {
   ];
   
   userCards.set('user123', sampleCards);
-  console.log('[SRS] Sample data initialized for user123');
+  console.log('[DeepRemember] Sample data initialized for user123');
 };
 
 // Initialize database and sample data
 async function initializeDatabase() {
   try {
-    console.log('[SRS] Initializing database...');
-    srsRepository = await databaseFactory.initialize(dbConfig.type, dbConfig[dbConfig.type]);
+    console.log('[DeepRemember] Initializing database...');
+    deepRememberRepository = await databaseFactory.initialize(dbConfig.type, dbConfig[dbConfig.type]);
     useDatabase = true;
-    console.log('[SRS] Database initialized successfully');
+    console.log('[DeepRemember] Database initialized successfully');
     
     // Migrate sample data to database
     if (dbConfig.migration.autoMigrate) {
-      await srsRepository.migrateFromMemory(userCards);
-      console.log('[SRS] Sample data migrated to database');
+      await deepRememberRepository.migrateFromMemory(userCards);
+      console.log('[DeepRemember] Sample data migrated to database');
     }
   } catch (error) {
-    console.error('[SRS] Database initialization failed, falling back to memory storage:', error);
+    console.error('[DeepRemember] Database initialization failed, falling back to memory storage:', error);
     useDatabase = false;
     // Initialize sample data in memory as fallback
     initializeSampleData();
@@ -147,9 +147,9 @@ router.post('/create-card', async (req, res) => {
       created: new Date().toISOString()
     };
 
-    if (useDatabase && srsRepository) {
+    if (useDatabase && deepRememberRepository) {
       // Use database
-      const result = await srsRepository.createCard(userId, cardData);
+      const result = await deepRememberRepository.createCard(userId, cardData);
       res.json({
         success: true,
         card: result,
@@ -169,7 +169,7 @@ router.post('/create-card', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[SRS] Create card error:', error);
+    console.error('[DeepRemember] Create card error:', error);
     res.status(500).json({ error: 'Failed to create card' });
   }
 });
@@ -179,10 +179,10 @@ router.get('/review-cards/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     
-    if (useDatabase && srsRepository) {
+    if (useDatabase && deepRememberRepository) {
       // Use database
-      const cards = await srsRepository.getDueCards(userId);
-      const allCards = await srsRepository.getUserCards(userId);
+      const cards = await deepRememberRepository.getDueCards(userId);
+      const allCards = await deepRememberRepository.getUserCards(userId);
       
       res.json({
         success: true,
@@ -211,7 +211,7 @@ router.get('/review-cards/:userId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[SRS] Get review cards error:', error);
+    console.error('[DeepRemember] Get review cards error:', error);
     res.status(500).json({ error: 'Failed to get review cards' });
   }
 });
@@ -229,9 +229,9 @@ router.post('/answer-card', async (req, res) => {
     const now = new Date();
     const currentTime = now.getTime();
     
-    if (useDatabase && srsRepository) {
+    if (useDatabase && deepRememberRepository) {
       // Use database
-      const allCards = await srsRepository.getUserCards(userId);
+      const allCards = await deepRememberRepository.getUserCards(userId);
       const card = allCards.find(c => c.id === cardId);
       
       if (!card) {
@@ -280,7 +280,7 @@ router.post('/answer-card', async (req, res) => {
         lastReviewed: new Date().toISOString()
       };
       
-      await srsRepository.updateCard(userId, cardId, updatedCard);
+      await deepRememberRepository.updateCard(userId, cardId, updatedCard);
       
       res.json({
         success: true,
@@ -361,7 +361,7 @@ router.post('/answer-card', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[SRS] Answer card error:', error);
+    console.error('[DeepRemember] Answer card error:', error);
     res.status(500).json({ error: 'Failed to answer card' });
   }
 });
@@ -371,9 +371,9 @@ router.get('/stats/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     
-    if (useDatabase && srsRepository) {
+    if (useDatabase && deepRememberRepository) {
       // Use database
-      const stats = await srsRepository.getUserStats(userId);
+      const stats = await deepRememberRepository.getUserStats(userId);
       res.json({
         success: true,
         stats
@@ -407,7 +407,7 @@ router.get('/stats/:userId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[SRS] Get stats error:', error);
+    console.error('[DeepRemember] Get stats error:', error);
     res.status(500).json({ error: 'Failed to get statistics' });
   }
 });
@@ -417,9 +417,9 @@ router.delete('/delete-card/:userId/:cardId', async (req, res) => {
   try {
     const { userId, cardId } = req.params;
     
-    if (useDatabase && srsRepository) {
+    if (useDatabase && deepRememberRepository) {
       // Use database
-      const success = await srsRepository.deleteCard(userId, cardId);
+      const success = await deepRememberRepository.deleteCard(userId, cardId);
       if (!success) {
         return res.status(404).json({ error: 'Card not found' });
       }
@@ -449,7 +449,7 @@ router.delete('/delete-card/:userId/:cardId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[SRS] Delete card error:', error);
+    console.error('[DeepRemember] Delete card error:', error);
     res.status(500).json({ error: 'Failed to delete card' });
   }
 });
@@ -457,13 +457,13 @@ router.delete('/delete-card/:userId/:cardId', async (req, res) => {
 // Get all cards in memory (for debugging/logging)
 router.get('/debug/all-cards', async (req, res) => {
   try {
-    if (useDatabase && srsRepository) {
+    if (useDatabase && deepRememberRepository) {
       // Use database
-      const allUsers = await srsRepository.getAllUsers();
+      const allUsers = await deepRememberRepository.getAllUsers();
       const allCards = {};
       
       for (const user of allUsers) {
-        const cards = await srsRepository.getUserCards(user.user_id);
+        const cards = await deepRememberRepository.getUserCards(user.user_id);
         allCards[user.user_id] = cards;
       }
       
@@ -497,7 +497,7 @@ router.get('/debug/all-cards', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[SRS] Debug all cards error:', error);
+    console.error('[DeepRemember] Debug all cards error:', error);
     res.status(500).json({ error: 'Failed to get debug information' });
   }
 });
@@ -507,9 +507,9 @@ router.get('/debug/log', async (req, res) => {
   try {
     const now = new Date();
     
-    if (useDatabase && srsRepository) {
+    if (useDatabase && deepRememberRepository) {
       // Use database
-      const allUsers = await srsRepository.getAllUsers();
+      const allUsers = await deepRememberRepository.getAllUsers();
       const logData = {
         timestamp: now.toISOString(),
         totalUsers: allUsers.length,
@@ -518,8 +518,8 @@ router.get('/debug/log', async (req, res) => {
       };
       
       for (const user of allUsers) {
-        const cards = await srsRepository.getUserCards(user.user_id);
-        const stats = await srsRepository.getUserStats(user.user_id);
+        const cards = await deepRememberRepository.getUserCards(user.user_id);
+        const stats = await deepRememberRepository.getUserStats(user.user_id);
         
         logData.users[user.user_id] = {
           ...stats,
@@ -610,7 +610,7 @@ router.get('/debug/log', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('[SRS] Log error:', error);
+    console.error('[DeepRemember] Log error:', error);
     res.status(500).json({ error: 'Failed to generate log' });
   }
 });
