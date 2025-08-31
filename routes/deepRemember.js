@@ -133,6 +133,71 @@ router.get('/review-cards/:userId', async (req, res) => {
   }
 });
 
+// Get translation and sample sentences from Ollama
+router.post('/translate-word', async (req, res) => {
+    try {
+        const { word } = req.body;
+        
+        if (!word) {
+            return res.status(400).json({ error: 'word is required' });
+        }
+
+        const prompt = `answer in this format {"translation":"string", "phrase":"phrase", "sampleSentecesOfThisWord":["stringSentence01","stringSentence02","StringSentence03"]} , what is the translation of "${word}" and make some simple sentences in German with this word`;
+        
+        console.log('[DeepRemember] Sending prompt to Ollama:', prompt);
+        
+        const response = await fetch('http://localhost:11434/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'llama3.2',
+                prompt: prompt,
+                stream: false
+            })
+        });
+
+        const data = await response.json();
+        console.log('[DeepRemember] Raw Ollama response:', data.response);
+        
+        let translation = 'No translation found.';
+        let sampleSentence = '';
+        
+        if (data.response) {
+            try {
+                const match = data.response.match(/\{[^}]+\}/);
+                if (match) {
+                    const parsed = JSON.parse(match[0]);
+                    console.log('[DeepRemember] Parsed Ollama response:', parsed);
+                    translation = parsed.translation || translation;
+                    // Handle array of sample sentences
+                    if (parsed.sampleSentencesOfThisWord && Array.isArray(parsed.sampleSentencesOfThisWord)) {
+                        sampleSentence = parsed.sampleSentencesOfThisWord.join('\n');
+                    } else {
+                        // Fallback for single sentence or old format
+                        sampleSentence = parsed.sampleSenteceOfThisWord || parsed.sampleSentenceOfThisWord || '';
+                    }
+                    console.log('[DeepRemember] Extracted sample sentence:', sampleSentence);
+                }
+            } catch (e) {
+                console.error('[DeepRemember] JSON parse error:', e);
+            }
+        }
+        
+        const result = { 
+            success: true, 
+            translation: translation,
+            phrase: word,
+            sampleSentence: sampleSentence
+        };
+        
+        console.log('[DeepRemember] Sending result to frontend:', result);
+        res.json(result);
+    } catch (error) {
+        console.error('[DeepRemember] Translation error:', error);
+        res.status(500).json({ error: 'Failed to get translation from Ollama' });
+    }
+});
+
 // Search for similar words
 router.get('/search-similar/:userId/:query', async (req, res) => {
     try {

@@ -500,8 +500,8 @@
                 <button class="modal-close" onclick="hideCreateCard()">&times;</button>
             </div>
             <div class="modal-form">
-                <input type="text" id="newWord" placeholder="Enter word to learn" oninput="searchSimilarWords()">
-                <input type="text" id="newTranslation" placeholder="Enter translation">
+                <input type="text" id="newWord" placeholder="Enter word to learn" oninput="searchSimilarWords()" onblur="handleWordBlur()">
+                <input type="text" id="newTranslation" placeholder="Enter translation" onfocus="handleTranslationFocus()" onkeydown="handleTranslationKeydown(event)">
                 <textarea id="newContext" placeholder="Enter context or example sentence"></textarea>
                 
                 <!-- Similar Words Table -->
@@ -520,6 +520,20 @@
                             <tbody id="similarWordsTableBody">
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                
+                <!-- Translation Result Display -->
+                <div id="translationResult" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff; cursor: pointer;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">🤖 AI Translation:</h4>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Translation:</strong> <span id="aiTranslation" style="color: #007bff;"></span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Sample Sentences:</strong> <span id="aiSampleSentence" style="color: #28a745; font-style: italic; white-space: pre-line;"></span>
+                    </div>
+                    <div style="font-size: 12px; color: #666;">
+                        💡 Press Tab or click to use this translation
                     </div>
                 </div>
                 
@@ -686,7 +700,114 @@
             document.getElementById('newContext').value = '';
             // Hide similar words section
             document.getElementById('similarWordsSection').style.display = 'none';
+            // Hide translation result
+            document.getElementById('translationResult').style.display = 'none';
         }
+        
+        // Translation functionality
+        let translationTimeout;
+        let currentTranslationData = null;
+        
+        async function handleWordBlur() {
+            const wordInput = document.getElementById('newWord');
+            const word = wordInput.value.trim();
+            
+            if (!word || word.length < 2) {
+                return;
+            }
+            
+            // Clear previous timeout
+            if (translationTimeout) {
+                clearTimeout(translationTimeout);
+            }
+            
+            // Set timeout for 1000ms delay
+            translationTimeout = setTimeout(async () => {
+                try {
+                    // Show loading indicator
+                    document.getElementById('translationResult').style.display = 'block';
+                    document.getElementById('aiTranslation').textContent = '🔄 Loading translation...';
+                    document.getElementById('aiSampleSentence').textContent = '';
+                    
+                    const response = await fetch('/deepRemember/translate-word', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ word: word })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        currentTranslationData = data;
+                        
+                        // Display the translation result
+                        document.getElementById('aiTranslation').textContent = data.translation;
+                        
+                        // Format multiple sentences with line breaks
+                        const sampleSentences = data.sampleSentence.split('\n').filter(s => s.trim());
+                        if (sampleSentences.length > 1) {
+                            const formattedSentences = sampleSentences.map((sentence, index) => 
+                                `${index + 1}. ${sentence.trim()}`
+                            ).join('\n');
+                            document.getElementById('aiSampleSentence').textContent = formattedSentences;
+                        } else {
+                            document.getElementById('aiSampleSentence').textContent = data.sampleSentence;
+                        }
+                    } else {
+                        console.error('Translation failed:', data.error);
+                        document.getElementById('aiTranslation').textContent = '❌ Translation failed';
+                        document.getElementById('aiSampleSentence').textContent = 'Please try again or enter manually';
+                    }
+                } catch (error) {
+                    console.error('Error getting translation:', error);
+                    document.getElementById('aiTranslation').textContent = '❌ Translation error';
+                    document.getElementById('aiSampleSentence').textContent = 'Please try again or enter manually';
+                }
+            }, 1000); // 1000ms delay
+        }
+        
+        function handleTranslationFocus() {
+            // If there's translation data available, allow user to use it
+            if (currentTranslationData) {
+                // The translation result is already visible, user can click or press tab
+            }
+        }
+        
+        function handleTranslationKeydown(event) {
+            if (event.key === 'Tab' && currentTranslationData) {
+                event.preventDefault();
+                
+                // Fill in the translation and context
+                document.getElementById('newTranslation').value = currentTranslationData.translation;
+                document.getElementById('newContext').value = currentTranslationData.sampleSentence;
+                
+                // Hide the translation result
+                document.getElementById('translationResult').style.display = 'none';
+                
+                // Focus on the context field
+                document.getElementById('newContext').focus();
+            }
+        }
+        
+        // Add click handler for translation result
+        document.addEventListener('DOMContentLoaded', function() {
+            const translationResult = document.getElementById('translationResult');
+            translationResult.addEventListener('click', function() {
+                if (currentTranslationData) {
+                    // Fill in the translation and context
+                    document.getElementById('newTranslation').value = currentTranslationData.translation;
+                    document.getElementById('newContext').value = currentTranslationData.sampleSentence;
+                    
+                    // Hide the translation result
+                    document.getElementById('translationResult').style.display = 'none';
+                    
+                    // Focus on the context field
+                    document.getElementById('newContext').focus();
+                }
+            });
+        });
     </script>
     <script src="/js/deepRemember.js"></script>
 </body>
