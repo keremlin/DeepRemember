@@ -2,6 +2,7 @@ const express = require('express');
 const { FSRS } = require('ts-fsrs');
 const databaseFactory = require('../database/access/DatabaseFactory');
 const dbConfig = require('../config/database');
+const { initializeSampleData } = require('../database/sampledata/sampleCardData');
 
 const router = express.Router();
 
@@ -12,90 +13,6 @@ const fsrs = new FSRS();
 const userCards = new Map();
 let deepRememberRepository = null;
 let useDatabase = false;
-
-// Initialize sample data for user123
-const initializeSampleData = () => {
-  const sampleCards = [
-    {
-      id: 'card_001',
-      word: 'hello',
-      translation: 'hola',
-      context: 'Hello, how are you today?',
-      state: 0,
-      due: new Date().toISOString(),
-      stability: 0,
-      difficulty: 0,
-      elapsed_days: 0,
-      scheduled_days: 0,
-      reps: 0,
-      lapses: 0,
-      created: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-    },
-    {
-      id: 'card_002',
-      word: 'world',
-      translation: 'mundo',
-      context: 'The world is beautiful.',
-      state: 1,
-      due: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago (due for review)
-      stability: 1.5,
-      difficulty: 0.3,
-      elapsed_days: 1,
-      scheduled_days: 1,
-      reps: 2,
-      lapses: 0,
-      created: new Date(Date.now() - 172800000).toISOString() // 2 days ago
-    },
-    {
-      id: 'card_003',
-      word: 'computer',
-      translation: 'computadora',
-      context: 'I work on my computer every day.',
-      state: 1,
-      due: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
-      stability: 2.5,
-      difficulty: 0.2,
-      elapsed_days: 3,
-      scheduled_days: 3,
-      reps: 5,
-      lapses: 1,
-      created: new Date(Date.now() - 259200000).toISOString() // 3 days ago
-    },
-    {
-      id: 'card_004',
-      word: 'language',
-      translation: 'idioma',
-      context: 'Learning a new language is fun.',
-      state: 0,
-      due: new Date().toISOString(),
-      stability: 0,
-      difficulty: 0,
-      elapsed_days: 0,
-      scheduled_days: 0,
-      reps: 0,
-      lapses: 0,
-      created: new Date().toISOString()
-    },
-    {
-      id: 'card_005',
-      word: 'study',
-      translation: 'estudiar',
-      context: 'I study English every evening.',
-      state: 1,
-      due: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago (due for review)
-      stability: 1.8,
-      difficulty: 0.4,
-      elapsed_days: 2,
-      scheduled_days: 2,
-      reps: 3,
-      lapses: 0,
-      created: new Date(Date.now() - 345600000).toISOString() // 4 days ago
-    }
-  ];
-  
-  userCards.set('user123', sampleCards);
-  console.log('[DeepRemember] Sample data initialized for user123');
-};
 
 // Initialize database and sample data
 async function initializeDatabase() {
@@ -114,7 +31,7 @@ async function initializeDatabase() {
     console.error('[DeepRemember] Database initialization failed, falling back to memory storage:', error);
     useDatabase = false;
     // Initialize sample data in memory as fallback
-    initializeSampleData();
+    initializeSampleData(userCards, 'user123');
   }
 }
 
