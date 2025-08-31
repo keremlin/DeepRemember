@@ -112,6 +112,52 @@ class DeepRememberRepository {
   }
 
   /**
+   * Search for similar words
+   */
+  async searchSimilarWords(userId, query) {
+    try {
+      const searchQuery = `%${query}%`;
+      const cards = await this.db.query(
+        `SELECT * FROM cards 
+         WHERE user_id = ? 
+         AND (word LIKE ? OR translation LIKE ?)
+         ORDER BY 
+           CASE 
+             WHEN word = ? THEN 1
+             WHEN word LIKE ? THEN 2
+             WHEN translation LIKE ? THEN 3
+             ELSE 4
+           END,
+           created_at DESC
+         LIMIT 10`,
+        { 
+          user_id: userId, 
+          word_like: searchQuery, 
+          translation_like: searchQuery,
+          exact_word: query,
+          word_starts: `${query}%`,
+          translation_starts: `${query}%`
+        }
+      );
+
+      return cards.map(card => ({
+        id: card.card_id,
+        word: card.word,
+        translation: card.translation,
+        context: card.context,
+        state: card.state,
+        due: card.due,
+        reps: card.reps,
+        lapses: card.lapses,
+        created: card.created_at
+      }));
+    } catch (error) {
+      console.error('[SRS-REPO] Search similar words error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get cards due for review
    */
   async getDueCards(userId) {

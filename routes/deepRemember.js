@@ -133,6 +133,46 @@ router.get('/review-cards/:userId', async (req, res) => {
   }
 });
 
+// Search for similar words
+router.get('/search-similar/:userId/:query', async (req, res) => {
+    try {
+        const { userId, query } = req.params;
+        
+        if (!userId || !query) {
+            return res.status(400).json({ error: 'userId and query are required' });
+        }
+
+        if (useDatabase && deepRememberRepository) {
+            const similarWords = await deepRememberRepository.searchSimilarWords(userId, query);
+            res.json({ success: true, words: similarWords });
+        } else {
+            if (!userCards.has(userId)) {
+                return res.json({ success: true, words: [] });
+            }
+            const cards = userCards.get(userId);
+            const similarWords = cards
+                .filter(card => 
+                    card.word.toLowerCase().includes(query.toLowerCase()) ||
+                    card.translation.toLowerCase().includes(query.toLowerCase())
+                )
+                .map(card => ({
+                    id: card.id,
+                    word: card.word,
+                    translation: card.translation,
+                    context: card.context,
+                    state: card.state,
+                    due: card.due
+                }))
+                .slice(0, 10); // Limit to 10 results
+            
+            res.json({ success: true, words: similarWords });
+        }
+    } catch (error) {
+        console.error('[DeepRemember] Search similar words error:', error);
+        res.status(500).json({ error: 'Failed to search similar words' });
+    }
+});
+
 // Get all cards for a user (not just due cards)
 router.get('/all-cards/:userId', async (req, res) => {
   try {
