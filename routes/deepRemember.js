@@ -133,6 +133,110 @@ router.get('/review-cards/:userId', async (req, res) => {
   }
 });
 
+// Get all cards for a user (not just due cards)
+router.get('/all-cards/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (useDatabase && deepRememberRepository) {
+      // Use database
+      const allCards = await deepRememberRepository.getUserCards(userId);
+      
+      res.json({
+        success: true,
+        cards: allCards,
+        total: allCards.length
+      });
+    } else {
+      // Use memory storage
+      if (!userCards.has(userId)) {
+        return res.json({ cards: [] });
+      }
+      
+      const cards = userCards.get(userId);
+      
+      res.json({
+        success: true,
+        cards: cards,
+        total: cards.length
+      });
+    }
+  } catch (error) {
+    console.error('[DeepRemember] Get all cards error:', error);
+    res.status(500).json({ error: 'Failed to get all cards' });
+  }
+});
+
+// Update card details (word, translation, context)
+router.put('/update-card/:userId/:cardId', async (req, res) => {
+  try {
+    const { userId, cardId } = req.params;
+    const { word, translation, context } = req.body;
+    
+    if (!userId || !cardId) {
+      return res.status(400).json({ error: 'userId and cardId are required' });
+    }
+    
+    if (!word) {
+      return res.status(400).json({ error: 'word is required' });
+    }
+    
+    if (useDatabase && deepRememberRepository) {
+      // Use database
+      const allCards = await deepRememberRepository.getUserCards(userId);
+      const card = allCards.find(c => c.id === cardId);
+      
+      if (!card) {
+        return res.status(404).json({ error: 'Card not found' });
+      }
+      
+      const updatedCard = {
+        ...card,
+        word: word,
+        translation: translation || card.translation,
+        context: context || card.context
+      };
+      
+      await deepRememberRepository.updateCard(userId, cardId, updatedCard);
+      
+      res.json({
+        success: true,
+        card: updatedCard,
+        message: 'Card updated successfully in database'
+      });
+    } else {
+      // Use memory storage
+      if (!userCards.has(userId)) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const cards = userCards.get(userId);
+      const cardIndex = cards.findIndex(card => card.id === cardId);
+      
+      if (cardIndex === -1) {
+        return res.status(404).json({ error: 'Card not found' });
+      }
+      
+      // Update card data
+      cards[cardIndex] = {
+        ...cards[cardIndex],
+        word: word,
+        translation: translation || cards[cardIndex].translation,
+        context: context || cards[cardIndex].context
+      };
+      
+      res.json({
+        success: true,
+        card: cards[cardIndex],
+        message: 'Card updated successfully in memory'
+      });
+    }
+  } catch (error) {
+    console.error('[DeepRemember] Update card error:', error);
+    res.status(500).json({ error: 'Failed to update card' });
+  }
+});
+
 // Answer a card (rate the difficulty)
 router.post('/answer-card', async (req, res) => {
   try {

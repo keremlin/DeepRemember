@@ -194,6 +194,96 @@
         .btn-modal-secondary:hover {
             background: #e0e0e0;
         }
+        
+        /* Manage Cards button styling */
+        .btn-manage-cards {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .btn-manage-cards:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* View states */
+        .dashboard-view {
+            display: block;
+        }
+        
+        .cards-view {
+            display: none;
+        }
+        
+        .dashboard-view.hidden {
+            display: none;
+        }
+        
+        .cards-view.visible {
+            display: block;
+        }
+        
+        /* Delete button styling */
+        .btn-delete {
+            background: white;
+            color: #dc3545;
+            border: 2px solid #dc3545;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 32px;
+            font-weight: bold;
+            padding: 0;
+            line-height: 1;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        
+        .btn-delete:hover {
+            background: #dc3545;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        /* Edit button styling */
+        .btn-edit {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+        }
+        
+        .btn-edit:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        /* Card actions container */
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -207,65 +297,73 @@
                 <div class="username-display" onclick="showUserSetup()">
                     👤 <span id="currentUsername">user123</span>
                 </div>
+                <button class="btn-manage-cards" id="manageCardsBtn" onclick="toggleView()">
+                    📚 Manage Cards
+                </button>
                 <a href="/" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">🎵 Back to AI-title</a>
             </div>
         </div>
 
         <div class="content">
             <div class="srs-container">
-                <!-- Statistics and Create Card Button -->
-                <div class="stats-section">
+                <!-- Dashboard View -->
+                <div class="dashboard-view" id="dashboardView">
+                    <!-- Statistics and Create Card Button -->
+                    <div class="stats-section">
+                        <div class="srs-card">
+                            <h3>📊 Learning Statistics</h3>
+                            <div class="stats-grid" id="statsGrid">
+                                <div class="stat-item">
+                                    <div class="stat-number">0</div>
+                                    <div class="stat-label">Total Cards</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">0</div>
+                                    <div class="stat-label">Due Cards</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">0</div>
+                                    <div class="stat-label">Learning</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">0</div>
+                                    <div class="stat-label">Review</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="create-card-button">
+                            <button class="btn-create-card" onclick="showCreateCard()">
+                                ➕ Create New Card
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Review Cards -->
+                    <div class="srs-card" id="reviewSection" style="display: none;">
+                        <h3>🔄 Review Cards</h3>
+                        <div id="currentCard" class="srs-card">
+                            <h4 id="cardWord">Loading...</h4>
+                            <p id="cardTranslation"></p>
+                            <p id="cardContext"></p>
+                            <div class="rating-buttons">
+                                <button class="rating-btn rating-1" onclick="answerCard(1)">Again</button>
+                                <button class="rating-btn rating-2" onclick="answerCard(2)">Hard</button>
+                                <button class="rating-btn rating-3" onclick="answerCard(3)">Good</button>
+                                <button class="rating-btn rating-4" onclick="answerCard(4)">Easy</button>
+                                <button class="rating-btn rating-5" onclick="answerCard(5)">Perfect</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="loadReviewCards()">Load More Cards</button>
+                    </div>
+                </div>
+
+                <!-- Cards Management View -->
+                <div class="cards-view" id="cardsView">
                     <div class="srs-card">
-                        <h3>📊 Learning Statistics</h3>
-                        <div class="stats-grid" id="statsGrid">
-                            <div class="stat-item">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">Total Cards</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">Due Cards</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">Learning</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">0</div>
-                                <div class="stat-label">Review</div>
-                            </div>
-                        </div>
+                        <h3>📚 All My Cards</h3>
+                        <div id="allCards"></div>
                     </div>
-                    
-                    <div class="create-card-button">
-                        <button class="btn-create-card" onclick="showCreateCard()">
-                            ➕ Create New Card
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Review Cards -->
-                <div class="srs-card" id="reviewSection" style="display: none;">
-                    <h3>🔄 Review Cards</h3>
-                    <div id="currentCard" class="srs-card">
-                        <h4 id="cardWord">Loading...</h4>
-                        <p id="cardTranslation"></p>
-                        <p id="cardContext"></p>
-                        <div class="rating-buttons">
-                            <button class="rating-btn rating-1" onclick="answerCard(1)">Again</button>
-                            <button class="rating-btn rating-2" onclick="answerCard(2)">Hard</button>
-                            <button class="rating-btn rating-3" onclick="answerCard(3)">Good</button>
-                            <button class="rating-btn rating-4" onclick="answerCard(4)">Easy</button>
-                            <button class="rating-btn rating-5" onclick="answerCard(5)">Perfect</button>
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary" onclick="loadReviewCards()">Load More Cards</button>
-                </div>
-
-                <!-- All Cards -->
-                <div class="srs-card">
-                    <h3>📚 All My Cards</h3>
-                    <div id="allCards"></div>
                 </div>
             </div>
         </div>

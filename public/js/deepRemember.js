@@ -1,6 +1,7 @@
 let currentUserId = 'user123';
 let currentCards = [];
 let currentCardIndex = 0;
+let isCardsView = false;
 
 // Modal functions
 function showUserSetup() {
@@ -17,6 +18,28 @@ function showCreateCard() {
 
 function hideCreateCard() {
     document.getElementById('createCardModal').style.display = 'none';
+}
+
+// Toggle between dashboard and cards view
+function toggleView() {
+    const dashboardView = document.getElementById('dashboardView');
+    const cardsView = document.getElementById('cardsView');
+    const manageCardsBtn = document.getElementById('manageCardsBtn');
+    
+    isCardsView = !isCardsView;
+    
+    if (isCardsView) {
+        // Switch to cards view
+        dashboardView.classList.add('hidden');
+        cardsView.classList.add('visible');
+        manageCardsBtn.textContent = '📊 Back to Dashboard';
+        loadAllCards(); // Load cards when switching to cards view
+    } else {
+        // Switch to dashboard view
+        dashboardView.classList.remove('hidden');
+        cardsView.classList.remove('visible');
+        manageCardsBtn.textContent = '📚 Manage Cards';
+    }
 }
 
 // Close modals when clicking outside
@@ -206,7 +229,7 @@ async function answerCard(rating) {
 // Load all cards
 async function loadAllCards() {
     try {
-        const response = await fetch(`/deepRemember/review-cards/${currentUserId}`);
+        const response = await fetch(`/deepRemember/all-cards/${currentUserId}`);
         const data = await response.json();
         
         if (data.success) {
@@ -218,18 +241,102 @@ async function loadAllCards() {
             
             allCardsDiv.innerHTML = data.cards.map(card => `
                 <div class="srs-card" style="margin: 10px 0; padding: 15px;">
-                    <h4>${card.word}</h4>
-                    <p><strong>Translation:</strong> ${card.translation || 'N/A'}</p>
-                    <p><strong>Context:</strong> ${card.context || 'N/A'}</p>
-                    <p><strong>Due:</strong> ${new Date(card.due).toLocaleString()}</p>
-                    <p><strong>State:</strong> ${getStateName(card.state)}</p>
-                    <button class="btn btn-delete" onclick="deleteCard('${card.id}')">Delete</button>
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 id="card-word-${card.id}">${card.word}</h4>
+                        <div class="card-actions">
+                            <button class="btn btn-edit" onclick="editCard('${card.id}')" style="margin-right: 5px;">✏️ Edit</button>
+                            <button class="btn btn-delete" onclick="deleteCard('${card.id}')">×</button>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <p><strong>Translation:</strong> <span id="card-translation-${card.id}">${card.translation || 'N/A'}</span></p>
+                        <p><strong>Context:</strong> <span id="card-context-${card.id}">${card.context || 'N/A'}</span></p>
+                        <p><strong>Due:</strong> ${new Date(card.due).toLocaleString()}</p>
+                        <p><strong>State:</strong> ${getStateName(card.state)}</p>
+                        <p><strong>Reps:</strong> ${card.reps} | <strong>Lapses:</strong> ${card.lapses}</p>
+                    </div>
+                    <div class="card-edit-form" id="edit-form-${card.id}" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h5>Edit Card</h5>
+                        <div style="margin-bottom: 10px;">
+                            <label><strong>Word:</strong></label>
+                            <input type="text" id="edit-word-${card.id}" value="${card.word}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label><strong>Translation:</strong></label>
+                            <input type="text" id="edit-translation-${card.id}" value="${card.translation || ''}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label><strong>Context:</strong></label>
+                            <textarea id="edit-context-${card.id}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 60px; resize: vertical;">${card.context || ''}</textarea>
+                        </div>
+                        <div class="edit-buttons">
+                            <button class="btn btn-primary" onclick="saveCardEdit('${card.id}')" style="margin-right: 5px;">💾 Save</button>
+                            <button class="btn btn-secondary" onclick="cancelCardEdit('${card.id}')">❌ Cancel</button>
+                        </div>
+                    </div>
                 </div>
             `).join('');
         }
     } catch (error) {
         console.error('Error loading all cards:', error);
         showError('Failed to load cards');
+    }
+}
+
+// Edit card
+function editCard(cardId) {
+    const editForm = document.getElementById(`edit-form-${cardId}`);
+    editForm.style.display = 'block';
+}
+
+// Cancel card edit
+function cancelCardEdit(cardId) {
+    const editForm = document.getElementById(`edit-form-${cardId}`);
+    editForm.style.display = 'none';
+}
+
+// Save card edit
+async function saveCardEdit(cardId) {
+    const word = document.getElementById(`edit-word-${cardId}`).value;
+    const translation = document.getElementById(`edit-translation-${cardId}`).value;
+    const context = document.getElementById(`edit-context-${cardId}`).value;
+    
+    if (!word.trim()) {
+        showError('Word cannot be empty');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/deepRemember/update-card/${currentUserId}/${cardId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                word: word.trim(),
+                translation: translation.trim(),
+                context: context.trim()
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Card updated successfully!');
+            
+            // Update the displayed values
+            document.getElementById(`card-word-${cardId}`).textContent = word.trim();
+            document.getElementById(`card-translation-${cardId}`).textContent = translation.trim() || 'N/A';
+            document.getElementById(`card-context-${cardId}`).textContent = context.trim() || 'N/A';
+            
+            // Hide the edit form
+            cancelCardEdit(cardId);
+            
+            // Refresh user data to update stats
+            loadUserData();
+        } else {
+            showError(data.error || 'Failed to update card');
+        }
+    } catch (error) {
+        console.error('Error updating card:', error);
+        showError('Failed to update card');
     }
 }
 
