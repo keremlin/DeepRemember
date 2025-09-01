@@ -142,7 +142,7 @@ router.post('/translate-word', async (req, res) => {
             return res.status(400).json({ error: 'word is required' });
         }
 
-        const prompt = `answer in this format {"translation":"string", "phrase":"phrase", "sampleSentecesOfThisWord":["stringSentence01","stringSentence02","StringSentence03"]} , what is the translation of "${word}" and make some simple sentences in German with this word`;
+        const prompt = `answer in this format {"translation":"string", "phrase":"phrase", "sampleSentecesOfThisWord":["stringSentence01","stringSentence02","StringSentence03"]} , what is the translation of "${word}" and make some simple sentences in German with this word. Also `;
         
         console.log('[DeepRemember] Sending prompt to Ollama:', prompt);
         

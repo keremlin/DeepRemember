@@ -373,6 +373,13 @@
             margin-bottom: 8px;
         }
         
+        /* Context display styling for multiple sentences */
+        .context-display {
+            white-space: pre-line;
+            line-height: 1.5;
+            font-family: inherit;
+        }
+        
         .close-help {
             position: absolute;
             top: 15px;
@@ -449,9 +456,11 @@
                     <div class="srs-card" id="reviewSection" style="display: none;">
                         <h3>🔄 Review Cards</h3>
                         <div id="currentCard" class="srs-card">
-                            <h4 id="cardWord">Loading...</h4>
-                            <p id="cardTranslation"></p>
-                            <p id="cardContext"></p>
+                            <div class="card-content">
+                                <p><strong>Word:</strong> <span id="cardWord">Loading...</span></p>
+                                <p><strong>Translation:</strong> <span id="cardTranslation"></span></p>
+                                <p><strong>Context:</strong> <span id="cardContext" class="context-display"></span></p>
+                            </div>
                             <div class="rating-buttons">
                                 <button class="rating-btn rating-1" onclick="answerCard(1)">Again</button>
                                 <button class="rating-btn rating-2" onclick="answerCard(2)">Hard</button>

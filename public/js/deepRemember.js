@@ -3,6 +3,23 @@ let currentCards = [];
 let currentCardIndex = 0;
 let isCardsView = false;
 
+// Helper function to format context with dot delimiters
+function formatContext(context) {
+    if (!context) return '';
+    
+    // Split by newlines and filter out empty lines
+    const sentences = context.split('\n').filter(s => s.trim());
+    
+    if (sentences.length === 1) {
+        return sentences[0];
+    }
+    
+    // Format multiple sentences with dot delimiters
+    return sentences.map((sentence, index) => 
+        `${index + 1}. ${sentence.trim()}`
+    ).join('\n');
+}
+
 // Modal functions
 function showUserSetup() {
     document.getElementById('userSetupModal').style.display = 'block';
@@ -192,7 +209,7 @@ function showCurrentCard() {
     const card = currentCards[currentCardIndex];
     document.getElementById('cardWord').textContent = card.word;
     document.getElementById('cardTranslation').textContent = card.translation || '';
-    document.getElementById('cardContext').textContent = card.context || '';
+    document.getElementById('cardContext').textContent = formatContext(card.context);
 }
 
 // Answer current card
@@ -250,7 +267,7 @@ async function loadAllCards() {
                     </div>
                     <div class="card-content">
                         <p><strong>Translation:</strong> <span id="card-translation-${card.id}">${card.translation || 'N/A'}</span></p>
-                        <p><strong>Context:</strong> <span id="card-context-${card.id}">${card.context || 'N/A'}</span></p>
+                        <p><strong>Context:</strong> <span id="card-context-${card.id}">${formatContext(card.context)}</span></p>
                         <p><strong>Due:</strong> ${new Date(card.due).toLocaleString()}</p>
                         <p><strong>State:</strong> ${getStateName(card.state)}</p>
                         <p><strong>Reps:</strong> ${card.reps} | <strong>Lapses:</strong> ${card.lapses}</p>
@@ -267,7 +284,7 @@ async function loadAllCards() {
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label><strong>Context:</strong></label>
-                            <textarea id="edit-context-${card.id}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 60px; resize: vertical;">${card.context || ''}</textarea>
+                            <textarea id="edit-context-${card.id}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 60px; resize: vertical;">${formatContext(card.context)}</textarea>
                         </div>
                         <div class="edit-buttons">
                             <button class="btn btn-primary" onclick="saveCardEdit('${card.id}')" style="margin-right: 5px;">💾 Save</button>
@@ -324,7 +341,7 @@ async function saveCardEdit(cardId) {
             // Update the displayed values
             document.getElementById(`card-word-${cardId}`).textContent = word.trim();
             document.getElementById(`card-translation-${cardId}`).textContent = translation.trim() || 'N/A';
-            document.getElementById(`card-context-${cardId}`).textContent = context.trim() || 'N/A';
+            document.getElementById(`card-context-${cardId}`).textContent = formatContext(context.trim());
             
             // Hide the edit form
             cancelCardEdit(cardId);
