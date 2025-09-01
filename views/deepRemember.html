@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deep Remember</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="styles.css">
     <style>
         /* Header styles */
         .header {
@@ -378,6 +378,38 @@
             white-space: pre-line;
             line-height: 1.5;
             font-family: inherit;
+        }
+        
+        /* Sentence and play button styling */
+        .sentence {
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .play-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 5px;
+            transition: all 0.2s ease;
+            vertical-align: middle;
+        }
+        
+        .play-btn:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+        }
+        
+        .play-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .close-help {

@@ -26,6 +26,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Serve files from the files directory
 app.use('/files', express.static(path.join(__dirname, 'files')));
 
+// Serve voice files
+app.use('/voice', express.static(path.join(__dirname, 'voice')));
+
 // Routes
 app.use('/', indexRoutes);
 app.use('/', uploadRoutes);

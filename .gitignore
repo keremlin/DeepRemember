@@ -48,6 +48,7 @@ Thumbs.db
 # IDEs/editors
 .vscode/
 .idea/
+voice/
 *.swp
 *.swo
 *.sublime-workspace

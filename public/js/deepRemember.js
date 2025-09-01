@@ -143,6 +143,7 @@ async function createCard() {
     }
     
     try {
+        // First create the card
         const response = await fetch('/deepRemember/create-card', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -156,6 +157,16 @@ async function createCard() {
         
         const data = await response.json();
         if (data.success) {
+            // If card creation is successful and there's context, convert to speech
+            if (context && context.trim()) {
+                try {
+                    await convertContextToSpeech(context.trim(), word.trim());
+                } catch (ttsError) {
+                    console.warn('TTS conversion failed, but card was created:', ttsError);
+                    // Don't fail the card creation if TTS fails
+                }
+            }
+            
             showSuccess('Card created successfully!');
             // Clear form fields
             document.getElementById('newWord').value = '';
@@ -209,7 +220,8 @@ function showCurrentCard() {
     const card = currentCards[currentCardIndex];
     document.getElementById('cardWord').textContent = card.word;
     document.getElementById('cardTranslation').textContent = card.translation || '';
-    document.getElementById('cardContext').textContent = formatContext(card.context);
+    document.getElementById('cardContext').innerHTML = formatContextWithPlayButtons(card.context, card.word);
+    document.getElementById('cardContext').className = 'context-display';
 }
 
 // Answer current card
@@ -267,7 +279,7 @@ async function loadAllCards() {
                     </div>
                     <div class="card-content">
                         <p><strong>Translation:</strong> <span id="card-translation-${card.id}">${card.translation || 'N/A'}</span></p>
-                        <p><strong>Context:</strong> <span id="card-context-${card.id}">${formatContext(card.context)}</span></p>
+                        <p><strong>Context:</strong> <span id="card-context-${card.id}">${formatContextWithPlayButtons(card.context, card.word)}</span></p>
                         <p><strong>Due:</strong> ${new Date(card.due).toLocaleString()}</p>
                         <p><strong>State:</strong> ${getStateName(card.state)}</p>
                         <p><strong>Reps:</strong> ${card.reps} | <strong>Lapses:</strong> ${card.lapses}</p>
@@ -284,7 +296,7 @@ async function loadAllCards() {
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label><strong>Context:</strong></label>
-                            <textarea id="edit-context-${card.id}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 60px; resize: vertical;">${formatContext(card.context)}</textarea>
+                            <textarea id="edit-context-${card.id}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 60px; resize: vertical;">${card.context || ''}</textarea>
                         </div>
                         <div class="edit-buttons">
                             <button class="btn btn-primary" onclick="saveCardEdit('${card.id}')" style="margin-right: 5px;">💾 Save</button>
@@ -336,12 +348,22 @@ async function saveCardEdit(cardId) {
         
         const data = await response.json();
         if (data.success) {
+            // If card update is successful and there's context, convert to speech
+            if (context && context.trim()) {
+                try {
+                    await convertContextToSpeech(context.trim(), word.trim());
+                } catch (ttsError) {
+                    console.warn('TTS conversion failed, but card was updated:', ttsError);
+                    // Don't fail the card update if TTS fails
+                }
+            }
+            
             showSuccess('Card updated successfully!');
             
             // Update the displayed values
             document.getElementById(`card-word-${cardId}`).textContent = word.trim();
             document.getElementById(`card-translation-${cardId}`).textContent = translation.trim() || 'N/A';
-            document.getElementById(`card-context-${cardId}`).textContent = formatContext(context.trim());
+            document.getElementById(`card-context-${cardId}`).innerHTML = formatContextWithPlayButtons(context.trim(), word.trim());
             
             // Hide the edit form
             cancelCardEdit(cardId);
@@ -404,4 +426,136 @@ function showError(message) {
     errorDiv.textContent = message;
     document.querySelector('.content').insertBefore(errorDiv, document.querySelector('.srs-container'));
     setTimeout(() => errorDiv.remove(), 3000);
+}
+
+// Helper function to format context with play buttons for TTS
+function formatContextWithPlayButtons(context, word = '') {
+    if (!context) return '';
+    
+    // Split by newlines and filter out empty lines
+    const sentences = context.split('\n').filter(s => s.trim());
+    
+    if (sentences.length === 1) {
+        return `<span class="sentence">${sentences[0]}</span> <button class="play-btn" onclick="playSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')">🔊</button>`;
+    }
+    
+    // Format multiple sentences with dot delimiters and play buttons
+    return sentences.map((sentence, index) => 
+        `<span class="sentence">${index + 1}. ${sentence.trim()}</span> <button class="play-btn" onclick="playSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')">🔊</button>`
+    ).join('<br>');
+}
+
+// Text-to-Speech functionality
+async function playSentence(text, word) {
+    try {
+        // Show loading state
+        const playBtn = event.target;
+        const originalText = playBtn.textContent;
+        playBtn.textContent = '⏳';
+        playBtn.disabled = true;
+        
+        // First try to get existing audio file
+        const encodedSentence = encodeURIComponent(text);
+        const response = await fetch(`/deepRemember/get-audio/${word}/${encodedSentence}`);
+        const data = await response.json();
+        
+        let audioUrl;
+        
+        if (data.success && data.exists) {
+            // Use existing audio file
+            audioUrl = data.audioUrl;
+            console.log(`[TTS] Using existing audio: ${audioUrl}`);
+        } else {
+            // Generate new audio file
+            console.log(`[TTS] Generating new audio for: "${text}"`);
+            const ttsResponse = await fetch('/deepRemember/convert-to-speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text, word })
+            });
+            
+            const ttsData = await ttsResponse.json();
+            if (ttsData.success) {
+                audioUrl = ttsData.audioUrl;
+            } else {
+                throw new Error(ttsData.error || 'TTS conversion failed');
+            }
+        }
+        
+        // Create and play audio
+        const audio = new Audio(audioUrl);
+        audio.play();
+        
+        // Update button to show playing state
+        playBtn.textContent = '▶️';
+        
+        // Reset button after audio finishes
+        audio.onended = () => {
+            playBtn.textContent = originalText;
+            playBtn.disabled = false;
+        };
+        
+        // Reset button if there's an error
+        audio.onerror = () => {
+            playBtn.textContent = originalText;
+            playBtn.disabled = false;
+        };
+        
+    } catch (error) {
+        console.error('Error playing sentence:', error);
+        showError('Failed to play audio');
+        
+        // Reset button
+        const playBtn = event.target;
+        playBtn.textContent = '🔊';
+        playBtn.disabled = false;
+    }
+}
+
+// Function to convert context to speech (for automatic conversion)
+async function convertContextToSpeech(context, word) {
+    if (!context || !word) return;
+    
+    // Split context into sentences
+    const sentences = context.split('\n').filter(s => s.trim());
+    
+    // Convert each sentence to speech
+    for (const sentence of sentences) {
+        if (sentence.trim()) {
+            try {
+                // Check if audio already exists first
+                const encodedSentence = encodeURIComponent(sentence.trim());
+                const checkResponse = await fetch(`/deepRemember/get-audio/${word.trim()}/${encodedSentence}`);
+                const checkData = await checkResponse.json();
+                
+                if (checkData.success && checkData.exists) {
+                    console.log(`[TTS] Audio already exists for: "${sentence.trim()}" -> ${checkData.audioUrl}`);
+                    continue; // Skip if already exists
+                }
+                
+                // Generate new audio if it doesn't exist
+                const response = await fetch('/deepRemember/convert-to-speech', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        text: sentence.trim(), 
+                        word: word.trim() 
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    console.log(`[TTS] Audio generated for: "${sentence.trim()}" -> ${data.audioUrl}`);
+                } else {
+                    console.warn(`[TTS] Failed to generate audio for: "${sentence.trim()}"`);
+                }
+            } catch (error) {
+                console.warn(`[TTS] Error generating audio for: "${sentence.trim()}"`, error);
+            }
+        }
+    }
 }

@@ -3,6 +3,8 @@ const { FSRS } = require('ts-fsrs');
 const databaseFactory = require('../database/access/DatabaseFactory');
 const dbConfig = require('../config/database');
 const { initializeSampleData } = require('../database/sampledata/sampleCardData');
+const path = require('path'); // Added for file path handling
+const fs = require('fs'); // Added for file system operations
 
 const router = express.Router();
 
@@ -131,6 +133,115 @@ router.get('/review-cards/:userId', async (req, res) => {
     console.error('[DeepRemember] Get review cards error:', error);
     res.status(500).json({ error: 'Failed to get review cards' });
   }
+});
+
+// Text-to-Speech conversion endpoint
+router.post('/convert-to-speech', async (req, res) => {
+    try {
+        const { text, word } = req.body;
+        
+        if (!text || !word) {
+            return res.status(400).json({ error: 'text and word are required' });
+        }
+
+        // Create a simple hash of the sentence
+        const sentenceHash = text.split('').reduce((hash, char) => {
+            return ((hash << 5) - hash + char.charCodeAt(0)) & 0xffffffff;
+        }, 0).toString(16);
+
+        // Create a safe filename for the audio
+        const safeWord = word.replace(/[^a-zA-Z0-9]/g, '_');
+        const filename = `${safeWord}_${sentenceHash}.wav`;
+        const filepath = path.join(__dirname, '../voice', filename);
+
+        // Check if audio file already exists
+        if (fs.existsSync(filepath)) {
+            console.log(`[DeepRemember] Audio file already exists: ${filepath}`);
+            res.json({
+                success: true,
+                audioUrl: `/voice/${filename}`,
+                filename: filename
+            });
+            return;
+        }
+
+        // Call the matatonic/openai-speech API
+        console.log(`[DeepRemember] Converting to speech: "${text}"`);
+        const response = await fetch('http://localhost:8000/v1/audio/speech', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                input: text,
+                voice: 'pavoque',
+                model: 'tts-1-hd'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`TTS API error: ${response.status}`);
+        }
+
+        // Get the audio data
+        const audioBuffer = await response.arrayBuffer();
+        
+        // Save the audio file
+        fs.writeFileSync(filepath, Buffer.from(audioBuffer));
+        
+        console.log(`[DeepRemember] Audio file saved: ${filepath}`);
+        
+        res.json({
+            success: true,
+            audioUrl: `/voice/${filename}`,
+            filename: filename
+        });
+        
+    } catch (error) {
+        console.error('[DeepRemember] TTS conversion error:', error);
+        res.status(500).json({ error: 'Failed to convert text to speech' });
+    }
+});
+
+// Get audio URL for a sentence (without generating new audio)
+router.get('/get-audio/:word/:sentence', async (req, res) => {
+    try {
+        const { word, sentence } = req.params;
+        
+        if (!word || !sentence) {
+            return res.status(400).json({ error: 'word and sentence are required' });
+        }
+
+        // Create a simple hash of the sentence
+        const sentenceHash = sentence.split('').reduce((hash, char) => {
+            return ((hash << 5) - hash + char.charCodeAt(0)) & 0xffffffff;
+        }, 0).toString(16);
+
+        // Create the expected filename
+        const safeWord = word.replace(/[^a-zA-Z0-9]/g, '_');
+        const filename = `${safeWord}_${sentenceHash}.wav`;
+        const filepath = path.join(__dirname, '../voice', filename);
+
+        // Check if audio file exists
+        if (fs.existsSync(filepath)) {
+            res.json({
+                success: true,
+                audioUrl: `/voice/${filename}`,
+                filename: filename,
+                exists: true
+            });
+        } else {
+            res.json({
+                success: false,
+                error: 'Audio file not found',
+                exists: false
+            });
+        }
+        
+    } catch (error) {
+        console.error('[DeepRemember] Get audio error:', error);
+        res.status(500).json({ error: 'Failed to get audio file' });
+    }
 });
 
 // Get translation and sample sentences from Ollama
