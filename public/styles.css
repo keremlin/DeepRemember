@@ -490,6 +490,22 @@ body {
     min-height: 80px;
 }
 
+/* Word display styling */
+.word-display {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    border: 2px solid #dee2e6;
+}
+
+.word-display strong {
+    font-size: 24px;
+    color: #495057;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
 /* DeepRemember specific styles */
 /* Header styles */
 .header {
