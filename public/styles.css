@@ -448,6 +448,31 @@ body {
     box-shadow: none;
 }
 
+/* Shortcut key styling for rating buttons */
+.shortcut-key {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ffffff;
+    border-radius: 50%;
+    background: transparent;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 16px;
+    margin-left: 8px;
+    vertical-align: middle;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.rating-btn:disabled .shortcut-key {
+    border-color: #999999;
+    color: #999999;
+}
+
 .rating-btn:disabled:hover {
     transform: none;
     box-shadow: none;

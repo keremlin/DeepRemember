@@ -444,9 +444,50 @@ function showCurrentCard() {
 
 // Handle keyboard events for card review
 function handleCardKeyboard(event) {
+    console.log('Key pressed:', event.key); // Debug log
+    
     if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         showAnswer();
+        return;
+    }
+    
+    // Rating button shortcuts (only when rating buttons are enabled)
+    const ratingButtons = document.querySelectorAll('.rating-btn');
+    const firstRatingBtn = ratingButtons[0];
+    
+    console.log('Rating buttons found:', ratingButtons.length); // Debug log
+    console.log('First rating button disabled:', firstRatingBtn ? firstRatingBtn.disabled : 'no button found'); // Debug log
+    
+    if (firstRatingBtn && !firstRatingBtn.disabled) {
+        console.log('Processing rating shortcut for key:', event.key); // Debug log
+        switch (event.key.toLowerCase()) {
+            case 'z':
+                event.preventDefault();
+                console.log('Triggering rating 1 (Again)'); // Debug log
+                answerCard(1);
+                break;
+            case 'x':
+                event.preventDefault();
+                console.log('Triggering rating 2 (Hard)'); // Debug log
+                answerCard(2);
+                break;
+            case 'c':
+                event.preventDefault();
+                console.log('Triggering rating 3 (Good)'); // Debug log
+                answerCard(3);
+                break;
+            case 'v':
+                event.preventDefault();
+                console.log('Triggering rating 4 (Easy)'); // Debug log
+                answerCard(4);
+                break;
+            case 'b':
+                event.preventDefault();
+                console.log('Triggering rating 5 (Perfect)'); // Debug log
+                answerCard(5);
+                break;
+        }
     }
 }
 
@@ -475,8 +516,8 @@ function showAnswer() {
         btn.style.cursor = 'pointer';
     });
     
-    // Remove keyboard event listener since answer is shown
-    document.removeEventListener('keydown', handleCardKeyboard);
+    // Re-add keyboard event listener for rating shortcuts
+    document.addEventListener('keydown', handleCardKeyboard);
 }
 
 // Answer current card
