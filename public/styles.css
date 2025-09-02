@@ -586,6 +586,7 @@ body {
 
 .translation-section h4,
 .context-section h4 {
+    text-align: center;
     color: #495057;
     margin: 0 0 10px 0;
     font-size: 18px;
