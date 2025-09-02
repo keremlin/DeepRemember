@@ -433,6 +433,11 @@ body {
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
 }
 
 .rating-1 { background: #e53e3e; color: white; }
@@ -450,6 +455,10 @@ body {
 
 /* Shortcut key styling for rating buttons */
 .shortcut-key {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     display: inline-flex;
     width: 16px;
     height: 16px;
@@ -461,7 +470,7 @@ body {
     font-weight: 600;
     text-align: center;
     line-height: 16px;
-    margin-left: 8px;
+    margin-left: 0;
     vertical-align: middle;
     align-items: center;
     justify-content: center;
@@ -589,6 +598,18 @@ body {
     letter-spacing: 1px;
     width: 100%;
     margin-top: 10px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.answer-btn .answer-shortcuts {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 0;
 }
 
 .answer-btn:hover:not(:disabled) {
