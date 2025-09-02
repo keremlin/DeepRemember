@@ -477,6 +477,24 @@ body {
     flex-shrink: 0;
 }
 
+/* Glowing effect for rating button shortcuts when pressed */
+.rating-btn:active .shortcut-key {
+    background: #ffd700 !important;
+    color: #000 !important;
+    box-shadow: 0 0 8px #ffd700, 0 0 16px #ffd700, 0 0 24px #ffd700;
+    border-color: #ffd700 !important;
+    transition: all 0.1s ease;
+}
+
+/* Glowing effect for rating button shortcuts on keyboard press */
+.rating-btn.shortcut-active .shortcut-key {
+    background: #ffd700 !important;
+    color: #000 !important;
+    box-shadow: 0 0 8px #ffd700, 0 0 16px #ffd700, 0 0 24px #ffd700;
+    border-color: #ffd700 !important;
+    transition: all 0.1s ease;
+}
+
 /* Answer shortcuts styling */
 .answer-shortcuts {
     display: inline-block !important;
@@ -610,6 +628,24 @@ body {
     top: 50%;
     transform: translateY(-50%);
     margin-left: 0;
+}
+
+/* Glowing effect for answer button shortcuts when pressed */
+.answer-btn:active .shortcut-item {
+    background: #ffd700 !important;
+    color: #000 !important;
+    box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 30px #ffd700;
+    border-color: #ffd700 !important;
+    transition: all 0.1s ease;
+}
+
+/* Glowing effect for answer button shortcuts on keyboard press */
+.answer-btn.shortcut-active .shortcut-item {
+    background: #ffd700 !important;
+    color: #000 !important;
+    box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 30px #ffd700;
+    border-color: #ffd700 !important;
+    transition: all 0.1s ease;
 }
 
 .answer-btn:hover:not(:disabled) {

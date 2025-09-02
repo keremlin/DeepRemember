@@ -446,6 +446,14 @@ function showCurrentCard() {
 function handleCardKeyboard(event) {
     if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
+        
+        // Add glowing effect to answer button
+        const answerBtn = document.getElementById('answerBtn');
+        answerBtn.classList.add('shortcut-active');
+        setTimeout(() => {
+            answerBtn.classList.remove('shortcut-active');
+        }, 200);
+        
         showAnswer();
         return;
     }
@@ -455,27 +463,44 @@ function handleCardKeyboard(event) {
     const firstRatingBtn = ratingButtons[0];
     
     if (firstRatingBtn && !firstRatingBtn.disabled) {
+        let rating = 0;
+        let targetButton = null;
+        
         switch (event.key.toLowerCase()) {
             case 'z':
                 event.preventDefault();
-                answerCard(1);
+                rating = 1;
+                targetButton = ratingButtons[0];
                 break;
             case 'x':
                 event.preventDefault();
-                answerCard(2);
+                rating = 2;
+                targetButton = ratingButtons[1];
                 break;
             case 'c':
                 event.preventDefault();
-                answerCard(3);
+                rating = 3;
+                targetButton = ratingButtons[2];
                 break;
             case 'v':
                 event.preventDefault();
-                answerCard(4);
+                rating = 4;
+                targetButton = ratingButtons[3];
                 break;
             case 'b':
                 event.preventDefault();
-                answerCard(5);
+                rating = 5;
+                targetButton = ratingButtons[4];
                 break;
+        }
+        
+        if (rating > 0 && targetButton) {
+            // Add glowing effect to the corresponding rating button
+            targetButton.classList.add('shortcut-active');
+            setTimeout(() => {
+                targetButton.classList.remove('shortcut-active');
+            }, 200);
+            answerCard(rating);
         }
     }
 }
