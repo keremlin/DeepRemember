@@ -35,9 +35,18 @@
                             <div class="card-content">
                                 <div class="word-display">
                                     <strong id="cardWord">Loading...</strong>
+                                    <button class="answer-btn" id="answerBtn" onclick="showAnswer()">ANSWER</button>
                                 </div>
-                                <p><strong>Translation:</strong> <span id="cardTranslation"></span></p>
-                                <p><strong>Context:</strong> <span id="cardContext" class="context-display"></span></p>
+                                <div class="answer-content" id="answerContent" style="display: none;">
+                                    <div class="translation-section">
+                                        <h4>Translation</h4>
+                                        <div class="translation-text" id="cardTranslation"></div>
+                                    </div>
+                                    <div class="context-section">
+                                        <h4>Context</h4>
+                                        <div class="context-text" id="cardContext" class="context-display"></div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="rating-buttons">
                                 <button class="rating-btn rating-1" onclick="answerCard(1)">Again</button>

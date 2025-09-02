@@ -413,9 +413,70 @@ function showCurrentCard() {
     
     const card = currentCards[currentCardIndex];
     document.getElementById('cardWord').textContent = card.word;
-    document.getElementById('cardTranslation').textContent = card.translation || '';
-    document.getElementById('cardContext').innerHTML = formatContextWithPlayButtons(card.context, card.word);
+    
+    // Store the original translation and context for later restoration
+    document.getElementById('cardTranslation').setAttribute('data-original', card.translation || '');
+    document.getElementById('cardContext').setAttribute('data-original', card.context || '');
+    
+    // Clear the translation and context initially (but keep sections visible)
+    document.getElementById('cardTranslation').textContent = '';
+    document.getElementById('cardContext').textContent = '';
+    
+    // Reset answer button to enabled state
+    const answerBtn = document.getElementById('answerBtn');
+    answerBtn.disabled = false;
+    answerBtn.textContent = 'ANSWER';
+    
+    // Disable all rating buttons initially
+    const ratingButtons = document.querySelectorAll('.rating-btn');
+    ratingButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+    });
+    
+    // Keep answer content visible but empty
+    document.getElementById('answerContent').style.display = 'block';
+    
+    // Add keyboard event listeners
+    document.addEventListener('keydown', handleCardKeyboard);
+}
+
+// Handle keyboard events for card review
+function handleCardKeyboard(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        showAnswer();
+    }
+}
+
+// Show answer function
+function showAnswer() {
+    const answerBtn = document.getElementById('answerBtn');
+    
+    // Get the original translation and context
+    const originalTranslation = document.getElementById('cardTranslation').getAttribute('data-original');
+    const originalContext = document.getElementById('cardContext').getAttribute('data-original');
+    
+    // Show the translation and context
+    document.getElementById('cardTranslation').textContent = originalTranslation;
+    document.getElementById('cardContext').innerHTML = formatContextWithPlayButtons(originalContext, document.getElementById('cardWord').textContent);
     document.getElementById('cardContext').className = 'context-display';
+    
+    // Disable the answer button
+    answerBtn.disabled = true;
+    answerBtn.textContent = 'ANSWERED';
+    
+    // Enable all rating buttons
+    const ratingButtons = document.querySelectorAll('.rating-btn');
+    ratingButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+    });
+    
+    // Remove keyboard event listener since answer is shown
+    document.removeEventListener('keydown', handleCardKeyboard);
 }
 
 // Answer current card
@@ -437,6 +498,24 @@ async function answerCard(rating) {
         
         const data = await response.json();
         if (data.success) {
+            // Clear translation and context (but keep sections visible)
+            document.getElementById('cardTranslation').textContent = '';
+            document.getElementById('cardContext').textContent = '';
+            
+            // Re-enable answer button
+            const answerBtn = document.getElementById('answerBtn');
+            answerBtn.disabled = false;
+            answerBtn.textContent = 'ANSWER';
+            
+            // Disable all rating buttons
+            const ratingButtons = document.querySelectorAll('.rating-btn');
+            ratingButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+            });
+            
+            // Move to next card
             currentCardIndex++;
             showCurrentCard();
             loadUserData();
