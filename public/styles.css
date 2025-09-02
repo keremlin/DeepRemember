@@ -468,6 +468,34 @@ body {
     flex-shrink: 0;
 }
 
+/* Answer shortcuts styling */
+.answer-shortcuts {
+    display: inline-block !important;
+    margin-left: 8px;
+    vertical-align: middle;
+    white-space: nowrap;
+    opacity: 1;
+}
+
+.shortcut-item {
+    display: inline-block;
+    border: 1px solid #ffffff;
+    border-radius: 8px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 8px;
+    font-weight: 400;
+    padding: 1px 4px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.answer-btn:disabled .shortcut-item {
+    border-color: #999999;
+    color: #999999;
+    opacity: 0.6;
+}
+
 .rating-btn:disabled .shortcut-key {
     border-color: #999999;
     color: #999999;
