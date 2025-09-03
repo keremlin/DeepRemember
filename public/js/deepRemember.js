@@ -438,6 +438,9 @@ function showCurrentCard() {
     // Keep answer content visible but empty
     document.getElementById('answerContent').style.display = 'block';
     
+    // Hide audio shortcuts hint
+    document.getElementById('audioShortcutsHint').style.display = 'none';
+    
     // Add keyboard event listeners
     document.addEventListener('keydown', handleCardKeyboard);
 }
@@ -456,6 +459,60 @@ function handleCardKeyboard(event) {
         
         showAnswer();
         return;
+    }
+    
+    // Audio playback shortcuts (only when context is visible)
+    const cardContext = document.getElementById('cardContext');
+    if (cardContext && cardContext.innerHTML && cardContext.innerHTML.includes('play-btn')) {
+        // Handle number keys for audio playback
+        const numberKey = parseInt(event.key);
+        if (!isNaN(numberKey) && numberKey >= 0 && numberKey <= 9) {
+            event.preventDefault();
+            
+            // Check for double-digit numbers (e.g., "10", "11", etc.)
+            let targetNumber = numberKey;
+            
+            // If we have a previous number key pressed, check for double-digit
+            if (window.lastNumberKey && window.lastNumberKeyTime && 
+                (Date.now() - window.lastNumberKeyTime) < 500) { // 500ms window
+                const doubleDigit = parseInt(window.lastNumberKey + event.key);
+                if (doubleDigit >= 10 && doubleDigit <= 99) {
+                    targetNumber = doubleDigit;
+                }
+            }
+            
+            // Store current key for potential double-digit detection
+            window.lastNumberKey = event.key;
+            window.lastNumberKeyTime = Date.now();
+            
+            // Find the play button for the corresponding sentence number
+            const playButtons = cardContext.querySelectorAll('.play-btn');
+            const sentenceNumbers = cardContext.querySelectorAll('.sentence-number-circle');
+            
+            // Find the sentence number that matches the pressed key
+            let targetIndex = -1;
+            sentenceNumbers.forEach((numberElement, index) => {
+                if (parseInt(numberElement.textContent) === targetNumber) {
+                    targetIndex = index;
+                }
+            });
+            
+            // If found, play the audio
+            if (targetIndex >= 0 && targetIndex < playButtons.length) {
+                const targetButton = playButtons[targetIndex];
+                
+                // Add glowing effect to the play button
+                targetButton.classList.add('shortcut-active');
+                setTimeout(() => {
+                    targetButton.classList.remove('shortcut-active');
+                }, 200);
+                
+                // Trigger the play button click
+                targetButton.click();
+            }
+            
+            return;
+        }
     }
     
     // Rating button shortcuts (only when rating buttons are enabled)
@@ -518,6 +575,14 @@ function showAnswer() {
     document.getElementById('cardContext').innerHTML = formatContextWithPlayButtons(originalContext, document.getElementById('cardWord').textContent);
     document.getElementById('cardContext').className = 'context-display';
     
+    // Show audio shortcuts hint if there are multiple sentences
+    const audioShortcutsHint = document.getElementById('audioShortcutsHint');
+    if (originalContext && originalContext.split('\n').filter(s => s.trim()).length > 1) {
+        audioShortcutsHint.style.display = 'block';
+    } else {
+        audioShortcutsHint.style.display = 'none';
+    }
+    
     // Disable the answer button
     answerBtn.disabled = true;
     answerBtn.innerHTML = 'ANSWERED<span class="answer-shortcuts"><span class="shortcut-item">Enter</span><span class="shortcut-item">Space</span></span>';
@@ -556,6 +621,9 @@ async function answerCard(rating) {
             // Clear translation and context (but keep sections visible)
             document.getElementById('cardTranslation').textContent = '';
             document.getElementById('cardContext').textContent = '';
+            
+            // Hide audio shortcuts hint
+            document.getElementById('audioShortcutsHint').style.display = 'none';
             
             // Re-enable answer button
             const answerBtn = document.getElementById('answerBtn');

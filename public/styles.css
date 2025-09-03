@@ -1210,6 +1210,15 @@ button.play-btn:disabled,
     transform: none;
 }
 
+/* Glowing effect for play button shortcuts on keyboard press */
+.play-btn.shortcut-active {
+    background: #ffd700 !important;
+    color: #000 !important;
+    box-shadow: 0 0 8px #ffd700, 0 0 16px #ffd700, 0 0 24px #ffd700;
+    transform: scale(1.2);
+    transition: all 0.1s ease;
+}
+
 .close-help {
     position: absolute;
     top: 15px;
