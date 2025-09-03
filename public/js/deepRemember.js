@@ -764,12 +764,12 @@ function formatContextWithPlayButtons(context, word = '') {
     const sentences = context.split('\n').filter(s => s.trim());
     
     if (sentences.length === 1) {
-        return `<span class="sentence">${sentences[0]}</span> <button class="play-btn" onclick="playSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')">🔊</button>`;
+        return `<span class="sentence">${sentences[0]}</span> <button class="play-btn" onclick="playSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')">🔊</button> <span class="sentence-number-circle">1</span>`;
     }
     
     // Format multiple sentences with dot delimiters and play buttons
     return sentences.map((sentence, index) => 
-        `<span class="sentence">${index + 1}. ${sentence.trim()}</span> <button class="play-btn" onclick="playSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')">🔊</button>`
+        `<span class="sentence">${index + 1}. ${sentence.trim()}</span> <button class="play-btn" onclick="playSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')">🔊</button> <span class="sentence-number-circle">${index + 1}</span>`
     ).join('<br>');
 }
 
