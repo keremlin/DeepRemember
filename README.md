@@ -1,6 +1,6 @@
-# AI-title - AI Powered Subtitle Player
+# DeepRemember Learning System - AI Powered
 
-A modern, modular Express.js web application for playing media files with AI-generated subtitles using OpenAI's Whisper.
+A modern, modular Express.js web application for Learning and playing media files with AI-generated subtitles using OpenAI's Whisper.
 
 ## 🚀 Features
 
