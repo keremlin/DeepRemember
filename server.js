@@ -29,6 +29,11 @@ app.use('/files', express.static(path.join(__dirname, 'files')));
 // Serve voice files
 app.use('/voice', express.static(path.join(__dirname, 'voice')));
 
+// Route to serve sentence analysis modal
+app.get('/views/sentenceAnalysisModal.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'sentenceAnalysisModal.html'));
+});
+
 // Routes
 app.use('/', indexRoutes);
 app.use('/', uploadRoutes);

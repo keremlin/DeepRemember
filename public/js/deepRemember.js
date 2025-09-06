@@ -230,12 +230,63 @@ function toggleView() {
     }
 }
 
+// Load sentence analysis modal content
+async function loadSentenceAnalysisModal() {
+    try {
+        const response = await fetch('/views/sentenceAnalysisModal.html');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const modalHTML = await response.text();
+        document.getElementById('sentenceAnalysisModalContainer').innerHTML = modalHTML;
+        console.log('Sentence analysis modal loaded successfully');
+    } catch (error) {
+        console.error('Error loading sentence analysis modal:', error);
+        // Fallback: create a simple modal if the file can't be loaded
+        document.getElementById('sentenceAnalysisModalContainer').innerHTML = `
+            <div class="modal-overlay" id="sentenceAnalysisModal">
+                <div class="modal sentence-analysis-modal">
+                    <div class="modal-header">
+                        <h3>✨ Sentence Analysis</h3>
+                        <button class="modal-close" onclick="hideSentenceAnalysis()">&times;</button>
+                    </div>
+                    <div class="modal-content">
+                        <div class="sentence-display">
+                            <h4>Original Sentence:</h4>
+                            <div class="sentence-text" id="analysisSentenceText"></div>
+                        </div>
+                        <div class="analysis-sections">
+                            <div class="analysis-section">
+                                <h4>📝 Translation</h4>
+                                <div class="analysis-content" id="sentenceTranslation">
+                                    <div class="loading-spinner">🔄 Analyzing...</div>
+                                </div>
+                            </div>
+                            <div class="analysis-section">
+                                <h4>🔍 Grammatical Structure</h4>
+                                <div class="analysis-content" id="grammaticalStructure">
+                                    <div class="loading-spinner">🔄 Analyzing...</div>
+                                </div>
+                            </div>
+                            <div class="analysis-section">
+                                <h4>📚 Grammar Points</h4>
+                                <div class="analysis-content" id="grammarPoints">
+                                    <div class="loading-spinner">🔄 Analyzing...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
 // Close modals when clicking outside
 document.addEventListener('DOMContentLoaded', function() {
     const userSetupModal = document.getElementById('userSetupModal');
     const createCardModal = document.getElementById('createCardModal');
     const helpModal = document.getElementById('helpModal');
-    const sentenceAnalysisModal = document.getElementById('sentenceAnalysisModal');
     
     userSetupModal.addEventListener('click', function(e) {
         if (e.target === userSetupModal) {
@@ -255,10 +306,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Add click handler for sentence analysis modal
-    sentenceAnalysisModal.addEventListener('click', function(e) {
-        if (e.target === sentenceAnalysisModal) {
-            hideSentenceAnalysis();
+    // Load the sentence analysis modal asynchronously
+    loadSentenceAnalysisModal().then(() => {
+        const sentenceAnalysisModal = document.getElementById('sentenceAnalysisModal');
+        if (sentenceAnalysisModal) {
+            sentenceAnalysisModal.addEventListener('click', function(e) {
+                if (e.target === sentenceAnalysisModal) {
+                    hideSentenceAnalysis();
+                }
+            });
         }
     });
     
