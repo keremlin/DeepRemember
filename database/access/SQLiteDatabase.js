@@ -85,10 +85,25 @@ class SQLiteDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_cards_state ON cards(state);
     `;
 
+    const createSentenceAnalysisCacheTable = `
+      CREATE TABLE IF NOT EXISTS sentence_analysis_cache (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        hash TEXT UNIQUE NOT NULL,
+        analysis_data TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    const createSentenceAnalysisIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_sentence_analysis_hash ON sentence_analysis_cache(hash);
+    `;
+
     try {
       this.db.exec(createUsersTable);
       this.db.exec(createCardsTable);
+      this.db.exec(createSentenceAnalysisCacheTable);
       this.db.exec(createIndexes);
+      this.db.exec(createSentenceAnalysisIndexes);
       console.log('[DB] Database tables created successfully');
     } catch (error) {
       console.error('[DB] Failed to create tables:', error);

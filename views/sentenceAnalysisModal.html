@@ -1,38 +1,39 @@
 <!-- Sentence Analysis Modal -->
 <div class="modal-overlay" id="sentenceAnalysisModal">
     <div class="modal sentence-analysis-modal">
-        <div class="modal-header">
-            <h3>✨ Sentence Analysis</h3>
-            <button class="modal-close" onclick="hideSentenceAnalysis()">&times;</button>
-        </div>
+            <div class="modal-header">
+                <h3>✨ Sentence Analysis</h3>
+                <div class="modal-actions">
+                    <button class="btn-save-analysis" id="saveAnalysisBtn" onclick="saveSentenceAnalysis()" disabled>
+                        💾 Save
+                    </button>
+                    <button class="btn-refresh-analysis" id="refreshAnalysisBtn" onclick="refreshSentenceAnalysis()" disabled>
+                        🔄 Refresh
+                    </button>
+                    <button class="modal-close" onclick="hideSentenceAnalysis()">&times;</button>
+                </div>
+            </div>
         <div class="modal-content">
             <div class="sentence-display">
                 <h4>Original Sentence:</h4>
                 <div class="sentence-text" id="analysisSentenceText"></div>
             </div>
             
-            <div class="analysis-sections">
-                <div class="analysis-section">
-                    <h4>📝 Translation</h4>
-                    <div class="analysis-content" id="sentenceTranslation">
-                        <div class="loading-spinner">🔄 Analyzing...</div>
+                <div class="analysis-sections">
+                    <div class="analysis-section">
+                        <h4>📝 Translation</h4>
+                        <div class="analysis-content" id="sentenceTranslation">
+                            <div class="loading-spinner">🔄 Analyzing...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h4>🔍 Grammatical Structure</h4>
+                        <div class="analysis-content" id="grammaticalStructure">
+                            <div class="loading-spinner">🔄 Analyzing...</div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="analysis-section">
-                    <h4>🔍 Grammatical Structure</h4>
-                    <div class="analysis-content" id="grammaticalStructure">
-                        <div class="loading-spinner">🔄 Analyzing...</div>
-                    </div>
-                </div>
-                
-                <div class="analysis-section">
-                    <h4>📚 Grammar Points</h4>
-                    <div class="analysis-content" id="grammarPoints">
-                        <div class="loading-spinner">🔄 Analyzing...</div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

@@ -355,6 +355,41 @@ class DeepRememberRepository {
       throw error;
     }
   }
+
+  /**
+   * Get cached sentence analysis by hash
+   */
+  async getSentenceAnalysis(hash) {
+    try {
+      const analysis = await this.db.queryOne(
+        'SELECT * FROM sentence_analysis_cache WHERE hash = ?',
+        { hash: hash }
+      );
+      return analysis;
+    } catch (error) {
+      console.error('[DeepRememberRepository] Error getting sentence analysis:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Store sentence analysis in cache
+   */
+  async storeSentenceAnalysis(hash, analysisData) {
+    try {
+      await this.db.execute(
+        'INSERT OR REPLACE INTO sentence_analysis_cache (hash, analysis_data, created_at) VALUES (?, ?, ?)',
+        { 
+          hash: hash, 
+          analysis_data: analysisData, 
+          created_at: new Date().toISOString() 
+        }
+      );
+    } catch (error) {
+      console.error('[DeepRememberRepository] Error storing sentence analysis:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = DeepRememberRepository;

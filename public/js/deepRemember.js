@@ -248,7 +248,15 @@ async function loadSentenceAnalysisModal() {
                 <div class="modal sentence-analysis-modal">
                     <div class="modal-header">
                         <h3>✨ Sentence Analysis</h3>
-                        <button class="modal-close" onclick="hideSentenceAnalysis()">&times;</button>
+                        <div class="modal-actions">
+                            <button class="btn-save-analysis" id="saveAnalysisBtn" onclick="saveSentenceAnalysis()" disabled>
+                                💾 Save
+                            </button>
+                            <button class="btn-refresh-analysis" id="refreshAnalysisBtn" onclick="refreshSentenceAnalysis()" disabled>
+                                🔄 Refresh
+                            </button>
+                            <button class="modal-close" onclick="hideSentenceAnalysis()">&times;</button>
+                        </div>
                     </div>
                     <div class="modal-content">
                         <div class="sentence-display">
@@ -265,12 +273,6 @@ async function loadSentenceAnalysisModal() {
                             <div class="analysis-section">
                                 <h4>🔍 Grammatical Structure</h4>
                                 <div class="analysis-content" id="grammaticalStructure">
-                                    <div class="loading-spinner">🔄 Analyzing...</div>
-                                </div>
-                            </div>
-                            <div class="analysis-section">
-                                <h4>📚 Grammar Points</h4>
-                                <div class="analysis-content" id="grammarPoints">
                                     <div class="loading-spinner">🔄 Analyzing...</div>
                                 </div>
                             </div>
@@ -1052,19 +1054,35 @@ async function convertContextToSpeech(context, word) {
     }
 }
 
+// Global variables for sentence analysis
+let currentAnalysisData = null;
+let currentSentence = '';
+let currentWord = '';
+
 // Sentence Analysis Modal Functions
 function showSentenceAnalysis(sentence, word = '') {
     const modal = document.getElementById('sentenceAnalysisModal');
     const sentenceText = document.getElementById('analysisSentenceText');
     
+    // Store current analysis data
+    currentSentence = sentence;
+    currentWord = word;
+    currentAnalysisData = null;
+    
     // Display the sentence
     sentenceText.textContent = sentence;
+    
+    // Reset button states
+    const saveBtn = document.getElementById('saveAnalysisBtn');
+    const refreshBtn = document.getElementById('refreshAnalysisBtn');
+    saveBtn.disabled = true;
+    refreshBtn.disabled = true;
     
     // Show the modal
     modal.style.display = 'block';
     
     // Start analysis
-    analyzeSentenceContent(sentence, word);
+    analyzeSentenceContent(sentence, word, false);
 }
 
 function hideSentenceAnalysis() {
@@ -1072,25 +1090,34 @@ function hideSentenceAnalysis() {
     modal.style.display = 'none';
 }
 
-async function analyzeSentenceContent(sentence, word) {
+async function analyzeSentenceContent(sentence, word, refresh = false) {
+    const saveBtn = document.getElementById('saveAnalysisBtn');
+    const refreshBtn = document.getElementById('refreshAnalysisBtn');
+    
     try {
+        // Disable buttons during analysis
+        saveBtn.disabled = true;
+        refreshBtn.disabled = true;
+        saveBtn.textContent = '⏳ Analyzing...';
+        refreshBtn.textContent = '⏳ Analyzing...';
+        
         // Show loading states
         document.getElementById('sentenceTranslation').innerHTML = '<div class="loading-spinner">🔄 Analyzing...</div>';
         document.getElementById('grammaticalStructure').innerHTML = '<div class="loading-spinner">🔄 Analyzing...</div>';
-        document.getElementById('grammarPoints').innerHTML = '<div class="loading-spinner">🔄 Analyzing...</div>';
         
         const response = await fetch('/deepRemember/analyze-sentence', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ sentence, word })
+            body: JSON.stringify({ sentence, word, refresh })
         });
         
         const data = await response.json();
         
         if (data.success && data.analysis) {
             const analysis = data.analysis;
+            currentAnalysisData = analysis; // Store for saving
             
             // Display translation
             document.getElementById('sentenceTranslation').innerHTML = 
@@ -1127,31 +1154,24 @@ async function analyzeSentenceContent(sentence, word) {
                 </div>
             `;
             
-            // Display grammar points
-            if (analysis.grammarPoints && analysis.grammarPoints.length > 0) {
-                document.getElementById('grammarPoints').innerHTML = `
-                    <div class="analysis-content">
-                        ${analysis.grammarPoints.map(point => `
-                            <div class="grammar-point">
-                                <div class="grammar-point-title">${point.point}</div>
-                                <div class="grammar-point-explanation">${point.explanation}</div>
-                                ${point.example ? `<div class="grammar-point-explanation" style="margin-top: 5px; font-style: italic;">Example: ${point.example}</div>` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else {
-                document.getElementById('grammarPoints').innerHTML = 
-                    '<div class="analysis-content">No specific grammar points identified.</div>';
-            }
+            // Enable buttons after successful analysis
+            saveBtn.disabled = false;
+            refreshBtn.disabled = false;
+            saveBtn.textContent = '💾 Save';
+            refreshBtn.textContent = '🔄 Refresh';
+            
         } else {
             // Handle error case
             document.getElementById('sentenceTranslation').innerHTML = 
                 '<div class="analysis-content">❌ Translation analysis failed</div>';
             document.getElementById('grammaticalStructure').innerHTML = 
                 '<div class="analysis-content">❌ Grammatical analysis failed</div>';
-            document.getElementById('grammarPoints').innerHTML = 
-                '<div class="analysis-content">❌ Grammar points analysis failed</div>';
+            
+            // Re-enable buttons on error
+            saveBtn.disabled = false;
+            refreshBtn.disabled = false;
+            saveBtn.textContent = '💾 Save';
+            refreshBtn.textContent = '🔄 Refresh';
         }
     } catch (error) {
         console.error('Error analyzing sentence:', error);
@@ -1161,8 +1181,12 @@ async function analyzeSentenceContent(sentence, word) {
             '<div class="analysis-content">❌ Error loading translation</div>';
         document.getElementById('grammaticalStructure').innerHTML = 
             '<div class="analysis-content">❌ Error loading grammatical structure</div>';
-        document.getElementById('grammarPoints').innerHTML = 
-            '<div class="analysis-content">❌ Error loading grammar points</div>';
+        
+        // Re-enable buttons on error
+        saveBtn.disabled = false;
+        refreshBtn.disabled = false;
+        saveBtn.textContent = '💾 Save';
+        refreshBtn.textContent = '🔄 Refresh';
     }
 }
 
@@ -1170,3 +1194,65 @@ async function analyzeSentenceContent(sentence, word) {
 window.analyzeSentence = function(sentence, word) {
     showSentenceAnalysis(sentence, word);
 };
+
+// Save sentence analysis
+async function saveSentenceAnalysis() {
+    if (!currentAnalysisData) {
+        alert('No analysis data to save');
+        return;
+    }
+
+    const saveBtn = document.getElementById('saveAnalysisBtn');
+    
+    try {
+        // Disable button during save
+        saveBtn.disabled = true;
+        saveBtn.textContent = '⏳ Saving...';
+        
+        const response = await fetch('/deepRemember/save-sentence-analysis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                sentence: currentSentence, 
+                word: currentWord, 
+                analysis: currentAnalysisData 
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            saveBtn.textContent = '✅ Saved';
+            setTimeout(() => {
+                saveBtn.textContent = '💾 Save';
+                saveBtn.disabled = false;
+            }, 2000);
+        } else {
+            alert('Failed to save analysis: ' + (data.error || 'Unknown error'));
+            saveBtn.textContent = '💾 Save';
+            saveBtn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error saving analysis:', error);
+        alert('Error saving analysis: ' + error.message);
+        saveBtn.textContent = '💾 Save';
+        saveBtn.disabled = false;
+    }
+}
+
+// Refresh sentence analysis
+function refreshSentenceAnalysis() {
+    if (!currentSentence) {
+        alert('No sentence to refresh');
+        return;
+    }
+    
+    // Re-analyze with refresh flag
+    analyzeSentenceContent(currentSentence, currentWord, true);
+}
+
+// Global functions for buttons (called from HTML)
+window.saveSentenceAnalysis = saveSentenceAnalysis;
+window.refreshSentenceAnalysis = refreshSentenceAnalysis;

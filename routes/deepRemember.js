@@ -5,6 +5,7 @@ const dbConfig = require('../config/database');
 const { initializeSampleData } = require('../database/sampledata/sampleCardData');
 const path = require('path'); // Added for file path handling
 const fs = require('fs'); // Added for file system operations
+const crypto = require('crypto'); // Added for hash generation
 
 const router = express.Router();
 
@@ -39,6 +40,14 @@ async function initializeDatabase() {
 
 // Initialize database and sample data on startup
 initializeDatabase();
+
+// Function to generate hash for sentence analysis caching
+function generateSentenceHash(sentence, word = '') {
+    const normalizedSentence = sentence.toLowerCase().trim();
+    const normalizedWord = word.toLowerCase().trim();
+    const combined = `${normalizedSentence}|${normalizedWord}`;
+    return crypto.createHash('sha256').update(combined).digest('hex');
+}
 
 // Create a new card for learning
 router.post('/create-card', async (req, res) => {
@@ -318,11 +327,33 @@ router.post('/analyze-sentence', async (req, res) => {
             return res.status(400).json({ error: 'sentence is required' });
         }
 
-        const prompt = `Analyze this German sentence: "${sentence}"${word ? ` (focusing on the word "${word}")` : ''}. 
+        // Generate hash for caching
+        const sentenceHash = generateSentenceHash(sentence, word);
+        console.log(`[DeepRemember] Generated hash for sentence analysis: ${sentenceHash}`);
+
+        // Check if analysis exists in cache (unless refresh is requested)
+        const refresh = req.body.refresh || false;
+        if (!refresh && useDatabase && deepRememberRepository) {
+            try {
+                const cachedAnalysis = await deepRememberRepository.getSentenceAnalysis(sentenceHash);
+                if (cachedAnalysis) {
+                    console.log(`[DeepRemember] Found cached analysis for hash: ${sentenceHash}`);
+                    return res.json({ 
+                        success: true,
+                        analysis: JSON.parse(cachedAnalysis.analysis_data),
+                        cached: true
+                    });
+                }
+            } catch (dbError) {
+                console.warn('[DeepRemember] Error checking cache:', dbError);
+            }
+        }
+
+        const prompt = `Analyze and translate this German sentence: "${sentence}"${word ? ` ` : ''}. 
 
 Provide a comprehensive analysis in this exact JSON format:
 {
-    "translation": "English translation of the sentence",
+    "translation": "English-translation-of-the-sentence",
     "grammaticalStructure": {
         "subject": "subject of the sentence",
         "verb": "main verb",
@@ -331,13 +362,6 @@ Provide a comprehensive analysis in this exact JSON format:
         "mood": "indicative/imperative/subjunctive",
         "sentenceType": "declarative/interrogative/imperative"
     },
-    "grammarPoints": [
-        {
-            "point": "grammar rule or structure",
-            "explanation": "detailed explanation of this grammar point",
-            "example": "example usage"
-        }
-    ],
     "keyWords": ["important", "words", "in", "sentence"],
     "difficulty": "beginner/intermediate/advanced"
 }`;
@@ -367,7 +391,6 @@ Provide a comprehensive analysis in this exact JSON format:
                 mood: 'Not identified',
                 sentenceType: 'Not identified'
             },
-            grammarPoints: [],
             keyWords: [],
             difficulty: 'unknown'
         };
@@ -383,7 +406,6 @@ Provide a comprehensive analysis in this exact JSON format:
                     analysis = {
                         translation: parsed.translation || analysis.translation,
                         grammaticalStructure: parsed.grammaticalStructure || analysis.grammaticalStructure,
-                        grammarPoints: parsed.grammarPoints || analysis.grammarPoints,
                         keyWords: parsed.keyWords || analysis.keyWords,
                         difficulty: parsed.difficulty || analysis.difficulty
                     };
@@ -400,11 +422,45 @@ Provide a comprehensive analysis in this exact JSON format:
             analysis: analysis
         };
         
+        // Don't auto-save analysis - user will save manually
+        
         console.log('[DeepRemember] Sending sentence analysis result to frontend:', result);
         res.json(result);
     } catch (error) {
         console.error('[DeepRemember] Sentence analysis error:', error);
         res.status(500).json({ error: 'Failed to analyze sentence' });
+    }
+});
+
+// Save sentence analysis manually
+router.post('/save-sentence-analysis', async (req, res) => {
+    try {
+        const { sentence, word, analysis } = req.body;
+        
+        if (!sentence || !analysis) {
+            return res.status(400).json({ error: 'sentence and analysis are required' });
+        }
+
+        // Generate hash for caching
+        const sentenceHash = generateSentenceHash(sentence, word);
+        console.log(`[DeepRemember] Manually saving analysis with hash: ${sentenceHash}`);
+
+        // Store analysis in cache
+        if (useDatabase && deepRememberRepository) {
+            try {
+                await deepRememberRepository.storeSentenceAnalysis(sentenceHash, JSON.stringify(analysis));
+                console.log(`[DeepRemember] Successfully saved analysis with hash: ${sentenceHash}`);
+                res.json({ success: true, message: 'Analysis saved successfully' });
+            } catch (dbError) {
+                console.error('[DeepRemember] Error saving analysis:', dbError);
+                res.status(500).json({ error: 'Failed to save analysis' });
+            }
+        } else {
+            res.status(500).json({ error: 'Database not available' });
+        }
+    } catch (error) {
+        console.error('[DeepRemember] Save analysis error:', error);
+        res.status(500).json({ error: 'Failed to save analysis' });
     }
 });
 
