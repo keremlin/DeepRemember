@@ -235,6 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const userSetupModal = document.getElementById('userSetupModal');
     const createCardModal = document.getElementById('createCardModal');
     const helpModal = document.getElementById('helpModal');
+    const sentenceAnalysisModal = document.getElementById('sentenceAnalysisModal');
     
     userSetupModal.addEventListener('click', function(e) {
         if (e.target === userSetupModal) {
@@ -251,6 +252,13 @@ document.addEventListener('DOMContentLoaded', function() {
     helpModal.addEventListener('click', function(e) {
         if (e.target === helpModal) {
             hideHelp();
+        }
+    });
+    
+    // Add click handler for sentence analysis modal
+    sentenceAnalysisModal.addEventListener('click', function(e) {
+        if (e.target === sentenceAnalysisModal) {
+            hideSentenceAnalysis();
         }
     });
     
@@ -508,6 +516,28 @@ function handleCardKeyboard(event) {
                 }, 200);
                 
                 // Trigger the play button click
+                targetButton.click();
+            }
+            
+            return;
+        }
+        
+        // Handle 'A' key for sentence analysis (magic wand)
+        if (event.key.toLowerCase() === 'a') {
+            event.preventDefault();
+            
+            // Find the first intel button and trigger it
+            const intelButtons = cardContext.querySelectorAll('.intel-btn');
+            if (intelButtons.length > 0) {
+                const targetButton = intelButtons[0]; // Analyze first sentence
+                
+                // Add glowing effect to the intel button
+                targetButton.classList.add('shortcut-active');
+                setTimeout(() => {
+                    targetButton.classList.remove('shortcut-active');
+                }, 200);
+                
+                // Trigger the intel button click
                 targetButton.click();
             }
             
@@ -832,12 +862,22 @@ function formatContextWithPlayButtons(context, word = '') {
     const sentences = context.split('\n').filter(s => s.trim());
     
     if (sentences.length === 1) {
-        return `<span class="sentence">${sentences[0]}</span> <button class="play-btn" onclick="playSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')">🔊</button> <span class="sentence-number-circle">1</span>`;
+        return `<span class="intelSentence">
+            <span class="sentence">${sentences[0]}</span> 
+            <button class="play-btn" onclick="playSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')">🔊</button> 
+            <span class="sentence-number-circle">1</span>
+            <button class="intel-btn" onclick="analyzeSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')" title="Analyze sentence">✨</button>
+        </span>`;
     }
     
     // Format multiple sentences with dot delimiters and play buttons
     return sentences.map((sentence, index) => 
-        `<span class="sentence">${index + 1}. ${sentence.trim()}</span> <button class="play-btn" onclick="playSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')">🔊</button> <span class="sentence-number-circle">${index + 1}</span>`
+        `<span class="intelSentence">
+            <span class="sentence">${index + 1}. ${sentence.trim()}</span> 
+            <button class="play-btn" onclick="playSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')">🔊</button> 
+            <span class="sentence-number-circle">${index + 1}</span>
+            <button class="intel-btn" onclick="analyzeSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')" title="Analyze sentence">✨</button>
+        </span>`
     ).join('<br>');
 }
 
@@ -955,3 +995,122 @@ async function convertContextToSpeech(context, word) {
         }
     }
 }
+
+// Sentence Analysis Modal Functions
+function showSentenceAnalysis(sentence, word = '') {
+    const modal = document.getElementById('sentenceAnalysisModal');
+    const sentenceText = document.getElementById('analysisSentenceText');
+    
+    // Display the sentence
+    sentenceText.textContent = sentence;
+    
+    // Show the modal
+    modal.style.display = 'block';
+    
+    // Start analysis
+    analyzeSentenceContent(sentence, word);
+}
+
+function hideSentenceAnalysis() {
+    const modal = document.getElementById('sentenceAnalysisModal');
+    modal.style.display = 'none';
+}
+
+async function analyzeSentenceContent(sentence, word) {
+    try {
+        // Show loading states
+        document.getElementById('sentenceTranslation').innerHTML = '<div class="loading-spinner">🔄 Analyzing...</div>';
+        document.getElementById('grammaticalStructure').innerHTML = '<div class="loading-spinner">🔄 Analyzing...</div>';
+        document.getElementById('grammarPoints').innerHTML = '<div class="loading-spinner">🔄 Analyzing...</div>';
+        
+        const response = await fetch('/deepRemember/analyze-sentence', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ sentence, word })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.analysis) {
+            const analysis = data.analysis;
+            
+            // Display translation
+            document.getElementById('sentenceTranslation').innerHTML = 
+                `<div class="analysis-content">${analysis.translation}</div>`;
+            
+            // Display grammatical structure
+            const structure = analysis.grammaticalStructure;
+            document.getElementById('grammaticalStructure').innerHTML = `
+                <div class="analysis-content">
+                    <div class="grammar-point">
+                        <div class="grammar-point-title">Subject:</div>
+                        <div class="grammar-point-explanation">${structure.subject}</div>
+                    </div>
+                    <div class="grammar-point">
+                        <div class="grammar-point-title">Verb:</div>
+                        <div class="grammar-point-explanation">${structure.verb}</div>
+                    </div>
+                    <div class="grammar-point">
+                        <div class="grammar-point-title">Object:</div>
+                        <div class="grammar-point-explanation">${structure.object}</div>
+                    </div>
+                    <div class="grammar-point">
+                        <div class="grammar-point-title">Tense:</div>
+                        <div class="grammar-point-explanation">${structure.tense}</div>
+                    </div>
+                    <div class="grammar-point">
+                        <div class="grammar-point-title">Mood:</div>
+                        <div class="grammar-point-explanation">${structure.mood}</div>
+                    </div>
+                    <div class="grammar-point">
+                        <div class="grammar-point-title">Sentence Type:</div>
+                        <div class="grammar-point-explanation">${structure.sentenceType}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Display grammar points
+            if (analysis.grammarPoints && analysis.grammarPoints.length > 0) {
+                document.getElementById('grammarPoints').innerHTML = `
+                    <div class="analysis-content">
+                        ${analysis.grammarPoints.map(point => `
+                            <div class="grammar-point">
+                                <div class="grammar-point-title">${point.point}</div>
+                                <div class="grammar-point-explanation">${point.explanation}</div>
+                                ${point.example ? `<div class="grammar-point-explanation" style="margin-top: 5px; font-style: italic;">Example: ${point.example}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                document.getElementById('grammarPoints').innerHTML = 
+                    '<div class="analysis-content">No specific grammar points identified.</div>';
+            }
+        } else {
+            // Handle error case
+            document.getElementById('sentenceTranslation').innerHTML = 
+                '<div class="analysis-content">❌ Translation analysis failed</div>';
+            document.getElementById('grammaticalStructure').innerHTML = 
+                '<div class="analysis-content">❌ Grammatical analysis failed</div>';
+            document.getElementById('grammarPoints').innerHTML = 
+                '<div class="analysis-content">❌ Grammar points analysis failed</div>';
+        }
+    } catch (error) {
+        console.error('Error analyzing sentence:', error);
+        
+        // Show error messages
+        document.getElementById('sentenceTranslation').innerHTML = 
+            '<div class="analysis-content">❌ Error loading translation</div>';
+        document.getElementById('grammaticalStructure').innerHTML = 
+            '<div class="analysis-content">❌ Error loading grammatical structure</div>';
+        document.getElementById('grammarPoints').innerHTML = 
+            '<div class="analysis-content">❌ Error loading grammar points</div>';
+    }
+}
+
+// Global function for analyzeSentence (called from HTML)
+window.analyzeSentence = function(sentence, word) {
+    showSentenceAnalysis(sentence, word);
+};

@@ -46,7 +46,7 @@
                                         <h4>Samples</h4>
                                         <div class="context-text" id="cardContext" class="context-display"></div>
                                         <div class="audio-shortcuts-hint" id="audioShortcutsHint" style="display: none; margin-top: 8px; font-size: 12px; color: #666; font-style: italic;">
-                                            💡 Tip: Press number keys (1-9, 10, 11...) to play audio for each sentence
+                                            💡 Tip: Press number keys (1-9, 10, 11...) to play audio for each sentence | Press 'A' to analyze sentence
                                         </div>
                                     </div>
                                 </div>
@@ -224,6 +224,45 @@
                 <li>Use the context field to add example sentences</li>
                 <li>Focus on understanding rather than memorization</li>
             </ul>
+        </div>
+    </div>
+
+    <!-- Sentence Analysis Modal -->
+    <div class="modal-overlay" id="sentenceAnalysisModal">
+        <div class="modal sentence-analysis-modal">
+            <div class="modal-header">
+                <h3>✨ Sentence Analysis</h3>
+                <button class="modal-close" onclick="hideSentenceAnalysis()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="sentence-display">
+                    <h4>Original Sentence:</h4>
+                    <div class="sentence-text" id="analysisSentenceText"></div>
+                </div>
+                
+                <div class="analysis-sections">
+                    <div class="analysis-section">
+                        <h4>📝 Translation</h4>
+                        <div class="analysis-content" id="sentenceTranslation">
+                            <div class="loading-spinner">🔄 Analyzing...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h4>🔍 Grammatical Structure</h4>
+                        <div class="analysis-content" id="grammaticalStructure">
+                            <div class="loading-spinner">🔄 Analyzing...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h4>📚 Grammar Points</h4>
+                        <div class="analysis-content" id="grammarPoints">
+                            <div class="loading-spinner">🔄 Analyzing...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

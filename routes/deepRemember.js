@@ -309,6 +309,105 @@ router.post('/translate-word', async (req, res) => {
     }
 });
 
+// Analyze sentence for grammatical structure and translation
+router.post('/analyze-sentence', async (req, res) => {
+    try {
+        const { sentence, word } = req.body;
+        
+        if (!sentence) {
+            return res.status(400).json({ error: 'sentence is required' });
+        }
+
+        const prompt = `Analyze this German sentence: "${sentence}"${word ? ` (focusing on the word "${word}")` : ''}. 
+
+Provide a comprehensive analysis in this exact JSON format:
+{
+    "translation": "English translation of the sentence",
+    "grammaticalStructure": {
+        "subject": "subject of the sentence",
+        "verb": "main verb",
+        "object": "object if present",
+        "tense": "verb tense",
+        "mood": "indicative/imperative/subjunctive",
+        "sentenceType": "declarative/interrogative/imperative"
+    },
+    "grammarPoints": [
+        {
+            "point": "grammar rule or structure",
+            "explanation": "detailed explanation of this grammar point",
+            "example": "example usage"
+        }
+    ],
+    "keyWords": ["important", "words", "in", "sentence"],
+    "difficulty": "beginner/intermediate/advanced"
+}`;
+        
+        console.log('[DeepRemember] Sending sentence analysis prompt to Ollama:', prompt);
+        
+        const response = await fetch('http://localhost:11434/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'llama3.2',
+                prompt: prompt,
+                stream: false
+            })
+        });
+
+        const data = await response.json();
+        console.log('[DeepRemember] Raw Ollama response for sentence analysis:', data.response);
+        
+        let analysis = {
+            translation: 'Translation not available',
+            grammaticalStructure: {
+                subject: 'Not identified',
+                verb: 'Not identified',
+                object: 'Not identified',
+                tense: 'Not identified',
+                mood: 'Not identified',
+                sentenceType: 'Not identified'
+            },
+            grammarPoints: [],
+            keyWords: [],
+            difficulty: 'unknown'
+        };
+        
+        if (data.response) {
+            try {
+                // Try to extract JSON from the response
+                const jsonMatch = data.response.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    console.log('[DeepRemember] Parsed sentence analysis:', parsed);
+                    
+                    analysis = {
+                        translation: parsed.translation || analysis.translation,
+                        grammaticalStructure: parsed.grammaticalStructure || analysis.grammaticalStructure,
+                        grammarPoints: parsed.grammarPoints || analysis.grammarPoints,
+                        keyWords: parsed.keyWords || analysis.keyWords,
+                        difficulty: parsed.difficulty || analysis.difficulty
+                    };
+                }
+            } catch (e) {
+                console.error('[DeepRemember] JSON parse error for sentence analysis:', e);
+                // Fallback: try to extract basic information from text
+                analysis.translation = data.response.split('\n')[0] || analysis.translation;
+            }
+        }
+        
+        const result = { 
+            success: true,
+            analysis: analysis
+        };
+        
+        console.log('[DeepRemember] Sending sentence analysis result to frontend:', result);
+        res.json(result);
+    } catch (error) {
+        console.error('[DeepRemember] Sentence analysis error:', error);
+        res.status(500).json({ error: 'Failed to analyze sentence' });
+    }
+});
+
 // Search for similar words
 router.get('/search-similar/:userId/:query', async (req, res) => {
     try {
