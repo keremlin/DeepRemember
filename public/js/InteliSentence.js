@@ -211,6 +211,19 @@ async function analyzeSentenceContent(sentence, word, refresh = false) {
 }
 
 /**
+ * Refresh sentence analysis
+ */
+async function refreshSentenceAnalysis() {
+    if (!currentSentence) {
+        alert('No sentence to refresh');
+        return;
+    }
+    
+    // Re-run analysis with refresh flag set to true
+    await analyzeSentenceContent(currentSentence, currentWord, true);
+}
+
+/**
  * Save sentence analysis to database
  */
 async function saveSentenceAnalysis() {
