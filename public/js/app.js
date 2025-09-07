@@ -407,6 +407,12 @@
 
         // Delegate click event for subtitle words
         document.addEventListener('click', async function(e) {
+            // Check if clicked on the add-to-cards button
+            if (e.target.classList.contains('add-to-cards-btn')) {
+                e.stopPropagation(); // Prevent the tooltip from disappearing
+                return;
+            }
+            
             if (e.target.classList.contains('subtitle-word')) {
                 // Hide all other tooltips
                 document.querySelectorAll('.subtitle-word.show-tooltip').forEach(el => el.classList.remove('show-tooltip'));
@@ -414,7 +420,7 @@
                 e.target.classList.add('show-tooltip');
                 const tooltip = e.target.querySelector('.subtitle-tooltip');
                 const word = e.target.getAttribute('data-word');
-                tooltip.textContent = 'Loading...';
+                tooltip.innerHTML = 'Loading...<span class="add-to-cards-btn" onclick="addWordToCards(\'' + word.replace(/'/g, "\\'") + '\')" title="Add to learning cards">➕</span>';
                 // Fetch translation from Ollama
                 try {
                     const response = await fetch('http://localhost:11434/api/generate', {
@@ -438,9 +444,9 @@
                             }
                         } catch (e) {}
                     }
-                    tooltip.textContent = translation;
+                    tooltip.innerHTML = translation + '<span class="add-to-cards-btn" onclick="addWordToCards(\'' + word.replace(/'/g, "\\'") + '\')" title="Add to learning cards">➕</span>';
                 } catch (err) {
-                    tooltip.textContent = 'Error fetching translation.';
+                    tooltip.innerHTML = 'Error fetching translation.<span class="add-to-cards-btn" onclick="addWordToCards(\'' + word.replace(/'/g, "\\'") + '\')" title="Add to learning cards">➕</span>';
                 }
                 // Hide tooltip after 5 seconds
                 setTimeout(() => {
@@ -629,3 +635,30 @@
             }
         }
         window.addEventListener('DOMContentLoaded', loadPlaylist);
+
+        // Function to add word to cards (opens create-new-card dialog)
+        function addWordToCards(word) {
+            // Clean the word (remove punctuation, trim whitespace)
+            const cleanWord = word.replace(/[^\w\s]/g, '').trim();
+            
+            if (!cleanWord) {
+                alert('Please select a valid word');
+                return;
+            }
+            
+            // Open the create-new-card dialog
+            if (typeof showCreateCard === 'function') {
+                showCreateCard();
+                
+                // Populate the word field
+                const wordInput = document.getElementById('newWord');
+                if (wordInput) {
+                    wordInput.value = cleanWord;
+                    // Trigger the word blur event to get translation
+                    wordInput.dispatchEvent(new Event('blur'));
+                }
+            } else {
+                // If deepRemember functions are not available, redirect to deepRemember page
+                window.location.href = '/deepRemember';
+            }
+        }

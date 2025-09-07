@@ -258,11 +258,29 @@ body {
     font-size: 0.95em;
     white-space: nowrap;
     z-index: 10;
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 .subtitle-word.show-tooltip .subtitle-tooltip {
     display: block;
+}
+
+.add-to-cards-btn {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 4px;
+    background: #28a745;
+    color: white;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+}
+
+.add-to-cards-btn:hover {
+    background: #218838;
+    transform: scale(1.1);
 }
 
 .playlist-section {

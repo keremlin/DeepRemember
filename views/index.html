@@ -71,6 +71,60 @@
         </div>
     </div>
 
+    <!-- Create New Card Modal -->
+    <div class="modal-overlay" id="createCardModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>➕ Create New Card</h3>
+                <button class="modal-close" onclick="hideCreateCard()">&times;</button>
+            </div>
+            <div class="modal-form">
+                <input type="text" id="newWord" placeholder="Enter word to learn" oninput="searchSimilarWords()" onblur="handleWordBlur()">
+                <input type="text" id="newTranslation" placeholder="Enter translation" onfocus="handleTranslationFocus()" onkeydown="handleTranslationKeydown(event)">
+                <textarea id="newContext" placeholder="Enter context or example sentence"></textarea>
+                
+                <!-- Similar Words Table -->
+                <div id="similarWordsSection" style="display: none; margin-top: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #666;">🔍 Similar Words Found:</h4>
+                    <div id="similarWordsTable" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px;">
+                        <table id="similarWordsTableContent" style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Word</th>
+                                    <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Translation</th>
+                                    <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">State</th>
+                                    <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Due</th>
+                                </tr>
+                            </thead>
+                            <tbody id="similarWordsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Translation Result Display -->
+                <div id="translationResult" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff; cursor: pointer;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;">🤖 AI Translation:</h4>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Translation:</strong> <span id="aiTranslation" style="color: #007bff;"></span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Sample Sentences:</strong> <span id="aiSampleSentence" style="color: #28a745; font-style: italic; white-space: pre-line;"></span>
+                    </div>
+                    <div style="font-size: 12px; color: #666;">
+                        💡 Press Tab or click to use this translation
+                    </div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button class="btn-modal btn-modal-secondary" onclick="hideCreateCard()">Cancel</button>
+                    <button class="btn-modal btn-modal-primary" onclick="createCard()">Create Card</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/app.js" ></script>
+    <script src="/js/deepRemember.js" ></script>
 </body>
 </html> 
