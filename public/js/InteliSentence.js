@@ -166,34 +166,11 @@ async function analyzeSentenceContent(sentence, word, refresh = false) {
             document.getElementById('sentenceTranslation').innerHTML = 
                 `<div class="analysis-content">${analysis.translation}</div>`;
             
-            // Display grammatical structure
+            // Display grammatical structure as a tree
             const structure = analysis.grammaticalStructure;
             document.getElementById('grammaticalStructure').innerHTML = `
                 <div class="analysis-content">
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Subject:</div>
-                        <div class="grammar-point-explanation">${structure.subject}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Verb:</div>
-                        <div class="grammar-point-explanation">${structure.verb}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Object:</div>
-                        <div class="grammar-point-explanation">${structure.object}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Tense:</div>
-                        <div class="grammar-point-explanation">${structure.tense}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Mood:</div>
-                        <div class="grammar-point-explanation">${structure.mood}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Sentence Type:</div>
-                        <div class="grammar-point-explanation">${structure.sentenceType}</div>
-                    </div>
+                    ${renderGrammaticalTree(structure)}
                 </div>
             `;
             
@@ -283,16 +260,69 @@ async function saveSentenceAnalysis() {
 }
 
 /**
- * Refresh sentence analysis (bypass cache)
+ * Render grammatical structure as a traditional tree diagram
  */
-function refreshSentenceAnalysis() {
-    if (!currentSentence) {
-        alert('No sentence to refresh');
-        return;
-    }
+function renderGrammaticalTree(structure) {
+    if (!structure) return '<div class="analysis-content">❌ No grammatical structure available</div>';
     
-    // Re-analyze with refresh flag
-    analyzeSentenceContent(currentSentence, currentWord, true);
+    const treeHTML = `
+        <div class="grammar-tree">
+            <div class="tree-container">
+                <div class="tree-structure">
+                    <!-- Level 1: Sentence -->
+                    <div class="tree-level tree-level-1">
+                        <div class="tree-node sentence">Sentence</div>
+                    </div>
+                    
+                    <!-- Level 2: Main Components -->
+                    <div class="tree-level tree-level-2">
+                        <div class="tree-branch">
+                            <div class="tree-node subject">Subject</div>
+                        </div>
+                        <div class="tree-branch">
+                            <div class="tree-node verb">Verb</div>
+                        </div>
+                        ${structure.object ? `
+                            <div class="tree-branch">
+                                <div class="tree-node object">Object</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Level 3: Individual Words -->
+                    <div class="tree-level tree-level-3">
+                        <div class="tree-word">${structure.subject}</div>
+                        <div class="tree-word">${structure.verb}</div>
+                        ${structure.object ? `<div class="tree-word">${structure.object}</div>` : ''}
+                    </div>
+                    
+                    <!-- Additional Information -->
+                    <div class="tree-level tree-level-3">
+                        <div class="tree-node modifier">Tense: ${structure.tense}</div>
+                        ${structure.mood ? `<div class="tree-node modifier">Mood: ${structure.mood}</div>` : ''}
+                        ${structure.sentenceType ? `<div class="tree-node modifier">Type: ${structure.sentenceType}</div>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return treeHTML;
+}
+
+/**
+ * Get additional details for tree nodes
+ */
+function getNodeDetails(type) {
+    const details = {
+        'subject': 'Who/What performs the action',
+        'verb': 'The action or state',
+        'object': 'What receives the action',
+        'modifier': 'Additional information',
+        'connector': 'Sentence classification'
+    };
+    
+    return details[type] || '';
 }
 
 /**
@@ -348,6 +378,7 @@ window.saveSentenceAnalysis = saveSentenceAnalysis;
 window.refreshSentenceAnalysis = refreshSentenceAnalysis;
 window.hideSentenceAnalysis = hideSentenceAnalysis;
 window.formatContextWithPlayButtons = formatContextWithPlayButtons;
+window.handleInteliSentenceKeyboard = handleInteliSentenceKeyboard;
 
 // Export functions for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

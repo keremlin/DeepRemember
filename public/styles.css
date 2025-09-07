@@ -1325,7 +1325,7 @@ button.play-btn:disabled,
 
 /* Sentence Analysis Modal Styling */
 .sentence-analysis-modal {
-    max-width: 800px;
+    max-width: 900px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
@@ -1386,6 +1386,252 @@ button.play-btn:disabled,
 .btn-save-analysis:active:not(:disabled),
 .btn-refresh-analysis:active:not(:disabled) {
     transform: translateY(0);
+}
+
+/* Grammatical Structure Tree Visualization - Traditional Tree Style */
+.grammar-tree {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 20px 0;
+    overflow-x: auto;
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.tree-container {
+    display: flex;
+    justify-content: center;
+    min-width: 100%;
+    padding: 10px;
+}
+
+.tree-structure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Tree Node Styles */
+.tree-node {
+    background: white;
+    border: 2px solid #333;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 2px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    position: relative;
+    min-width: 80px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tree-node.sentence {
+    background: #e3f2fd;
+    border-color: #1976d2;
+    color: #1976d2;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.tree-node.subject {
+    background: #e8f5e8;
+    border-color: #4caf50;
+    color: #2e7d32;
+}
+
+.tree-node.verb {
+    background: #fff3e0;
+    border-color: #ff9800;
+    color: #f57c00;
+}
+
+.tree-node.object {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    color: #1976d2;
+}
+
+.tree-node.modifier {
+    background: #f3e5f5;
+    border-color: #9c27b0;
+    color: #7b1fa2;
+}
+
+/* Tree Levels */
+.tree-level {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+    position: relative;
+}
+
+.tree-level-1 {
+    margin-bottom: 30px;
+}
+
+.tree-level-2 {
+    margin-bottom: 20px;
+}
+
+.tree-level-3 {
+    margin-bottom: 15px;
+}
+
+/* Tree Connectors */
+.tree-connector {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tree-connector::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 15px;
+    background: #333;
+    z-index: 1;
+}
+
+.tree-connector::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 2px;
+    background: #333;
+    z-index: 1;
+}
+
+/* Branch connectors for multiple children */
+.tree-branch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tree-branch::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 15px;
+    background: #333;
+}
+
+.tree-branch::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 2px;
+    background: #333;
+}
+
+/* Individual word nodes */
+.tree-word {
+    background: #fff;
+    border: 2px solid #666;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin: 2px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: #333;
+    position: relative;
+    min-width: 60px;
+}
+
+.tree-word::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 12px;
+    background: #333;
+}
+
+.tree-word::after {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 2px;
+    background: #333;
+}
+
+/* Tree labels */
+.tree-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .tree-container {
+        padding: 5px;
+    }
+    
+    .tree-node {
+        min-width: 60px;
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    .tree-word {
+        min-width: 50px;
+        padding: 4px 6px;
+        font-size: 14px;
+    }
+    
+    .tree-level {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+}
+
+/* Animation for tree loading */
+.tree-node, .tree-word {
+    animation: treeNodeAppear 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.tree-node:nth-child(1) { animation-delay: 0.1s; }
+.tree-node:nth-child(2) { animation-delay: 0.2s; }
+.tree-node:nth-child(3) { animation-delay: 0.3s; }
+.tree-node:nth-child(4) { animation-delay: 0.4s; }
+.tree-node:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes treeNodeAppear {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .sentence-display {

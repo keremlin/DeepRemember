@@ -259,17 +259,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize InteliSentence module
     initializeInteliSentence();
     
-    // Load the sentence analysis modal asynchronously
-    loadSentenceAnalysisModal().then(() => {
-        const sentenceAnalysisModal = document.getElementById('sentenceAnalysisModal');
-        if (sentenceAnalysisModal) {
-            sentenceAnalysisModal.addEventListener('click', function(e) {
-                if (e.target === sentenceAnalysisModal) {
-                    hideSentenceAnalysis();
-                }
-            });
-        }
-    });
+    // Show user setup modal on page load
+    showUserSetup();
     
     // Add click handler for translation result
     const translationResult = document.getElementById('translationResult');
@@ -594,7 +585,7 @@ function showAnswer() {
     
     // Show the translation and context
     document.getElementById('cardTranslation').textContent = originalTranslation;
-    document.getElementById('cardContext').innerHTML = formatContextWithPlayButtons(originalContext, document.getElementById('cardWord').textContent);
+    document.getElementById('cardContext').innerHTML = formatContextWithPlayButtonsLocal(originalContext, document.getElementById('cardWord').textContent);
     document.getElementById('cardContext').className = 'context-display';
     
     // Show audio shortcuts hint if there are multiple sentences
@@ -676,14 +667,22 @@ async function answerCard(rating) {
 // Load all cards
 async function loadAllCards() {
     try {
+        console.log('[DeepRemember] Loading all cards for user:', currentUserId);
         const response = await fetch(`/deepRemember/all-cards/${currentUserId}`);
         const data = await response.json();
+        
+        console.log('[DeepRemember] Cards response:', data);
         
         if (data.success) {
             const allCardsDiv = document.getElementById('allCards');
             if (data.cards.length === 0) {
                 allCardsDiv.innerHTML = '<p>No cards created yet.</p>';
                 return;
+            }
+            
+            // Check if formatContextWithPlayButtons is available
+            if (typeof formatContextWithPlayButtons !== 'function') {
+                console.warn('[DeepRemember] formatContextWithPlayButtons not available, using fallback');
             }
             
             allCardsDiv.innerHTML = data.cards.map(card => `
@@ -697,7 +696,7 @@ async function loadAllCards() {
                     </div>
                     <div class="card-content">
                         <p><strong>Translation:</strong> <span id="card-translation-${card.id}">${card.translation || 'N/A'}</span></p>
-                        <p><strong>Context:</strong> <span id="card-context-${card.id}">${formatContextWithPlayButtons(card.context, card.word)}</span></p>
+                        <p><strong>Context:</strong> <span id="card-context-${card.id}">${formatContextWithPlayButtonsLocal(card.context, card.word)}</span></p>
                         <p><strong>Due:</strong> ${new Date(card.due).toLocaleString()}</p>
                         <p><strong>State:</strong> ${getStateName(card.state)}</p>
                         <p><strong>Reps:</strong> ${card.reps} | <strong>Lapses:</strong> ${card.lapses}</p>
@@ -726,7 +725,8 @@ async function loadAllCards() {
         }
     } catch (error) {
         console.error('Error loading all cards:', error);
-        showError('Failed to load cards');
+        console.error('Error details:', error.message, error.stack);
+        showError('Failed to load cards: ' + error.message);
     }
 }
 
@@ -781,7 +781,7 @@ async function saveCardEdit(cardId) {
             // Update the displayed values
             document.getElementById(`card-word-${cardId}`).textContent = word.trim();
             document.getElementById(`card-translation-${cardId}`).textContent = translation.trim() || 'N/A';
-            document.getElementById(`card-context-${cardId}`).innerHTML = formatContextWithPlayButtons(context.trim(), word.trim());
+            document.getElementById(`card-context-${cardId}`).innerHTML = formatContextWithPlayButtonsLocal(context.trim(), word.trim());
             
             // Hide the edit form
             cancelCardEdit(cardId);
@@ -847,12 +847,34 @@ function showError(message) {
 }
 
 // Helper function to format context with play buttons for TTS
-// Format context with play buttons - now handled by InteliSentence module
-function formatContextWithPlayButtons(context, word = '') {
+// Format context with play buttons - delegate to InteliSentence module
+function formatContextWithPlayButtonsLocal(context, word = '') {
     if (!context) return '';
     
     // Use the InteliSentence module function
-    return window.formatContextWithPlayButtons ? window.formatContextWithPlayButtons(context, word) : '';
+    if (typeof window.formatContextWithPlayButtons === 'function') {
+        return window.formatContextWithPlayButtons(context, word);
+    }
+    
+    // Fallback: basic formatting if InteliSentence module not loaded
+    const sentences = context.split('\n').filter(s => s.trim());
+    if (sentences.length === 1) {
+        return `<span class="intelSentence">
+            <span class="sentence">${sentences[0]}</span> 
+            <button class="play-btn" onclick="playSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')">🔊</button> 
+            <span class="sentence-number-circle">1</span>
+            <button class="intel-btn" onclick="analyzeSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')" title="Analyze sentence">✨</button>
+        </span>`;
+    }
+    
+    return sentences.map((sentence, index) => 
+        `<span class="intelSentence">
+            <span class="sentence">${index + 1}. ${sentence.trim()}</span> 
+            <button class="play-btn" onclick="playSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')">🔊</button> 
+            <span class="sentence-number-circle">${index + 1}</span>
+            <button class="intel-btn" onclick="analyzeSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')" title="Analyze sentence">✨</button>
+        </span>`
+    ).join('<br>');
 }
 
 // Text-to-Speech functionality
