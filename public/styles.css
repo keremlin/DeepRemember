@@ -268,11 +268,11 @@ body {
 .add-to-cards-btn {
     display: inline-block;
     margin-left: 8px;
-    padding: 2px 4px;
-    background: #28a745;
+    padding: 1px 3px;
+    background: #ffffff;
     color: white;
-    border-radius: 3px;
-    font-size: 12px;
+    border-radius: 2px;
+    font-size: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
     pointer-events: auto;
