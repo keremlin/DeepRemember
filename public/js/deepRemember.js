@@ -230,59 +230,7 @@ function toggleView() {
     }
 }
 
-// Load sentence analysis modal content
-async function loadSentenceAnalysisModal() {
-    try {
-        const response = await fetch('/views/sentenceAnalysisModal.html');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const modalHTML = await response.text();
-        document.getElementById('sentenceAnalysisModalContainer').innerHTML = modalHTML;
-        console.log('Sentence analysis modal loaded successfully');
-    } catch (error) {
-        console.error('Error loading sentence analysis modal:', error);
-        // Fallback: create a simple modal if the file can't be loaded
-        document.getElementById('sentenceAnalysisModalContainer').innerHTML = `
-            <div class="modal-overlay" id="sentenceAnalysisModal">
-                <div class="modal sentence-analysis-modal">
-                    <div class="modal-header">
-                        <h3>✨ Sentence Analysis</h3>
-                        <div class="modal-actions">
-                            <button class="btn-save-analysis" id="saveAnalysisBtn" onclick="saveSentenceAnalysis()" disabled>
-                                💾 Save
-                            </button>
-                            <button class="btn-refresh-analysis" id="refreshAnalysisBtn" onclick="refreshSentenceAnalysis()" disabled>
-                                🔄 Refresh
-                            </button>
-                            <button class="modal-close" onclick="hideSentenceAnalysis()">&times;</button>
-                        </div>
-                    </div>
-                    <div class="modal-content">
-                        <div class="sentence-display">
-                            <h4>Original Sentence:</h4>
-                            <div class="sentence-text" id="analysisSentenceText"></div>
-                        </div>
-                        <div class="analysis-sections">
-                            <div class="analysis-section">
-                                <h4>📝 Translation</h4>
-                                <div class="analysis-content" id="sentenceTranslation">
-                                    <div class="loading-spinner">🔄 Analyzing...</div>
-                                </div>
-                            </div>
-                            <div class="analysis-section">
-                                <h4>🔍 Grammatical Structure</h4>
-                                <div class="analysis-content" id="grammaticalStructure">
-                                    <div class="loading-spinner">🔄 Analyzing...</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-}
+// Sentence analysis modal loading is now handled by InteliSentence.js
 
 // Close modals when clicking outside
 document.addEventListener('DOMContentLoaded', function() {
@@ -307,6 +255,9 @@ document.addEventListener('DOMContentLoaded', function() {
             hideHelp();
         }
     });
+    
+    // Initialize InteliSentence module
+    initializeInteliSentence();
     
     // Load the sentence analysis modal asynchronously
     loadSentenceAnalysisModal().then(() => {
@@ -580,27 +531,10 @@ function handleCardKeyboard(event) {
             return;
         }
         
-        // Handle 'A' key for sentence analysis (magic wand)
-        if (event.key.toLowerCase() === 'a') {
-            event.preventDefault();
-            
-            // Find the first intel button and trigger it
-            const intelButtons = cardContext.querySelectorAll('.intel-btn');
-            if (intelButtons.length > 0) {
-                const targetButton = intelButtons[0]; // Analyze first sentence
-                
-                // Add glowing effect to the intel button
-                targetButton.classList.add('shortcut-active');
-                setTimeout(() => {
-                    targetButton.classList.remove('shortcut-active');
-                }, 200);
-                
-                // Trigger the intel button click
-                targetButton.click();
-            }
-            
-            return;
-        }
+        // Handle 'A' key for sentence analysis (magic wand) - delegated to InteliSentence module
+        handleInteliSentenceKeyboard(event, cardContext);
+        
+        return;
     }
     
     // Rating button shortcuts (only when rating buttons are enabled)
@@ -913,30 +847,12 @@ function showError(message) {
 }
 
 // Helper function to format context with play buttons for TTS
+// Format context with play buttons - now handled by InteliSentence module
 function formatContextWithPlayButtons(context, word = '') {
     if (!context) return '';
     
-    // Split by newlines and filter out empty lines
-    const sentences = context.split('\n').filter(s => s.trim());
-    
-    if (sentences.length === 1) {
-        return `<span class="intelSentence">
-            <span class="sentence">${sentences[0]}</span> 
-            <button class="play-btn" onclick="playSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')">🔊</button> 
-            <span class="sentence-number-circle">1</span>
-            <button class="intel-btn" onclick="analyzeSentence('${sentences[0].replace(/'/g, "\\'")}', '${word}')" title="Analyze sentence">✨</button>
-        </span>`;
-    }
-    
-    // Format multiple sentences with dot delimiters and play buttons
-    return sentences.map((sentence, index) => 
-        `<span class="intelSentence">
-            <span class="sentence">${index + 1}. ${sentence.trim()}</span> 
-            <button class="play-btn" onclick="playSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')">🔊</button> 
-            <span class="sentence-number-circle">${index + 1}</span>
-            <button class="intel-btn" onclick="analyzeSentence('${sentence.trim().replace(/'/g, "\\'")}', '${word}')" title="Analyze sentence">✨</button>
-        </span>`
-    ).join('<br>');
+    // Use the InteliSentence module function
+    return window.formatContextWithPlayButtons ? window.formatContextWithPlayButtons(context, word) : '';
 }
 
 // Text-to-Speech functionality
@@ -1054,205 +970,4 @@ async function convertContextToSpeech(context, word) {
     }
 }
 
-// Global variables for sentence analysis
-let currentAnalysisData = null;
-let currentSentence = '';
-let currentWord = '';
-
-// Sentence Analysis Modal Functions
-function showSentenceAnalysis(sentence, word = '') {
-    const modal = document.getElementById('sentenceAnalysisModal');
-    const sentenceText = document.getElementById('analysisSentenceText');
-    
-    // Store current analysis data
-    currentSentence = sentence;
-    currentWord = word;
-    currentAnalysisData = null;
-    
-    // Display the sentence
-    sentenceText.textContent = sentence;
-    
-    // Reset button states
-    const saveBtn = document.getElementById('saveAnalysisBtn');
-    const refreshBtn = document.getElementById('refreshAnalysisBtn');
-    saveBtn.disabled = true;
-    refreshBtn.disabled = true;
-    
-    // Show the modal
-    modal.style.display = 'block';
-    
-    // Start analysis
-    analyzeSentenceContent(sentence, word, false);
-}
-
-function hideSentenceAnalysis() {
-    const modal = document.getElementById('sentenceAnalysisModal');
-    modal.style.display = 'none';
-}
-
-async function analyzeSentenceContent(sentence, word, refresh = false) {
-    const saveBtn = document.getElementById('saveAnalysisBtn');
-    const refreshBtn = document.getElementById('refreshAnalysisBtn');
-    
-    try {
-        // Disable buttons during analysis
-        saveBtn.disabled = true;
-        refreshBtn.disabled = true;
-        saveBtn.textContent = '⏳ Analyzing...';
-        refreshBtn.textContent = '⏳ Analyzing...';
-        
-        // Show loading states
-        document.getElementById('sentenceTranslation').innerHTML = '<div class="loading-spinner">🔄 Analyzing...</div>';
-        document.getElementById('grammaticalStructure').innerHTML = '<div class="loading-spinner">🔄 Analyzing...</div>';
-        
-        const response = await fetch('/deepRemember/analyze-sentence', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ sentence, word, refresh })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.analysis) {
-            const analysis = data.analysis;
-            currentAnalysisData = analysis; // Store for saving
-            
-            // Display translation
-            document.getElementById('sentenceTranslation').innerHTML = 
-                `<div class="analysis-content">${analysis.translation}</div>`;
-            
-            // Display grammatical structure
-            const structure = analysis.grammaticalStructure;
-            document.getElementById('grammaticalStructure').innerHTML = `
-                <div class="analysis-content">
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Subject:</div>
-                        <div class="grammar-point-explanation">${structure.subject}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Verb:</div>
-                        <div class="grammar-point-explanation">${structure.verb}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Object:</div>
-                        <div class="grammar-point-explanation">${structure.object}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Tense:</div>
-                        <div class="grammar-point-explanation">${structure.tense}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Mood:</div>
-                        <div class="grammar-point-explanation">${structure.mood}</div>
-                    </div>
-                    <div class="grammar-point">
-                        <div class="grammar-point-title">Sentence Type:</div>
-                        <div class="grammar-point-explanation">${structure.sentenceType}</div>
-                    </div>
-                </div>
-            `;
-            
-            // Enable buttons after successful analysis
-            saveBtn.disabled = false;
-            refreshBtn.disabled = false;
-            saveBtn.textContent = '💾 Save';
-            refreshBtn.textContent = '🔄 Refresh';
-            
-        } else {
-            // Handle error case
-            document.getElementById('sentenceTranslation').innerHTML = 
-                '<div class="analysis-content">❌ Translation analysis failed</div>';
-            document.getElementById('grammaticalStructure').innerHTML = 
-                '<div class="analysis-content">❌ Grammatical analysis failed</div>';
-            
-            // Re-enable buttons on error
-            saveBtn.disabled = false;
-            refreshBtn.disabled = false;
-            saveBtn.textContent = '💾 Save';
-            refreshBtn.textContent = '🔄 Refresh';
-        }
-    } catch (error) {
-        console.error('Error analyzing sentence:', error);
-        
-        // Show error messages
-        document.getElementById('sentenceTranslation').innerHTML = 
-            '<div class="analysis-content">❌ Error loading translation</div>';
-        document.getElementById('grammaticalStructure').innerHTML = 
-            '<div class="analysis-content">❌ Error loading grammatical structure</div>';
-        
-        // Re-enable buttons on error
-        saveBtn.disabled = false;
-        refreshBtn.disabled = false;
-        saveBtn.textContent = '💾 Save';
-        refreshBtn.textContent = '🔄 Refresh';
-    }
-}
-
-// Global function for analyzeSentence (called from HTML)
-window.analyzeSentence = function(sentence, word) {
-    showSentenceAnalysis(sentence, word);
-};
-
-// Save sentence analysis
-async function saveSentenceAnalysis() {
-    if (!currentAnalysisData) {
-        alert('No analysis data to save');
-        return;
-    }
-
-    const saveBtn = document.getElementById('saveAnalysisBtn');
-    
-    try {
-        // Disable button during save
-        saveBtn.disabled = true;
-        saveBtn.textContent = '⏳ Saving...';
-        
-        const response = await fetch('/deepRemember/save-sentence-analysis', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                sentence: currentSentence, 
-                word: currentWord, 
-                analysis: currentAnalysisData 
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            saveBtn.textContent = '✅ Saved';
-            setTimeout(() => {
-                saveBtn.textContent = '💾 Save';
-                saveBtn.disabled = false;
-            }, 2000);
-        } else {
-            alert('Failed to save analysis: ' + (data.error || 'Unknown error'));
-            saveBtn.textContent = '💾 Save';
-            saveBtn.disabled = false;
-        }
-    } catch (error) {
-        console.error('Error saving analysis:', error);
-        alert('Error saving analysis: ' + error.message);
-        saveBtn.textContent = '💾 Save';
-        saveBtn.disabled = false;
-    }
-}
-
-// Refresh sentence analysis
-function refreshSentenceAnalysis() {
-    if (!currentSentence) {
-        alert('No sentence to refresh');
-        return;
-    }
-    
-    // Re-analyze with refresh flag
-    analyzeSentenceContent(currentSentence, currentWord, true);
-}
-
-// Global functions for buttons (called from HTML)
-window.saveSentenceAnalysis = saveSentenceAnalysis;
-window.refreshSentenceAnalysis = refreshSentenceAnalysis;
+// Sentence analysis functionality has been moved to InteliSentence.js
