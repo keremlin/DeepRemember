@@ -449,12 +449,20 @@ function showCurrentCard() {
     // Hide audio shortcuts hint
     document.getElementById('audioShortcutsHint').style.display = 'none';
     
-    // Add keyboard event listeners
+    // Add keyboard event listeners (remove any existing ones first)
+    document.removeEventListener('keydown', handleCardKeyboard);
     document.addEventListener('keydown', handleCardKeyboard);
+    
+    // Also add to the review section for more specific targeting
+    const reviewSection = document.getElementById('reviewSection');
+    reviewSection.removeEventListener('keydown', handleCardKeyboard);
+    reviewSection.addEventListener('keydown', handleCardKeyboard);
 }
 
 // Handle keyboard events for card review
 function handleCardKeyboard(event) {
+    console.log('DeepRemember keyboard handler triggered:', event.key);
+    
     if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         
@@ -466,7 +474,7 @@ function handleCardKeyboard(event) {
         }, 200);
         
         showAnswer();
-        return;
+        return; // Stop propagation to prevent conflicts
     }
     
     // Audio playback shortcuts (only when context is visible)
@@ -525,12 +533,19 @@ function handleCardKeyboard(event) {
         // Handle 'A' key for sentence analysis (magic wand) - delegated to InteliSentence module
         handleInteliSentenceKeyboard(event, cardContext);
         
-        return;
+        // Don't return here - continue to rating button shortcuts
     }
     
     // Rating button shortcuts (only when rating buttons are enabled)
     const ratingButtons = document.querySelectorAll('.rating-btn');
     const firstRatingBtn = ratingButtons[0];
+    
+    console.log('Rating buttons check:', {
+        count: ratingButtons.length,
+        firstButton: firstRatingBtn,
+        disabled: firstRatingBtn?.disabled,
+        key: event.key.toLowerCase()
+    });
     
     if (firstRatingBtn && !firstRatingBtn.disabled) {
         let rating = 0;
@@ -538,26 +553,31 @@ function handleCardKeyboard(event) {
         
         switch (event.key.toLowerCase()) {
             case 'z':
+                console.log('Z key detected - setting rating to 1');
                 event.preventDefault();
                 rating = 1;
                 targetButton = ratingButtons[0];
                 break;
             case 'x':
+                console.log('X key detected - setting rating to 2');
                 event.preventDefault();
                 rating = 2;
                 targetButton = ratingButtons[1];
                 break;
             case 'c':
+                console.log('C key detected - setting rating to 3');
                 event.preventDefault();
                 rating = 3;
                 targetButton = ratingButtons[2];
                 break;
             case 'v':
+                console.log('V key detected - setting rating to 4');
                 event.preventDefault();
                 rating = 4;
                 targetButton = ratingButtons[3];
                 break;
             case 'b':
+                console.log('B key detected - setting rating to 5');
                 event.preventDefault();
                 rating = 5;
                 targetButton = ratingButtons[4];
@@ -565,12 +585,14 @@ function handleCardKeyboard(event) {
         }
         
         if (rating > 0 && targetButton) {
+            console.log('Executing rating:', rating, 'Target button:', targetButton);
             // Add glowing effect to the corresponding rating button
             targetButton.classList.add('shortcut-active');
             setTimeout(() => {
                 targetButton.classList.remove('shortcut-active');
             }, 200);
             answerCard(rating);
+            return; // Stop propagation to prevent conflicts
         }
     }
 }
@@ -608,8 +630,14 @@ function showAnswer() {
         btn.style.cursor = 'pointer';
     });
     
-    // Re-add keyboard event listener for rating shortcuts
+    // Re-add keyboard event listener for rating shortcuts (remove any existing ones first)
+    document.removeEventListener('keydown', handleCardKeyboard);
     document.addEventListener('keydown', handleCardKeyboard);
+    
+    // Also add to the review section for more specific targeting
+    const reviewSection = document.getElementById('reviewSection');
+    reviewSection.removeEventListener('keydown', handleCardKeyboard);
+    reviewSection.addEventListener('keydown', handleCardKeyboard);
 }
 
 // Answer current card
