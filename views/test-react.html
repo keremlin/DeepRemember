@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Integration Test</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- React Dependencies -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 React Integration Test</h1>
+            <p>Testing React components integration with vanilla JS</p>
+        </div>
+
+        <div class="content">
+            <h2>Test Results:</h2>
+            <div id="testResults"></div>
+            
+            <h2>React Components Test:</h2>
+            <div id="reactTestContainer"></div>
+        </div>
+    </div>
+
+    <!-- Test React Component -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const TestComponent = () => {
+            const [count, setCount] = useState(0);
+            const [message, setMessage] = useState('React is working!');
+
+            useEffect(() => {
+                console.log('TestComponent mounted');
+                document.getElementById('testResults').innerHTML = '<p style="color: green;">✅ React components loaded successfully!</p>';
+            }, []);
+
+            return (
+                <div style={{ padding: '20px', border: '2px solid #667eea', borderRadius: '10px', margin: '20px 0' }}>
+                    <h3>{message}</h3>
+                    <p>Count: {count}</p>
+                    <button 
+                        onClick={() => setCount(count + 1)}
+                        style={{ 
+                            padding: '10px 20px', 
+                            backgroundColor: '#667eea', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '5px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Increment
+                    </button>
+                    <button 
+                        onClick={() => setMessage(message === 'React is working!' ? 'React is awesome!' : 'React is working!')}
+                        style={{ 
+                            padding: '10px 20px', 
+                            backgroundColor: '#28a745', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            marginLeft: '10px'
+                        }}
+                    >
+                        Toggle Message
+                    </button>
+                </div>
+            );
+        };
+
+        // Mount the test component
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('reactTestContainer');
+            const root = ReactDOM.createRoot(container);
+            root.render(React.createElement(TestComponent));
+        });
+    </script>
+
+    <!-- Test React Integration Helper -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Test if React is available
+            if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
+                document.getElementById('testResults').innerHTML += '<p style="color: green;">✅ React and ReactDOM loaded successfully!</p>';
+            } else {
+                document.getElementById('testResults').innerHTML += '<p style="color: red;">❌ React or ReactDOM not loaded!</p>';
+            }
+
+            // Test if Babel is available
+            if (typeof Babel !== 'undefined') {
+                document.getElementById('testResults').innerHTML += '<p style="color: green;">✅ Babel loaded successfully!</p>';
+            } else {
+                document.getElementById('testResults').innerHTML += '<p style="color: red;">❌ Babel not loaded!</p>';
+            }
+
+            // Test vanilla JS functionality
+            setTimeout(() => {
+                document.getElementById('testResults').innerHTML += '<p style="color: green;">✅ Vanilla JS functionality working!</p>';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

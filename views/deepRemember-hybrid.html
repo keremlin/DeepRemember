@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Remember</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- React Dependencies -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>🎓 DeepRemember Learning System</h1>
+                <p>Spaced Repetition System for vocabulary learning</p>
+            </div>
+            <div class="header-right">
+                <div class="username-display" onclick="showUserSetup()">
+                    👤 <span id="currentUsername">user123</span>
+                </div>
+                <button class="btn-manage-cards" id="manageCardsBtn" onclick="toggleView()">
+                    📚 Manage Cards
+                </button>
+                <a href="/" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">🎵 Back to AI-title</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="srs-container">
+                <!-- Dashboard View -->
+                <div class="dashboard-view" id="dashboardView">
+                    <!-- React Card Review Component -->
+                    <div id="reviewSection"></div>
+
+                    <!-- Statistics and Create Card Button -->
+                    <div class="stats-section">
+                        <div class="srs-card">
+                            <div class="stats-header">
+                                <h3>📊 Learning Statistics</h3>
+                                <button class="help-btn" onclick="showHelp()">?</button>
+                            </div>
+                            <div class="stats-grid" id="statsGrid">
+                                <div class="stat-item">
+                                    <div class="stat-number">0</div>
+                                    <div class="stat-label">Total Cards</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">0</div>
+                                    <div class="stat-label">Due Cards</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">0</div>
+                                    <div class="stat-label">Learning</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">0</div>
+                                    <div class="stat-label">Review</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="create-card-button">
+                            <button class="btn-create-card" onclick="showCreateCard()">
+                                ➕ Create New Card
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards Management View -->
+                <div class="cards-view" id="cardsView">
+                    <div class="srs-card">
+                        <h3>📚 All My Cards</h3>
+                        <div id="allCards"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Setup Modal -->
+    <div class="modal-overlay" id="userSetupModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>👤 User Setup</h3>
+                <button class="modal-close" onclick="hideUserSetup()">&times;</button>
+            </div>
+            <div class="modal-form">
+                <input type="text" id="userId" placeholder="Enter your user ID" value="user123">
+                <div class="modal-buttons">
+                    <button class="btn-modal btn-modal-secondary" onclick="hideUserSetup()">Cancel</button>
+                    <button class="btn-modal btn-modal-primary" onclick="loadUserData()">Load My Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- React Create Card Modal Component -->
+    <div id="createCardModal"></div>
+
+    <!-- Help Modal -->
+    <div class="help-modal" id="helpModal">
+        <div class="help-modal-content">
+            <span class="close-help" onclick="hideHelp()">&times;</span>
+            <h2>📚 DeepRemember Learning System Help</h2>
+            
+            <h3>🎯 Card States</h3>
+            <p>Cards in DeepRemember progress through different states based on your learning performance:</p>
+            
+            <ul>
+                <li><strong>Learning (State 0):</strong> New cards that you're just starting to learn. These appear frequently until you can recall them consistently.</li>
+                <li><strong>Review (State 1):</strong> Cards you've successfully learned and are now reviewing at spaced intervals.</li>
+                <li><strong>Relearning (State 2):</strong> Cards that you previously knew but have forgotten and need to relearn.</li>
+            </ul>
+            
+            <h3>⏰ Timing System</h3>
+            <p>The system uses spaced repetition to optimize your learning:</p>
+            
+            <ul>
+                <li><strong>New Cards:</strong> Start in Learning state and appear every 5 minutes until you rate them "Good" or better.</li>
+                <li><strong>Learning Cards:</strong> If you rate them "Again" or "Hard", they return to 5-minute intervals.</li>
+                <li><strong>Review Cards:</strong> Appear at increasing intervals based on your performance:
+                    <ul>
+                        <li><strong>Again:</strong> Back to Learning state (5 minutes)</li>
+                        <li><strong>Hard:</strong> Back to Learning state (5 minutes)</li>
+                        <li><strong>Good:</strong> Next review in 1 day</li>
+                        <li><strong>Easy:</strong> Next review in 2-3 days</li>
+                        <li><strong>Perfect:</strong> Next review in 4-7 days</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>📊 Statistics Explained</h3>
+            <ul>
+                <li><strong>Total Cards:</strong> All cards in your collection</li>
+                <li><strong>Due Cards:</strong> Cards ready for review right now</li>
+                <li><strong>Learning:</strong> Cards currently in the learning phase</li>
+                <li><strong>Review:</strong> Cards in the review phase</li>
+            </ul>
+            
+            <h3>💡 Tips for Success</h3>
+            <ul>
+                <li>Be honest with your ratings - this helps the system optimize your learning</li>
+                <li>Review cards regularly to maintain your progress</li>
+                <li>Use the context field to add example sentences</li>
+                <li>Focus on understanding rather than memorization</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Include Sentence Analysis Modal -->
+    <div id="sentenceAnalysisModalContainer"></div>
+
+    <!-- Load React Components -->
+    <script type="text/babel" src="/js/react-components/CardReviewComponent.jsx"></script>
+    <script type="text/babel" src="/js/react-components/CreateCardModal.jsx"></script>
+    <script src="/js/react-components/ReactIntegration.js"></script>
+    
+    <!-- Load Hybrid DeepRemember -->
+    <script src="/js/InteliSentence.js"></script>
+    <script src="/js/deepRemember-hybrid.js"></script>
+</body>
+</html>
