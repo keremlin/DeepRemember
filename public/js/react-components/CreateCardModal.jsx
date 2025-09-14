@@ -20,7 +20,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     const searchTimeoutRef = useRef(null);
     const translationTimeoutRef = useRef(null);
 
-    // Reset form when modal opens/closes
+    // Reset form when modal opens/closes (componentDidMount/componentDidUpdate pattern)
     useEffect(() => {
         if (!isOpen) {
             setFormData({ word: '', translation: '', context: '' });
@@ -30,6 +30,18 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
             setShowTranslation(false);
         }
     }, [isOpen]);
+
+    // Cleanup timeouts on unmount (componentWillUnmount pattern)
+    useEffect(() => {
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+            if (translationTimeoutRef.current) {
+                clearTimeout(translationTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // Handle form input changes
     const handleInputChange = (field, value) => {

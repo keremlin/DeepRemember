@@ -42,18 +42,22 @@ const SubtitleDisplay = ({ subtitles, currentSubtitleIndex, onWordClick }) => {
             
             setTooltipContent(translation);
             
-            // Auto-hide tooltip after 5 seconds
-            setTimeout(() => {
-                setShowTooltip(null);
-            }, 5000);
-            
         } catch (err) {
             setTooltipContent('Error fetching translation.');
-            setTimeout(() => {
-                setShowTooltip(null);
-            }, 3000);
         }
     };
+
+    // Auto-hide tooltip effect (componentDidMount/componentDidUpdate pattern)
+    useEffect(() => {
+        if (showTooltip) {
+            const timeoutId = setTimeout(() => {
+                setShowTooltip(null);
+            }, showTooltip ? 5000 : 3000);
+            
+            // Cleanup function (componentWillUnmount pattern)
+            return () => clearTimeout(timeoutId);
+        }
+    }, [showTooltip]);
 
     // Handle add to cards button click
     const handleAddToCards = (word) => {
