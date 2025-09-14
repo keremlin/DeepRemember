@@ -3,7 +3,7 @@
  * This replaces the vanilla JS subtitle display functionality
  */
 
-const { useState, useEffect, useRef } = React;
+const { useState, useRef } = React;
 
 const SubtitleDisplay = ({ subtitles, currentSubtitleIndex, onWordClick }) => {
     const [showTooltip, setShowTooltip] = useState(null);
@@ -12,49 +12,24 @@ const SubtitleDisplay = ({ subtitles, currentSubtitleIndex, onWordClick }) => {
 
     // Handle word click with translation fetching
     const handleWordClick = async (word) => {
-        // Hide all other tooltips
         setShowTooltip(word);
         setTooltipContent('Loading...');
         
         try {
-            const response = await fetch('http://localhost:11434/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'llama3.2',
-                    prompt: `answer in this format {"translation":"string", "word":"realWord"} , what is the translation of "${word}"`,
-                    stream: false
-                })
-            });
-            const data = await response.json();
-            
-            // Try to extract translation from the response
-            let translation = 'No translation found.';
-            if (data.response) {
-                try {
-                    const match = data.response.match(/\{[^}]+\}/);
-                    if (match) {
-                        const parsed = JSON.parse(match[0]);
-                        translation = parsed.translation || translation;
-                    }
-                } catch (e) {}
-            }
-            
-            setTooltipContent(translation);
-            
+            const result = await window.translationService.translateWord(word);
+            setTooltipContent(result.translation);
         } catch (err) {
             setTooltipContent('Error fetching translation.');
         }
     };
 
-    // Auto-hide tooltip effect (componentDidMount/componentDidUpdate pattern)
-    useEffect(() => {
+    // Auto-hide tooltip effect
+    React.useEffect(() => {
         if (showTooltip) {
             const timeoutId = setTimeout(() => {
                 setShowTooltip(null);
-            }, showTooltip ? 5000 : 3000);
+            }, 5000);
             
-            // Cleanup function (componentWillUnmount pattern)
             return () => clearTimeout(timeoutId);
         }
     }, [showTooltip]);

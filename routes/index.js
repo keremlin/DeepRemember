@@ -38,4 +38,29 @@ router.get('/test-react', (req, res) => {
   res.sendFile(filePath);
 });
 
+// Serve src files (React components, hooks, services, styles)
+router.get('/src/components/:filename', (req, res) => {
+  const filePath = path.join(__dirname, '..', 'src', 'components', req.params.filename);
+  console.log(`[SRC-COMPONENTS] Request for: ${filePath}`);
+  res.sendFile(filePath);
+});
+
+router.get('/src/hooks/:filename', (req, res) => {
+  const filePath = path.join(__dirname, '..', 'src', 'hooks', req.params.filename);
+  console.log(`[SRC-HOOKS] Request for: ${filePath}`);
+  res.sendFile(filePath);
+});
+
+router.get('/src/services/:filename', (req, res) => {
+  const filePath = path.join(__dirname, '..', 'src', 'services', req.params.filename);
+  console.log(`[SRC-SERVICES] Request for: ${filePath}`);
+  res.sendFile(filePath);
+});
+
+router.get('/src/styles/:filename', (req, res) => {
+  const filePath = path.join(__dirname, '..', 'src', 'styles', req.params.filename);
+  console.log(`[SRC-STYLES] Request for: ${filePath}`);
+  res.sendFile(filePath);
+});
+
 module.exports = router;

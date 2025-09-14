@@ -3,7 +3,10 @@
  * This replaces the vanilla JS create card modal functionality
  */
 
-const { useState, useEffect, useRef } = React;
+import React, { useState, useEffect, useRef } from 'react';
+import { useApi } from '../hooks/useApi';
+import { deepRememberService } from '../services/deepRememberService';
+import { translationService } from '../services/translationService';
 
 const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     const [formData, setFormData] = useState({
@@ -65,8 +68,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
 
         searchTimeoutRef.current = setTimeout(async () => {
             try {
-                const response = await fetch(`/deepRemember/search-similar/${currentUserId}/${encodeURIComponent(query)}`);
-                const data = await response.json();
+                const data = await deepRememberService.searchSimilarWords(currentUserId, query);
                 
                 if (data.success && data.words.length > 0) {
                     setSimilarWords(data.words);
@@ -95,19 +97,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
             setShowTranslation(true);
             
             try {
-                const response = await fetch('/deepRemember/translate-word', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ word })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    setTranslationData(data);
-                } else {
-                    setTranslationData({ translation: 'Translation failed', sampleSentence: 'Please try again or enter manually' });
-                }
+                const data = await translationService.getDetailedTranslation(word);
+                setTranslationData(data);
             } catch (error) {
                 console.error('Error getting translation:', error);
                 setTranslationData({ translation: 'Translation error', sampleSentence: 'Please try again or enter manually' });

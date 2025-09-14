@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AItitle - AI powered subtitle player</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/src/styles/styles.css">
     
     <!-- React Dependencies -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -125,9 +125,15 @@
         </div>
     </div>
 
+    <!-- Load Hooks and Services -->
+    <script src="/js/hooks/useApi.js"></script>
+    <script src="/js/hooks/useTooltip.js"></script>
+    <script src="/js/services/translationService.js"></script>
+    <script src="/js/services/playlistService.js"></script>
+    
     <!-- Load React Components -->
-    <script type="text/babel" src="/js/react-components/SubtitleDisplay.jsx"></script>
-    <script type="text/babel" src="/js/react-components/PlaylistComponent.jsx"></script>
+    <script type="text/babel" src="/src/components/SubtitleDisplay.jsx"></script>
+    <script type="text/babel" src="/src/components/PlaylistComponent.jsx"></script>
     <script src="/js/react-components/ReactIntegration.js"></script>
     
     <!-- Load Hybrid App -->

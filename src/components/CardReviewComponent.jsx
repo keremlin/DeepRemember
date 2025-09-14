@@ -3,7 +3,9 @@
  * This replaces the vanilla JS card review system
  */
 
-const { useState, useEffect, useRef } = React;
+import React, { useState, useEffect, useRef } from 'react';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { deepRememberService } from '../services/deepRememberService';
 
 const CardReviewComponent = ({ cards, currentCardIndex, onAnswerCard, onShowAnswer }) => {
     const [showAnswer, setShowAnswer] = useState(false);
@@ -32,46 +34,19 @@ const CardReviewComponent = ({ cards, currentCardIndex, onAnswerCard, onShowAnsw
         }
     };
 
-    // Handle keyboard shortcuts
-    useEffect(() => {
-        const handleKeyDown = (event) => {
-            // Answer shortcuts
-            if ((event.key === 'Enter' || event.key === ' ') && !answerShown) {
-                event.preventDefault();
-                handleShowAnswer();
-                return;
-            }
+    // Define keyboard shortcuts
+    const shortcuts = [
+        { key: 'enter', handler: () => !answerShown && handleShowAnswer() },
+        { key: ' ', handler: () => !answerShown && handleShowAnswer() },
+        { key: 'z', handler: () => answerShown && handleRating(1) },
+        { key: 'x', handler: () => answerShown && handleRating(2) },
+        { key: 'c', handler: () => answerShown && handleRating(3) },
+        { key: 'v', handler: () => answerShown && handleRating(4) },
+        { key: 'b', handler: () => answerShown && handleRating(5) }
+    ];
 
-            // Rating shortcuts (only when answer is shown)
-            if (answerShown) {
-                switch (event.key.toLowerCase()) {
-                    case 'z':
-                        event.preventDefault();
-                        handleRating(1);
-                        break;
-                    case 'x':
-                        event.preventDefault();
-                        handleRating(2);
-                        break;
-                    case 'c':
-                        event.preventDefault();
-                        handleRating(3);
-                        break;
-                    case 'v':
-                        event.preventDefault();
-                        handleRating(4);
-                        break;
-                    case 'b':
-                        event.preventDefault();
-                        handleRating(5);
-                        break;
-                }
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [answerShown]);
+    // Use keyboard shortcuts hook
+    useKeyboardShortcuts(shortcuts, [answerShown]);
 
     if (currentCardIndex >= cards.length) {
         return (

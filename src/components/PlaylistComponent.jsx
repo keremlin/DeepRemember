@@ -29,6 +29,11 @@ const PlaylistComponent = ({ onPlayItem, onDeleteItem }) => {
         }
     };
 
+    // Load playlist on component mount
+    useEffect(() => {
+        loadPlaylist();
+    }, []);
+
     // Handle play button click
     const handlePlay = (item) => {
         if (onPlayItem) {
@@ -41,12 +46,7 @@ const PlaylistComponent = ({ onPlayItem, onDeleteItem }) => {
         if (!confirm('Are you sure you want to delete this file and its subtitle?')) return;
         
         try {
-            const res = await fetch('/delete-files', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ media: item.media, subtitle: item.subtitle })
-            });
-            const result = await res.json();
+            const result = await window.playlistService.deleteFiles(item.media, item.subtitle);
             
             if (result.success) {
                 // Refresh playlist after successful deletion
@@ -66,10 +66,6 @@ const PlaylistComponent = ({ onPlayItem, onDeleteItem }) => {
         }
     };
 
-    // Load playlist on component mount
-    useEffect(() => {
-        loadPlaylist();
-    }, []);
 
     if (loading) {
         return (
