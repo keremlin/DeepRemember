@@ -7,8 +7,14 @@ const router = express.Router();
 
 // List all uploaded files as playlist
 router.get('/files-list', (req, res) => {
+  console.log('[FILES] Reading directory:', filesDir);
   fs.readdir(filesDir, (err, files) => {
-    if (err) return res.status(500).json({ error: 'Failed to read files directory.' });
+    if (err) {
+      console.log('[FILES] Error reading directory:', err);
+      return res.status(500).json({ error: 'Failed to read files directory.' });
+    }
+    
+    console.log('[FILES] Found files:', files);
     
     // Group files by base name (before extension)
     const mediaExts = ['.mp3', '.mp4', '.wav', '.ogg', '.webm', '.m4a'];

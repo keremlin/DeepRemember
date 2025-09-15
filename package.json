@@ -1,19 +1,22 @@
 {
   "name": "aitrainer",
   "version": "0.0.1",
-  "description": "",
-  "main": "index.js",
+  "description": "AI Trainer - Complete application with separated frontend and backend",
+  "main": "backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node build-production.js",
-    "start": "node server.js"
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm start",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd backend && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["ai", "subtitle", "learning", "express", "frontend", "backend"],
   "author": "Arash Yehanehrad",
   "license": "MIT",
-  "dependencies": {
-    "better-sqlite3": "^12.2.0",
-    "express": "^5.1.0",
-    "ts-fsrs": "^5.2.2"
-  }
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
 }

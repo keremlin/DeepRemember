@@ -14,24 +14,24 @@ const app = express();
 
 // Set up view engine
 app.set('view engine', 'html');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, '../frontend/views'));
 
 // Middleware
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from frontend public directory
+app.use(express.static(path.join(__dirname, '../frontend/public')));
 
-// Serve files from the files directory
-app.use('/files', express.static(path.join(__dirname, 'files')));
+// Serve files from the files directory (in root)
+app.use('/files', express.static(path.join(__dirname, '../files')));
 
-// Serve voice files
-app.use('/voice', express.static(path.join(__dirname, 'voice')));
+// Serve voice files (in root)
+app.use('/voice', express.static(path.join(__dirname, '../voice')));
 
 // Route to serve sentence analysis modal
 app.get('/views/sentenceAnalysisModal.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'sentenceAnalysisModal.html'));
+    res.sendFile(path.join(__dirname, '../frontend/views', 'sentenceAnalysisModal.html'));
 });
 
 // Routes
