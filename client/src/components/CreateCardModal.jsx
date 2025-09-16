@@ -96,46 +96,61 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     if (!newWord.trim() || newWord.length < 2) return
     
     translationTimeoutRef.current = setTimeout(async () => {
-      try {
-        setIsTranslating(true)
-        setShowTranslationResult(true)
+      await translateWord()
+    }, 1000)
+  }
+
+  // Function to translate word (extracted for reuse)
+  const translateWord = async () => {
+    if (!newWord.trim() || newWord.length < 2) return
+    
+    try {
+      setIsTranslating(true)
+      setShowTranslationResult(true)
+      setTranslationData({
+        translation: '🔄 Translating...',
+        sampleSentence: 'Please wait while we get the translation from AI'
+      })
+      
+      const response = await fetch('http://localhost:4004/deepRemember/translate-word', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+        body: JSON.stringify({ word: newWord })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      if (data.success) {
+        setTranslationData(data)
+      } else {
         setTranslationData({
-          translation: '🔄 Translating...',
-          sampleSentence: 'Please wait while we get the translation from AI'
-        })
-        
-        const response = await fetch('http://localhost:4004/deepRemember/translate-word', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-          },
-          mode: 'cors',
-          body: JSON.stringify({ word: newWord })
-        })
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
-        const data = await response.json()
-        if (data.success) {
-          setTranslationData(data)
-        } else {
-          setTranslationData({
-            translation: '❌ Translation failed',
-            sampleSentence: 'Please try again or enter manually'
-          })
-        }
-      } catch (error) {
-        console.error('Error getting translation:', error)
-        setTranslationData({
-          translation: '❌ Translation error',
+          translation: '❌ Translation failed',
           sampleSentence: 'Please try again or enter manually'
         })
-      } finally {
-        setIsTranslating(false)
       }
-    }, 1000)
+    } catch (error) {
+      console.error('Error getting translation:', error)
+      setTranslationData({
+        translation: '❌ Translation error',
+        sampleSentence: 'Please try again or enter manually'
+      })
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  // Handle AI button click
+  const handleAIClick = () => {
+    if (translationTimeoutRef.current) {
+      clearTimeout(translationTimeoutRef.current)
+    }
+    translateWord()
   }
 
   // Use translation data
@@ -306,29 +321,44 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>➕ Create New Card</h3>
-          <button className="modal-close" onClick={handleClose}>&times;</button>
+          <button className="modal-close" onClick={handleClose} tabIndex={7}>&times;</button>
         </div>
         <div className="modal-form">
-          <input 
-            type="text" 
-            value={newWord}
-            onChange={(e) => {
-              setNewWord(e.target.value)
-              searchSimilarWords(e.target.value)
-            }}
-            onBlur={handleWordBlur}
-            placeholder="Enter word to learn" 
-          />
+          <div className="input-with-button">
+            <input 
+              type="text" 
+              value={newWord}
+              onChange={(e) => {
+                setNewWord(e.target.value)
+                searchSimilarWords(e.target.value)
+              }}
+              onBlur={handleWordBlur}
+              placeholder="Enter word to learn"
+              tabIndex={1}
+            />
+            <button
+              type="button"
+              className="ai-button"
+              onClick={handleAIClick}
+              disabled={!newWord.trim() || newWord.length < 2 || isTranslating}
+              title="Get AI translation"
+              tabIndex={3}
+            >
+              <strong>AI</strong>
+            </button>
+          </div>
           <input 
             type="text" 
             value={newTranslation}
             onChange={(e) => setNewTranslation(e.target.value)}
-            placeholder="Enter translation" 
+            placeholder="Enter translation"
+            tabIndex={2}
           />
           <textarea 
             value={newContext}
             onChange={(e) => setNewContext(e.target.value)}
             placeholder="Enter context or example sentence"
+            tabIndex={4}
           />
           
           {/* Similar Words Section */}
@@ -398,10 +428,10 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
           )}
           
           <div className="modal-buttons">
-            <button className="btn-modal btn-modal-secondary" onClick={handleClose} disabled={isCreatingCard}>
+            <button className="btn-modal btn-modal-secondary" onClick={handleClose} disabled={isCreatingCard} tabIndex={5}>
               Cancel
             </button>
-            <button className="btn-modal btn-modal-primary" onClick={createCard} disabled={isCreatingCard}>
+            <button className="btn-modal btn-modal-primary" onClick={createCard} disabled={isCreatingCard} tabIndex={6}>
               {isCreatingCard ? (
                 <>
                   {isCreatingVoice ? '🎤 Creating Voice...' : '💾 Creating Card...'}
