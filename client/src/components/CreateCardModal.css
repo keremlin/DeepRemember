@@ -203,6 +203,30 @@
   margin-top: 10px;
 }
 
+/* Loading states */
+.btn-modal:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.translation-result.loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.translation-hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.translation-hint.loading {
+  color: #007bff;
+  font-weight: 500;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .modal {

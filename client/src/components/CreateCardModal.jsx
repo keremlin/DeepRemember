@@ -11,6 +11,11 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
   const [translationData, setTranslationData] = useState(null)
   const [showTranslationResult, setShowTranslationResult] = useState(false)
   
+  // Loading states
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [isCreatingVoice, setIsCreatingVoice] = useState(false)
+  const [isCreatingCard, setIsCreatingCard] = useState(false)
+  
   // Refs for timeouts
   const searchTimeoutRef = useRef(null)
   const translationTimeoutRef = useRef(null)
@@ -92,7 +97,12 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     
     translationTimeoutRef.current = setTimeout(async () => {
       try {
+        setIsTranslating(true)
         setShowTranslationResult(true)
+        setTranslationData({
+          translation: '🔄 Translating...',
+          sampleSentence: 'Please wait while we get the translation from AI'
+        })
         
         const response = await fetch('http://localhost:4004/deepRemember/translate-word', {
           method: 'POST',
@@ -122,6 +132,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
           translation: '❌ Translation error',
           sampleSentence: 'Please try again or enter manually'
         })
+      } finally {
+        setIsTranslating(false)
       }
     }, 1000)
   }
@@ -139,50 +151,57 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
   const convertContextToSpeech = async (context, word) => {
     if (!context || !word) return
     
-    // Split context into sentences
-    const sentences = context.split('\n').filter(s => s.trim())
+    setIsCreatingVoice(true)
     
-    // Convert each sentence to speech
-    for (const sentence of sentences) {
-      if (sentence.trim()) {
-        try {
-          // Check if audio already exists first
-          const encodedSentence = encodeURIComponent(sentence.trim())
-          const checkResponse = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedSentence}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            mode: 'cors'
-          })
-          const checkData = await checkResponse.json()
-          
-          if (checkData.success && checkData.exists) {
-            console.log(`[TTS] Audio already exists for: "${sentence.trim()}" -> ${checkData.audioUrl}`)
-            continue // Skip if already exists
-          }
-          
-          // Generate new audio if it doesn't exist
-          const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            mode: 'cors',
-            body: JSON.stringify({ 
-              text: sentence.trim(), 
-              word: word.trim() 
+    try {
+      // Split context into sentences
+      const sentences = context.split('\n').filter(s => s.trim())
+      
+      // Convert each sentence to speech
+      for (let i = 0; i < sentences.length; i++) {
+        const sentence = sentences[i]
+        if (sentence.trim()) {
+          try {
+            // Check if audio already exists first
+            const encodedSentence = encodeURIComponent(sentence.trim())
+            const checkResponse = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedSentence}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+              mode: 'cors'
             })
-          })
-          
-          const data = await response.json()
-          if (data.success) {
-            console.log(`[TTS] Audio generated for: "${sentence.trim()}" -> ${data.audioUrl}`)
-          } else {
-            console.warn(`[TTS] Failed to generate audio for: "${sentence.trim()}"`)
+            const checkData = await checkResponse.json()
+            
+            if (checkData.success && checkData.exists) {
+              console.log(`[TTS] Audio already exists for: "${sentence.trim()}" -> ${checkData.audioUrl}`)
+              continue // Skip if already exists
+            }
+            
+            // Generate new audio if it doesn't exist
+            const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              mode: 'cors',
+              body: JSON.stringify({ 
+                text: sentence.trim(), 
+                word: word.trim() 
+              })
+            })
+            
+            const data = await response.json()
+            if (data.success) {
+              console.log(`[TTS] Audio generated for: "${sentence.trim()}" -> ${data.audioUrl}`)
+            } else {
+              console.warn(`[TTS] Failed to generate audio for: "${sentence.trim()}"`)
+            }
+          } catch (error) {
+            console.warn(`[TTS] Error generating audio for: "${sentence.trim()}"`, error)
           }
-        } catch (error) {
-          console.warn(`[TTS] Error generating audio for: "${sentence.trim()}"`, error)
         }
       }
+    } finally {
+      setIsCreatingVoice(false)
     }
   }
 
@@ -192,6 +211,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
       alert('Please enter a word')
       return
     }
+    
+    setIsCreatingCard(true)
     
     try {
       // First create the card
@@ -244,6 +265,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     } catch (error) {
       console.error('Error creating card:', error)
       alert(`Failed to create card: ${error.message}`)
+    } finally {
+      setIsCreatingCard(false)
     }
   }
 
@@ -257,6 +280,10 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     setShowTranslationResult(false)
     setTranslationData(null)
     setSimilarWords([])
+    // Reset loading states
+    setIsTranslating(false)
+    setIsCreatingVoice(false)
+    setIsCreatingCard(false)
     onClose()
   }
 
@@ -349,7 +376,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
           
           {/* Translation Result */}
           {showTranslationResult && translationData && (
-            <div className="translation-result" onClick={useTranslationData}>
+            <div className="translation-result" onClick={!isTranslating ? useTranslationData : undefined}>
               <h4>🤖 AI Translation:</h4>
               <div>
                 <strong>Translation:</strong> <span className="translation-text">{translationData.translation}</span>
@@ -358,18 +385,30 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
                 <strong>Sample Sentences:</strong> 
                 <div className="sample-sentences">{translationData.sampleSentence}</div>
               </div>
-              <div className="translation-hint">
-                💡 Click to use this translation
-              </div>
+              {isTranslating ? (
+                <div className="translation-hint">
+                  🔄 Getting translation from AI...
+                </div>
+              ) : (
+                <div className="translation-hint">
+                  💡 Click to use this translation
+                </div>
+              )}
             </div>
           )}
           
           <div className="modal-buttons">
-            <button className="btn-modal btn-modal-secondary" onClick={handleClose}>
+            <button className="btn-modal btn-modal-secondary" onClick={handleClose} disabled={isCreatingCard}>
               Cancel
             </button>
-            <button className="btn-modal btn-modal-primary" onClick={createCard}>
-              Create Card
+            <button className="btn-modal btn-modal-primary" onClick={createCard} disabled={isCreatingCard}>
+              {isCreatingCard ? (
+                <>
+                  {isCreatingVoice ? '🎤 Creating Voice...' : '💾 Creating Card...'}
+                </>
+              ) : (
+                'Create Card'
+              )}
             </button>
           </div>
         </div>
