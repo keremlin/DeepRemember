@@ -53,7 +53,7 @@ const Toast = ({
   }
 
   return (
-    <div className={`toast toast-${type} toast-${position} ${isLeaving ? 'toast-leaving' : ''}`}>
+    <div className={`toast toast-${type} ${isLeaving ? 'toast-leaving' : ''}`}>
       <div className="toast-content">
         <div className="toast-icon">
           {getIcon()}

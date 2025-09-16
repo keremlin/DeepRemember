@@ -1,9 +1,56 @@
 /* Toast Notification Component */
 
-/* Toast Container */
-.toast {
+/* Toast Container - Fixed positioning for the container */
+.toast-container {
   position: fixed;
   z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+/* Position variants for container */
+.toast-container.top-right {
+  top: 20px;
+  right: 20px;
+  align-items: flex-end;
+}
+
+.toast-container.top-left {
+  top: 20px;
+  left: 20px;
+  align-items: flex-start;
+}
+
+.toast-container.top-center {
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+.toast-container.bottom-right {
+  bottom: 20px;
+  right: 20px;
+  align-items: flex-end;
+}
+
+.toast-container.bottom-left {
+  bottom: 20px;
+  left: 20px;
+  align-items: flex-start;
+}
+
+.toast-container.bottom-center {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+/* Individual Toast */
+.toast {
   max-width: 400px;
   min-width: 300px;
   background: white;
@@ -14,43 +61,11 @@
   overflow: hidden;
   animation: toastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  pointer-events: auto;
 }
 
 .toast-leaving {
   animation: toastSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* Position variants */
-.toast-top-right {
-  top: 20px;
-  right: 20px;
-}
-
-.toast-top-left {
-  top: 20px;
-  left: 20px;
-}
-
-.toast-top-center {
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.toast-bottom-right {
-  bottom: 20px;
-  right: 20px;
-}
-
-.toast-bottom-left {
-  bottom: 20px;
-  left: 20px;
-}
-
-.toast-bottom-center {
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 /* Toast Content */
