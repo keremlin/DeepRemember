@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import CloseButton from './CloseButton'
 import './CreateCardModal.css'
 
 const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
@@ -321,7 +322,11 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>➕ Create New Card</h3>
-          <button className="modal-close" onClick={handleClose} tabIndex={7}>&times;</button>
+          <CloseButton 
+            onClick={handleClose} 
+            size="medium" 
+            variant="default"
+          />
         </div>
         <div className="modal-form">
           <div className="input-with-button">
