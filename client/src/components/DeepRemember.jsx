@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import CreateCardModal from './CreateCardModal'
+import DashboardView from './DashboardView'
 import { useToast } from './ToastProvider'
 import './DeepRemember.css'
 
@@ -336,102 +337,16 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
       <div className="content">
         <div className="srs-container">
           {!isCardsView ? (
-            // Dashboard View
-            <div className="dashboard-view">
-              {/* Review Cards */}
-              {currentCards.length > 0 && (
-                <div className="srs-card review-section">
-                  <h3>🔄 Review Cards</h3>
-                  <div className="srs-card current-card">
-                    <div className="card-content">
-                      <div className="word-display">
-                        <strong>{currentCard?.word || 'Loading...'}</strong>
-                        <button 
-                          className="answer-btn" 
-                          onClick={() => setShowAnswer(true)}
-                          disabled={showAnswer}
-                        >
-                          ANSWER
-                          <span className="answer-shortcuts">
-                            <span className="shortcut-item">Enter</span>
-                            <span className="shortcut-item">Space</span>
-                          </span>
-                        </button>
-                      </div>
-                      
-                      {showAnswer && currentCard && (
-                        <div className="answer-content">
-                          <div className="translation-section">
-                            <h4>Answer</h4>
-                            <div className="translation-text">{currentCard.translation || ''}</div>
-                          </div>
-                          <div className="context-section">
-                            <h4>Samples</h4>
-                            <div className="context-text context-display">
-                              {formatContext(currentCard.context)}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {showAnswer && (
-                      <div className="rating-buttons">
-                        <button className="rating-btn rating-1" onClick={() => answerCard(1)}>
-                          Again<span className="shortcut-key">Z</span>
-                        </button>
-                        <button className="rating-btn rating-2" onClick={() => answerCard(2)}>
-                          Hard<span className="shortcut-key">X</span>
-                        </button>
-                        <button className="rating-btn rating-3" onClick={() => answerCard(3)}>
-                          Good<span className="shortcut-key">C</span>
-                        </button>
-                        <button className="rating-btn rating-4" onClick={() => answerCard(4)}>
-                          Easy<span className="shortcut-key">V</span>
-                        </button>
-                        <button className="rating-btn rating-5" onClick={() => answerCard(5)}>
-                          Perfect<span className="shortcut-key">B</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Statistics and Create Card Button */}
-              <div className="stats-section">
-                <div className="srs-card">
-                  <div className="stats-header">
-                    <h3>📊 Learning Statistics</h3>
-                    <button className="help-btn" onClick={() => setShowHelp(true)}>?</button>
-                  </div>
-                  <div className="stats-grid">
-                    <div className="stat-item">
-                      <div className="stat-number">{stats.totalCards}</div>
-                      <div className="stat-label">Total Cards</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-number">{stats.dueCards}</div>
-                      <div className="stat-label">Due Cards</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-number">{stats.learningCards}</div>
-                      <div className="stat-label">Learning</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-number">{stats.reviewCards}</div>
-                      <div className="stat-label">Review</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="create-card-button">
-                  <button className="btn-create-card" onClick={() => setShowCreateCard(true)}>
-                    ➕ Create New Card
-                  </button>
-                </div>
-              </div>
-            </div>
+            <DashboardView
+              currentCards={currentCards}
+              currentCard={currentCard}
+              showAnswer={showAnswer}
+              setShowAnswer={setShowAnswer}
+              answerCard={answerCard}
+              stats={stats}
+              setShowHelp={setShowHelp}
+              setShowCreateCard={setShowCreateCard}
+            />
           ) : (
             // Cards Management View
             <div className="cards-view">
