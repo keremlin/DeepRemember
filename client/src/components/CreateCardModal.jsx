@@ -135,6 +135,57 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     }
   }
 
+  // Function to convert context to speech (for automatic conversion)
+  const convertContextToSpeech = async (context, word) => {
+    if (!context || !word) return
+    
+    // Split context into sentences
+    const sentences = context.split('\n').filter(s => s.trim())
+    
+    // Convert each sentence to speech
+    for (const sentence of sentences) {
+      if (sentence.trim()) {
+        try {
+          // Check if audio already exists first
+          const encodedSentence = encodeURIComponent(sentence.trim())
+          const checkResponse = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedSentence}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors'
+          })
+          const checkData = await checkResponse.json()
+          
+          if (checkData.success && checkData.exists) {
+            console.log(`[TTS] Audio already exists for: "${sentence.trim()}" -> ${checkData.audioUrl}`)
+            continue // Skip if already exists
+          }
+          
+          // Generate new audio if it doesn't exist
+          const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            mode: 'cors',
+            body: JSON.stringify({ 
+              text: sentence.trim(), 
+              word: word.trim() 
+            })
+          })
+          
+          const data = await response.json()
+          if (data.success) {
+            console.log(`[TTS] Audio generated for: "${sentence.trim()}" -> ${data.audioUrl}`)
+          } else {
+            console.warn(`[TTS] Failed to generate audio for: "${sentence.trim()}"`)
+          }
+        } catch (error) {
+          console.warn(`[TTS] Error generating audio for: "${sentence.trim()}"`, error)
+        }
+      }
+    }
+  }
+
   // Create card function
   const createCard = async () => {
     if (!newWord.trim()) {
@@ -143,6 +194,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     }
     
     try {
+      // First create the card
       const response = await fetch('http://localhost:4004/deepRemember/create-card', {
         method: 'POST',
         headers: { 
@@ -163,6 +215,16 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
       
       const data = await response.json()
       if (data.success) {
+        // If card creation is successful and there's context, convert to speech
+        if (newContext && newContext.trim()) {
+          try {
+            await convertContextToSpeech(newContext.trim(), newWord.trim())
+          } catch (ttsError) {
+            console.warn('TTS conversion failed, but card was created:', ttsError)
+            // Don't fail the card creation if TTS fails
+          }
+        }
+        
         alert('Card created successfully!')
         // Reset form
         setNewWord('')
