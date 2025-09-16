@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Welcome from './components/Welcome'
 import DeepRemember from './components/DeepRemember'
+import { ToastProvider } from './components/ToastProvider'
 import './App.css'
 
 function App() {
@@ -15,13 +16,15 @@ function App() {
   }
 
   return (
-    <div className="App">
-      {currentView === 'welcome' ? (
-        <Welcome onNavigateToDeepRemember={navigateToDeepRemember} />
-      ) : (
-        <DeepRemember onNavigateToWelcome={navigateToWelcome} />
-      )}
-    </div>
+    <ToastProvider>
+      <div className="App">
+        {currentView === 'welcome' ? (
+          <Welcome onNavigateToDeepRemember={navigateToDeepRemember} />
+        ) : (
+          <DeepRemember onNavigateToWelcome={navigateToWelcome} />
+        )}
+      </div>
+    </ToastProvider>
   )
 }
 

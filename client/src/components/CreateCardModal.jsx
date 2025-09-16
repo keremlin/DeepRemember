@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import CloseButton from './CloseButton'
+import { useToast } from './ToastProvider'
 import './CreateCardModal.css'
 
 const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
+  const { showSuccess, showError, showWarning, showInfo } = useToast()
+  
   // Create card form states
   const [newWord, setNewWord] = useState('')
   const [newTranslation, setNewTranslation] = useState('')
@@ -55,7 +58,6 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        console.log('Searching for similar words:', query)
         const response = await fetch(`http://localhost:4004/deepRemember/search-similar/${currentUserId}/${encodeURIComponent(query)}`, {
           method: 'GET',
           headers: {
@@ -69,19 +71,15 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
         }
         
         const data = await response.json()
-        console.log('Similar words response:', data)
         
         if (data.success && data.words && data.words.length > 0) {
           setSimilarWords(data.words)
           setShowSimilarWords(true)
-          console.log('Found similar words:', data.words.length)
         } else {
           setSimilarWords([])
           setShowSimilarWords(false)
-          console.log('No similar words found')
         }
       } catch (error) {
-        console.error('Error searching similar words:', error)
         setSimilarWords([])
         setShowSimilarWords(false)
       }
@@ -185,10 +183,10 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
               headers: { 'Content-Type': 'application/json' },
               mode: 'cors'
             })
+            
             const checkData = await checkResponse.json()
             
             if (checkData.success && checkData.exists) {
-              console.log(`[TTS] Audio already exists for: "${sentence.trim()}" -> ${checkData.audioUrl}`)
               continue // Skip if already exists
             }
             
@@ -205,17 +203,19 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
               })
             })
             
-            const data = await response.json()
-            if (data.success) {
-              console.log(`[TTS] Audio generated for: "${sentence.trim()}" -> ${data.audioUrl}`)
-            } else {
-              console.warn(`[TTS] Failed to generate audio for: "${sentence.trim()}"`)
+            if (!response.ok) {
+              continue
             }
+            
+            const data = await response.json()
+            // Audio generation completed (success or failure handled silently)
           } catch (error) {
-            console.warn(`[TTS] Error generating audio for: "${sentence.trim()}"`, error)
+            // Individual sentence errors are handled silently
           }
         }
       }
+    } catch (error) {
+      // Fatal errors are handled silently
     } finally {
       setIsCreatingVoice(false)
     }
@@ -224,7 +224,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
   // Create card function
   const createCard = async () => {
     if (!newWord.trim()) {
-      alert('Please enter a word')
+      showWarning('Please enter a word')
       return
     }
     
@@ -254,15 +254,17 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
       if (data.success) {
         // If card creation is successful and there's context, convert to speech
         if (newContext && newContext.trim()) {
+          showInfo(`🎤 Creating voice files for "${newWord.trim()}"...`)
           try {
             await convertContextToSpeech(newContext.trim(), newWord.trim())
+            showSuccess(`🎵 Voice files created successfully for "${newWord.trim()}"!`)
           } catch (ttsError) {
-            console.warn('TTS conversion failed, but card was created:', ttsError)
+            showWarning('Card created successfully, but voice files could not be generated')
             // Don't fail the card creation if TTS fails
           }
         }
         
-        alert('Card created successfully!')
+        showSuccess('Card created successfully!')
         // Reset form
         setNewWord('')
         setNewTranslation('')
@@ -280,7 +282,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
       }
     } catch (error) {
       console.error('Error creating card:', error)
-      alert(`Failed to create card: ${error.message}`)
+      showError(`Failed to create card: ${error.message}`)
     } finally {
       setIsCreatingCard(false)
     }

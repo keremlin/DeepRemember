@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import CreateCardModal from './CreateCardModal'
+import { useToast } from './ToastProvider'
 import './DeepRemember.css'
 
 const DeepRemember = ({ onNavigateToWelcome }) => {
+  const { showSuccess, showError, showInfo } = useToast()
+  
   // State management
   const [currentUserId, setCurrentUserId] = useState('user123')
   const [currentCards, setCurrentCards] = useState([])
@@ -102,7 +105,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
       if (error.message.includes('404') || error.message.includes('Failed to load')) {
         console.log('User data not found, this is normal for new users')
       } else {
-        alert(`Failed to load user data: ${error.message}`)
+        showError(`Failed to load user data: ${error.message}`)
       }
     } finally {
       isLoadingRef.current = false
@@ -133,7 +136,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
         if (data.cards.length > 0) {
           showCurrentCard()
         } else if (showAlert) {
-          alert('No cards due for review!')
+          showInfo('No cards due for review!')
         }
       } else {
         throw new Error(data.error || 'Failed to load review cards')
@@ -141,7 +144,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     } catch (error) {
       console.error('Error loading review cards:', error)
       if (showAlert) {
-        alert(`Failed to load review cards: ${error.message}`)
+        showError(`Failed to load review cards: ${error.message}`)
       }
     }
   }
@@ -170,7 +173,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     } catch (error) {
       console.error('Error loading all cards:', error)
       if (showAlert) {
-        alert(`Failed to load all cards: ${error.message}`)
+        showError(`Failed to load all cards: ${error.message}`)
       }
     }
   }
@@ -209,7 +212,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
         setShowAnswer(false)
         
         if (currentCardIndex + 1 >= currentCards.length) {
-          alert('All cards reviewed!')
+          showSuccess('All cards reviewed!')
           // Reload data without showing alerts
           loadUserData()
         } else {
@@ -220,7 +223,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
       }
     } catch (error) {
       console.error('Error answering card:', error)
-      alert(`Failed to answer card: ${error.message}`)
+      showError(`Failed to answer card: ${error.message}`)
     }
   }
 
@@ -242,7 +245,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
       
       const data = await response.json()
       if (data.success) {
-        alert('Card deleted successfully!')
+        showSuccess('Card deleted successfully!')
         loadUserData()
         loadAllCards()
       } else {
@@ -250,14 +253,14 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
       }
     } catch (error) {
       console.error('Error deleting card:', error)
-      alert(`Failed to delete card: ${error.message}`)
+      showError(`Failed to delete card: ${error.message}`)
     }
   }
 
   // Show current card
   const showCurrentCard = () => {
     if (currentCardIndex >= currentCards.length) {
-      alert('All cards reviewed!')
+      showSuccess('All cards reviewed!')
       loadUserData()
       return
     }

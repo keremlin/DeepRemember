@@ -1,19 +1,21 @@
 import React, { useState } from 'react'
+import { useToast } from './ToastProvider'
 import './Welcome.css'
 
 const Welcome = ({ onNavigateToDeepRemember }) => {
   const [isHovered, setIsHovered] = useState(false)
+  const { showSuccess, showInfo } = useToast()
 
   const handleGetStarted = () => {
     if (onNavigateToDeepRemember) {
       onNavigateToDeepRemember()
     } else {
-      alert('Welcome to the Subtitle Client! 🎉')
+      showSuccess('Welcome to the Subtitle Client! 🎉')
     }
   }
 
   const handleLearnMore = () => {
-    alert('This is a React.js application built with modern styling! 🚀')
+    showInfo('This is a React.js application built with modern styling! 🚀')
   }
 
   return (
