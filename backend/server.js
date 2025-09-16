@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 
 // Import routes
 const indexRoutes = require('./routes/index');
@@ -11,6 +12,14 @@ const deepRememberRoutes = require('./routes/deepRemember');
 const config = require('./config/app');
 
 const app = express();
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: ['http://localhost:9000', 'http://localhost:3000', 'http://localhost:4004'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Set up view engine
 app.set('view engine', 'html');

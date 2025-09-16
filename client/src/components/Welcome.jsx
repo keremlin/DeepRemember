@@ -1,11 +1,15 @@
 import React, { useState } from 'react'
 import './Welcome.css'
 
-const Welcome = () => {
+const Welcome = ({ onNavigateToDeepRemember }) => {
   const [isHovered, setIsHovered] = useState(false)
 
   const handleGetStarted = () => {
-    alert('Welcome to the Subtitle Client! 🎉')
+    if (onNavigateToDeepRemember) {
+      onNavigateToDeepRemember()
+    } else {
+      alert('Welcome to the Subtitle Client! 🎉')
+    }
   }
 
   const handleLearnMore = () => {
@@ -50,7 +54,7 @@ const Welcome = () => {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          🚀 Get Started
+          🎓 DeepRemember Learning System
         </button>
         <button 
           className="btn btn-secondary"
