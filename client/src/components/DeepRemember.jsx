@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import CreateCardModal from './CreateCardModal'
 import DashboardView from './DashboardView'
+import ManageCards from './ManageCards'
 import { useToast } from './ToastProvider'
 import './DeepRemember.css'
 
@@ -19,7 +20,6 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     learningCards: 0,
     reviewCards: 0
   })
-  const [allCards, setAllCards] = useState([])
   
   // Modal states
   const [showUserSetup, setShowUserSetup] = useState(false)
@@ -93,8 +93,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
       
       if (data.success) {
         setStats(data.stats)
-        // Load cards without showing alerts for empty results
-        await loadAllCards(false)
+        // Load review cards without showing alerts for empty results
         await loadReviewCards(false)
         setShowUserSetup(false)
       } else {
@@ -150,34 +149,6 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     }
   }
 
-  const loadAllCards = async (showAlert = true) => {
-    try {
-      const response = await fetch(`http://localhost:4004/deepRemember/all-cards/${currentUserId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors'
-      })
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const data = await response.json()
-      
-      if (data.success) {
-        setAllCards(data.cards)
-      } else {
-        throw new Error(data.error || 'Failed to load all cards')
-      }
-    } catch (error) {
-      console.error('Error loading all cards:', error)
-      if (showAlert) {
-        showError(`Failed to load all cards: ${error.message}`)
-      }
-    }
-  }
 
   // Handle card creation from modal
   const handleCardCreated = () => {
@@ -228,35 +199,6 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     }
   }
 
-  const deleteCard = async (cardId) => {
-    if (!confirm('Are you sure you want to delete this card?')) return
-    
-    try {
-      const response = await fetch(`http://localhost:4004/deepRemember/delete-card/${currentUserId}/${cardId}`, {
-        method: 'DELETE',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors'
-      })
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const data = await response.json()
-      if (data.success) {
-        showSuccess('Card deleted successfully!')
-        loadUserData()
-        loadAllCards()
-      } else {
-        throw new Error(data.error || 'Failed to delete card')
-      }
-    } catch (error) {
-      console.error('Error deleting card:', error)
-      showError(`Failed to delete card: ${error.message}`)
-    }
-  }
 
   // Show current card
   const showCurrentCard = () => {
@@ -349,39 +291,10 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
             />
           ) : (
             // Cards Management View
-            <div className="cards-view">
-              <div className="srs-card">
-                <h3>📚 All My Cards</h3>
-                <div className="all-cards">
-                  {allCards.map((card, index) => (
-                    <div key={card.id || index} className="card-item">
-                      <div className="card-info">
-                        <div className="card-word">{card.word}</div>
-                        <div className="card-translation">{card.translation}</div>
-                        <div className="card-context">{formatContext(card.context)}</div>
-                        <div className="card-meta">
-                          <span className={`card-state state-${card.state}`}>
-                            {getStateName(card.state)}
-                          </span>
-                          <span className="card-due">
-                            Due: {new Date(card.due).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="card-actions">
-                        <button 
-                          className="btn-delete" 
-                          onClick={() => deleteCard(card.id)}
-                          title="Delete card"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ManageCards 
+              currentUserId={currentUserId}
+              onCardDeleted={loadUserData}
+            />
           )}
         </div>
       </div>
