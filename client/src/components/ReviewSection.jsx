@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import './ReviewSection.css'
 
 const ReviewSection = ({ 
@@ -15,6 +15,44 @@ const ReviewSection = ({
       </div>
     ))
   }
+
+  // Keyboard event handlers
+  const handleKeyDown = (event) => {
+    // Enter or Space to show answer
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      if (!showAnswer && currentCard) {
+        setShowAnswer(true)
+      }
+      return
+    }
+    
+    // Rating shortcuts (Z, X, C, V, B)
+    if (showAnswer && currentCard) {
+      let rating = 0
+      switch (event.key.toLowerCase()) {
+        case 'z': rating = 1; break
+        case 'x': rating = 2; break
+        case 'c': rating = 3; break
+        case 'v': rating = 4; break
+        case 'b': rating = 5; break
+      }
+      
+      if (rating > 0) {
+        event.preventDefault()
+        answerCard(rating)
+      }
+    }
+  }
+
+  // Add keyboard event listener
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showAnswer, currentCard, setShowAnswer, answerCard])
 
   return (
     <div className="srs-card review-section">

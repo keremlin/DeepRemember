@@ -213,44 +213,12 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
   }
 
 
-  // Keyboard event handlers
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      if (!showAnswer && currentCards.length > 0) {
-        setShowAnswer(true)
-      }
-      return
-    }
-    
-    // Rating shortcuts
-    if (showAnswer && currentCards.length > 0) {
-      let rating = 0
-      switch (event.key.toLowerCase()) {
-        case 'z': rating = 1; break
-        case 'x': rating = 2; break
-        case 'c': rating = 3; break
-        case 'v': rating = 4; break
-        case 'b': rating = 5; break
-      }
-      
-      if (rating > 0) {
-        event.preventDefault()
-        answerCard(rating)
-      }
-    }
-  }
 
   // Initialize on component mount
   useEffect(() => {
     // Only load user data once on mount
     if (!isLoadingRef.current) {
       loadUserData()
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
     }
   }, []) // Empty dependency array ensures this only runs once
 
