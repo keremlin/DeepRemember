@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import ReviewButt from './ReviewButt'
 import './ReviewSection.css'
 
 const ReviewSection = ({ 
@@ -91,23 +92,7 @@ const ReviewSection = ({
         </div>
         
         {showAnswer && (
-          <div className="rating-buttons">
-            <button className="rating-btn rating-1" onClick={() => answerCard(1)}>
-              Again<span className="shortcut-key">Z</span>
-            </button>
-            <button className="rating-btn rating-2" onClick={() => answerCard(2)}>
-              Hard<span className="shortcut-key">X</span>
-            </button>
-            <button className="rating-btn rating-3" onClick={() => answerCard(3)}>
-              Good<span className="shortcut-key">C</span>
-            </button>
-            <button className="rating-btn rating-4" onClick={() => answerCard(4)}>
-              Easy<span className="shortcut-key">V</span>
-            </button>
-            <button className="rating-btn rating-5" onClick={() => answerCard(5)}>
-              Perfect<span className="shortcut-key">B</span>
-            </button>
-          </div>
+          <ReviewButt onAnswerCard={answerCard} />
         )}
       </div>
     </div>

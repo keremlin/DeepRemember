@@ -1,5 +1,5 @@
 import React from 'react'
-import ReviewSection from './ReviewSection'
+import ReviewSection from './ReviewSection/ReviewSection'
 import StatsSection from './StatsSection'
 import './DashboardView.css'
 
