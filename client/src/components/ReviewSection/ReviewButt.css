@@ -109,6 +109,33 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Shining effect for shortcut keys */
+.shortcut-key.shining {
+  animation: keyShine 0.3s ease-in-out;
+  color: #ffd700 !important;
+  font-weight: bold !important;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.8) !important;
+  border: 1px solid rgba(255, 215, 0, 0.6) !important;
+}
+
+@keyframes keyShine {
+  0% {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+  50% {
+    color: #ffed4e;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 1);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+  100% {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .rating-buttons {

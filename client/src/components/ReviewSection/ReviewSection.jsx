@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReviewButt from './ReviewButt'
 import './ReviewSection.css'
 
@@ -8,6 +8,7 @@ const ReviewSection = ({
   setShowAnswer, 
   answerCard 
 }) => {
+  const [pressedKey, setPressedKey] = useState(null)
   const formatContext = (context) => {
     if (!context) return ''
     return context.split('\n').map((line, index) => (
@@ -22,13 +23,15 @@ const ReviewSection = ({
     // Enter or Space to show answer
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
+      setPressedKey(event.key) // Track pressed key for shining effect
+      setTimeout(() => setPressedKey(null), 300) // Clear after 300ms
       if (!showAnswer && currentCard) {
         setShowAnswer(true)
       }
       return
     }
     
-    // Rating shortcuts (Z, X, C, V, B)
+    // Rating shortcuts (Z, X, C, V, B) - only work when answer is shown
     if (showAnswer && currentCard) {
       let rating = 0
       switch (event.key.toLowerCase()) {
@@ -41,6 +44,8 @@ const ReviewSection = ({
       
       if (rating > 0) {
         event.preventDefault()
+        setPressedKey(event.key.toLowerCase()) // Track pressed key for shining effect
+        setTimeout(() => setPressedKey(null), 300) // Clear after 300ms
         answerCard(rating)
       }
     }
@@ -69,31 +74,33 @@ const ReviewSection = ({
             >
               ANSWER
               <span className="answer-shortcuts">
-                <span className="shortcut-item">Enter</span>
-                <span className="shortcut-item">Space</span>
+                <span className={`shortcut-item ${pressedKey === 'Enter' ? 'shining' : ''}`}>Enter</span>
+                <span className={`shortcut-item ${pressedKey === ' ' ? 'shining' : ''}`}>Space</span>
               </span>
             </button>
           </div>
           
-          {showAnswer && currentCard && (
-            <div className="answer-content">
-              <div className="translation-section">
-                <h4>Answer</h4>
-                <div className="translation-text">{currentCard.translation || ''}</div>
-              </div>
-              <div className="context-section">
-                <h4>Samples</h4>
-                <div className="context-text context-display">
-                  {formatContext(currentCard.context)}
-                </div>
+          {/* Always show translation section, but disable when not answered */}
+          <div className="answer-content">
+            <div className={`translation-section ${!showAnswer ? 'disabled' : ''}`}>
+              <h4>Answer</h4>
+              <div className="translation-text">
+                {showAnswer && currentCard ? (currentCard.translation || '') : 'Click ANSWER to reveal translation'}
               </div>
             </div>
-          )}
+            <div className={`context-section ${!showAnswer ? 'disabled' : ''}`}>
+              <h4>Samples</h4>
+              <div className="context-text context-display">
+                {showAnswer && currentCard ? formatContext(currentCard.context) : 'Click ANSWER to reveal sample sentences'}
+              </div>
+            </div>
+          </div>
         </div>
         
-        {showAnswer && (
-          <ReviewButt onAnswerCard={answerCard} />
-        )}
+        {/* Always show rating buttons, but disable when not answered */}
+        <div className={`rating-buttons-container ${!showAnswer ? 'disabled' : ''}`}>
+          <ReviewButt onAnswerCard={showAnswer ? answerCard : null} pressedKey={pressedKey} />
+        </div>
       </div>
     </div>
   )

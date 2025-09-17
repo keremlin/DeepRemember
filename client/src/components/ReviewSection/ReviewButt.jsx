@@ -1,9 +1,11 @@
 import React from 'react'
 import './ReviewButt.css'
 
-const ReviewButt = ({ onAnswerCard }) => {
+const ReviewButt = ({ onAnswerCard, pressedKey }) => {
+  const isDisabled = !onAnswerCard
+  
   const handleRating = (rating) => {
-    if (onAnswerCard) {
+    if (onAnswerCard && !isDisabled) {
       onAnswerCard(rating)
     }
   }
@@ -13,37 +15,42 @@ const ReviewButt = ({ onAnswerCard }) => {
       <button 
         className="rating-btn rating-1" 
         onClick={() => handleRating(1)}
-        title="Again - Press Z"
+        disabled={isDisabled}
+        title={isDisabled ? "Answer the card first" : "Again - Press Z"}
       >
-        Again<span className="shortcut-key">Z</span>
+        Again<span className={`shortcut-key ${pressedKey === 'z' ? 'shining' : ''}`}>Z</span>
       </button>
       <button 
         className="rating-btn rating-2" 
         onClick={() => handleRating(2)}
-        title="Hard - Press X"
+        disabled={isDisabled}
+        title={isDisabled ? "Answer the card first" : "Hard - Press X"}
       >
-        Hard<span className="shortcut-key">X</span>
+        Hard<span className={`shortcut-key ${pressedKey === 'x' ? 'shining' : ''}`}>X</span>
       </button>
       <button 
         className="rating-btn rating-3" 
         onClick={() => handleRating(3)}
-        title="Good - Press C"
+        disabled={isDisabled}
+        title={isDisabled ? "Answer the card first" : "Good - Press C"}
       >
-        Good<span className="shortcut-key">C</span>
+        Good<span className={`shortcut-key ${pressedKey === 'c' ? 'shining' : ''}`}>C</span>
       </button>
       <button 
         className="rating-btn rating-4" 
         onClick={() => handleRating(4)}
-        title="Easy - Press V"
+        disabled={isDisabled}
+        title={isDisabled ? "Answer the card first" : "Easy - Press V"}
       >
-        Easy<span className="shortcut-key">V</span>
+        Easy<span className={`shortcut-key ${pressedKey === 'v' ? 'shining' : ''}`}>V</span>
       </button>
       <button 
         className="rating-btn rating-5" 
         onClick={() => handleRating(5)}
-        title="Perfect - Press B"
+        disabled={isDisabled}
+        title={isDisabled ? "Answer the card first" : "Perfect - Press B"}
       >
-        Perfect<span className="shortcut-key">B</span>
+        Perfect<span className={`shortcut-key ${pressedKey === 'b' ? 'shining' : ''}`}>B</span>
       </button>
     </div>
   )

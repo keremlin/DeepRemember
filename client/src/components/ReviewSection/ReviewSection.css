@@ -140,7 +140,90 @@
 }
 
 
+/* Disabled states for always-visible sections */
+.translation-section.disabled,
+.context-section.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.translation-section.disabled .translation-text,
+.context-section.disabled .context-text {
+  color: #999;
+  font-style: italic;
+}
+
+.rating-buttons-container.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.rating-buttons-container.disabled .rating-btn {
+  cursor: not-allowed;
+}
+
+/* Ensure consistent sizing */
+.answer-content {
+  min-height: 450px; /* Maintain consistent height */
+}
+
+.translation-section {
+  min-height: 80px; /* Maintain consistent section heights */
+}
+
+.context-section {
+  min-height: 250px; /* Fixed height for 3 samples */
+  max-height: 250px; /* Fixed height for 3 samples */
+  overflow-y: auto; /* Allow scrolling if content exceeds height */
+}
+
+.rating-buttons-container {
+  min-height: 60px; /* Maintain consistent button container height */
+}
+
+/* Shining effect for answer button shortcut keys */
+.shortcut-item.shining {
+  animation: keyShine 0.3s ease-in-out;
+  color: #ffd700 !important;
+  font-weight: bold !important;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.8) !important;
+  border: 1px solid rgba(255, 215, 0, 0.6) !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+}
+
+@keyframes keyShine {
+  0% {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+  50% {
+    color: #ffed4e;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 1);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+  100% {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   /* Rating button styles moved to ReviewButt.css */
+  
+  .answer-content {
+    min-height: 180px; /* Slightly smaller on mobile */
+  }
+  
+  .translation-section {
+    min-height: 70px; /* Slightly smaller on mobile */
+  }
+  
+  .context-section {
+    min-height: 100px; /* Fixed height for 3 samples on mobile */
+    max-height: 100px; /* Fixed height for 3 samples on mobile */
+  }
 }
