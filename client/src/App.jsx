@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import Welcome from './components/Welcome'
+import Welcome from './components/welcome/Welcome'
 import DeepRemember from './components/DeepRemember'
 import { ToastProvider } from './components/ToastProvider'
 import './App.css'
