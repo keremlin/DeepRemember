@@ -3,6 +3,7 @@ import CreateCardModal from './CreateCardModal'
 import DashboardView from './DashboardView'
 import ManageCards from './ManageCards'
 import HelpDeepRememberModal from './HelpDeepRememberModal'
+import Header from './header/Header'
 import { useToast } from './ToastProvider'
 import './DeepRemember.css'
 
@@ -227,23 +228,13 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
 
   return (
     <div className="deep-remember-container">
-      <div className="header">
-        <div className="header-left">
-          <h1>🎓 DeepRemember Learning System</h1>
-          <p>Spaced Repetition System for vocabulary learning</p>
-        </div>
-        <div className="header-right">
-          <div className="username-display" onClick={() => setShowUserSetup(true)}>
-            👤 <span>{currentUserId}</span>
-          </div>
-          <button className="btn-manage-cards" onClick={() => setIsCardsView(!isCardsView)}>
-            {isCardsView ? '📊 Back to Dashboard' : '📚 Manage Cards'}
-          </button>
-          <button className="btn btn-secondary" onClick={onNavigateToWelcome || (() => window.location.href = '/')}>
-            🎵 Back to AI-title
-          </button>
-        </div>
-      </div>
+      <Header
+        currentUserId={currentUserId}
+        isCardsView={isCardsView}
+        onUserSetup={() => setShowUserSetup(true)}
+        onToggleCardsView={() => setIsCardsView(!isCardsView)}
+        onNavigateToWelcome={onNavigateToWelcome}
+      />
 
       <div className="content">
         <div className="srs-container">

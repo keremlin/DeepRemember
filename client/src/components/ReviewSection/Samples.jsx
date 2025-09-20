@@ -16,12 +16,8 @@ const Samples = ({
     const key = event.key
     if (key >= '1' && key <= '9') {
       event.preventDefault()
-      console.log(`⌨️ Key pressed: ${key}, setting pressedKey state`)
       setPressedKey(key)
-      setTimeout(() => {
-        console.log(`⏰ Clearing pressedKey after 300ms`)
-        setPressedKey(null)
-      }, 300)
+      setTimeout(() => setPressedKey(null), 300)
       
       // Find the corresponding SampleSentence and trigger its playAudio
       const sentenceIndex = parseInt(key) - 1

@@ -12,11 +12,6 @@ const SampleSentenceCircle = ({
 }) => {
   const isShining = pressedKey && index !== null && pressedKey === (index + 1).toString()
   
-  // Debug logging for shining effect
-  if (type === 'number' && pressedKey) {
-    console.log(`🔍 SampleSentenceCircle ${index + 1}: pressedKey=${pressedKey}, isShining=${isShining}`)
-  }
-  
   return (
     <button 
       className={`sample-circle ${type} ${isPlaying ? 'playing' : ''} ${isShining ? 'shining' : ''}`}
