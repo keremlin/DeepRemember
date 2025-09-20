@@ -95,18 +95,15 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.translation-section,
-.context-section {
+.translation-section {
   margin-bottom: 15px;
 }
 
-.translation-section:last-child,
-.context-section:last-child {
+.translation-section:last-child {
   margin-bottom: 0;
 }
 
-.translation-section h4,
-.context-section h4 {
+.translation-section h4 {
   color: #495057;
   font-size: 1.1rem;
   font-weight: 600;
@@ -122,33 +119,15 @@
   line-height: 1.4;
 }
 
-.context-text {
-  color: #6c757d;
-  line-height: 1.6;
-}
-
-.context-line {
-  margin-bottom: 8px;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border-left: 3px solid #667eea;
-}
-
-.context-line:last-child {
-  margin-bottom: 0;
-}
 
 
 /* Disabled states for always-visible sections */
-.translation-section.disabled,
-.context-section.disabled {
+.translation-section.disabled {
   opacity: 0.6;
   pointer-events: none;
 }
 
-.translation-section.disabled .translation-text,
-.context-section.disabled .context-text {
+.translation-section.disabled .translation-text {
   color: #999;
   font-style: italic;
 }
@@ -171,11 +150,6 @@
   min-height: 80px; /* Maintain consistent section heights */
 }
 
-.context-section {
-  min-height: 250px; /* Fixed height for 3 samples */
-  max-height: 250px; /* Fixed height for 3 samples */
-  overflow-y: auto; /* Allow scrolling if content exceeds height */
-}
 
 .rating-buttons-container {
   min-height: 60px; /* Maintain consistent button container height */
@@ -222,8 +196,4 @@
     min-height: 70px; /* Slightly smaller on mobile */
   }
   
-  .context-section {
-    min-height: 100px; /* Fixed height for 3 samples on mobile */
-    max-height: 100px; /* Fixed height for 3 samples on mobile */
-  }
 }

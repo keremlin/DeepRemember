@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import ReviewButt from './ReviewButt'
+import Samples from './Samples'
 import './ReviewSection.css'
 
 const ReviewSection = ({ 
@@ -9,14 +10,6 @@ const ReviewSection = ({
   answerCard 
 }) => {
   const [pressedKey, setPressedKey] = useState(null)
-  const formatContext = (context) => {
-    if (!context) return ''
-    return context.split('\n').map((line, index) => (
-      <div key={index} className="context-line">
-        {line.trim()}
-      </div>
-    ))
-  }
 
   // Keyboard event handlers
   const handleKeyDown = (event) => {
@@ -88,12 +81,10 @@ const ReviewSection = ({
                 {showAnswer && currentCard ? (currentCard.translation || '') : 'Click ANSWER to reveal translation'}
               </div>
             </div>
-            <div className={`context-section ${!showAnswer ? 'disabled' : ''}`}>
-              <h4>Samples</h4>
-              <div className="context-text context-display">
-                {showAnswer && currentCard ? formatContext(currentCard.context) : 'Click ANSWER to reveal sample sentences'}
-              </div>
-            </div>
+            <Samples 
+              showAnswer={showAnswer}
+              currentCard={currentCard}
+            />
           </div>
         </div>
         
