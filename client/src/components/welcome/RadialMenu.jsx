@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import './RadialMenu.css'
 
 const RadialMenu = ({ onNavigateToDeepRemember }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
 
   const menuItems = [
     {

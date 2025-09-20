@@ -3,16 +3,17 @@
 .radial-menu-container {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+  align-items: flex-start;
+  height: 500px;
   background: #2a2a2a;
   padding: 20px;
+  padding-top: 80px;
 }
 
 .radial-menu {
   position: relative;
-  width: 300px;
-  height: 300px;
+  width: 280px;
+  height: 280px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -206,8 +207,50 @@
   animation-delay: var(--delay, 0s);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* Mobile First Responsive Design */
+@media (max-width: 480px) {
+  .radial-menu-container {
+    padding: 15px;
+    padding-top: 60px;
+  }
+  
+  .radial-menu {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .menu-button {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .menu-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .center-button {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .center-button svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .menu-label {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .radial-menu-container {
+    padding: 18px;
+    padding-top: 70px;
+  }
+  
   .radial-menu {
     width: 250px;
     height: 250px;
@@ -239,29 +282,14 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (min-width: 769px) {
+  .radial-menu-container {
+    padding: 20px;
+    padding-top: 80px;
+  }
+  
   .radial-menu {
-    width: 200px;
-    height: 200px;
-  }
-  
-  .menu-button {
-    width: 45px;
-    height: 45px;
-  }
-  
-  .menu-button svg {
-    width: 18px;
-    height: 18px;
-  }
-  
-  .center-button {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .center-button svg {
-    width: 16px;
-    height: 16px;
+    width: 280px;
+    height: 280px;
   }
 }

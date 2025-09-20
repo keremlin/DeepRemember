@@ -6,7 +6,7 @@ const Welcome = ({ onNavigateToDeepRemember }) => {
   return (
     <div className="welcome-page">
       <div className="welcome-header">
-        <h1 className="welcome-title">🎵 Subtitle Client</h1>
+        <h1 className="welcome-title">Deep Learning</h1>
         <p className="welcome-subtitle">Quick Access Menu</p>
       </div>
       
