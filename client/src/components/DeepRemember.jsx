@@ -4,6 +4,7 @@ import DashboardView from './DashboardView'
 import ManageCards from './ManageCards'
 import HelpDeepRememberModal from './HelpDeepRememberModal'
 import Header from './header/Header'
+import UserManage from './header/user/UserManage'
 import { useToast } from './ToastProvider'
 import './DeepRemember.css'
 
@@ -260,32 +261,13 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
       </div>
 
       {/* User Setup Modal */}
-      {showUserSetup && (
-        <div className="modal-overlay" onClick={() => setShowUserSetup(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>👤 User Setup</h3>
-              <button className="modal-close" onClick={() => setShowUserSetup(false)}>&times;</button>
-            </div>
-            <div className="modal-form">
-              <input 
-                type="text" 
-                value={currentUserId}
-                onChange={(e) => setCurrentUserId(e.target.value)}
-                placeholder="Enter your user ID" 
-              />
-              <div className="modal-buttons">
-                <button className="btn-modal btn-modal-secondary" onClick={() => setShowUserSetup(false)}>
-                  Cancel
-                </button>
-                <button className="btn-modal btn-modal-primary" onClick={loadUserData}>
-                  Load My Data
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <UserManage
+        isOpen={showUserSetup}
+        onClose={() => setShowUserSetup(false)}
+        currentUserId={currentUserId}
+        onUserIdChange={setCurrentUserId}
+        onLoadUserData={loadUserData}
+      />
 
        {/* Create Card Modal */}
        <CreateCardModal
