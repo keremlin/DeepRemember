@@ -1,0 +1,117 @@
+/* Sample Sentence Circle Component */
+
+.sample-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #28a745;
+  border: 2px solid #28a745;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+}
+
+.sample-circle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+  border-color: #218838;
+  color: #218838;
+}
+
+.sample-circle:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(40, 167, 69, 0.2);
+}
+
+.sample-circle.playing {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.sample-circle.playing:hover {
+  border-color: #c82333;
+  color: #c82333;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Play icon styling */
+.play-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.play-icon {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Number text styling */
+.number-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Shining effect for shortcut keys */
+.sample-circle.shining {
+  animation: keyShine 0.3s ease-in-out;
+  color: #ffd700 !important;
+  font-weight: bold !important;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.8) !important;
+  border: 1px solid rgba(255, 215, 0, 0.6) !important;
+}
+
+@keyframes keyShine {
+  0% {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+  50% {
+    color: #ffed4e;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 1);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+  100% {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sample-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+  
+  .play-icon-container {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .play-icon {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .number-text {
+    font-size: 0.75rem;
+  }
+}

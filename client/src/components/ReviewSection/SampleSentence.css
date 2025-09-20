@@ -20,10 +20,44 @@
   margin-bottom: 0;
 }
 
+/* Sentence content layout */
+.sentence-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sentence-text {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+/* Audio controls container */
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .context-line {
     padding: 6px 10px;
     margin-bottom: 6px;
+  }
+  
+  .sentence-content {
+    gap: 8px;
+  }
+  
+  .sentence-text {
+    font-size: 0.9rem;
+  }
+  
+  .audio-controls {
+    gap: 6px;
   }
 }
