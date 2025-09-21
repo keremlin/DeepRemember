@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useToast } from '../ToastProvider'
 import './AudioPlayer.css'
 
 const AudioPlayer = () => {
+  const { showSuccess, showError } = useToast()
   const [currentTrack, setCurrentTrack] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -194,6 +196,7 @@ const AudioPlayer = () => {
     setSubtitleText('')
     setCurrentSubtitleIndex(-1)
   }
+
 
   return (
     <div className="audio-player">
