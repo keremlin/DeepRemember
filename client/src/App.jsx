@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Welcome from './components/welcome/Welcome'
 import DeepRemember from './components/DeepRemember'
+import PlayerPage from './components/player/PlayerPage'
 import { ToastProvider } from './components/ToastProvider'
 import './App.css'
 
@@ -15,13 +16,22 @@ function App() {
     setCurrentView('welcome')
   }
 
+  const navigateToPlayer = () => {
+    setCurrentView('player')
+  }
+
   return (
     <ToastProvider>
       <div className="App">
         {currentView === 'welcome' ? (
-          <Welcome onNavigateToDeepRemember={navigateToDeepRemember} />
-        ) : (
+          <Welcome 
+            onNavigateToDeepRemember={navigateToDeepRemember}
+            onNavigateToPlayer={navigateToPlayer}
+          />
+        ) : currentView === 'deepremember' ? (
           <DeepRemember onNavigateToWelcome={navigateToWelcome} />
+        ) : (
+          <PlayerPage onNavigateToWelcome={navigateToWelcome} />
         )}
       </div>
     </ToastProvider>

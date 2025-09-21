@@ -1,0 +1,377 @@
+/* Audio Player Component Styles */
+
+.audio-player {
+  background: #1a1a1a;
+  color: white;
+  border-radius: 15px;
+  padding: 20px;
+  width: 100%;
+  max-width: 1000px;
+  min-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+
+
+/* Main Player */
+.player-main {
+  margin-bottom: 20px;
+}
+
+.player-info {
+  margin-bottom: 20px;
+}
+
+.track-info {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.track-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+.track-info p {
+  margin: 0;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+/* Subtitle Display */
+.subtitle-display {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.current-subtitle {
+  font-size: 1.1rem;
+  line-height: 1.4;
+  text-align: center;
+  color: #fff;
+  font-weight: 400;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+/* Progress Bar */
+.progress-container {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.1s ease;
+}
+
+.progress-bar:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Control Buttons */
+.control-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-play-pause {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-play-pause:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-play-pause:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Volume Control */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.volume-slider {
+  width: 100px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #667eea;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #667eea;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Speed Control */
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.speed-select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.speed-select option {
+  background: #1a1a1a;
+  color: white;
+}
+
+/* Panels */
+.playlist-panel,
+.subtitle-panel {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.playlist-panel h4,
+.subtitle-panel h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* Playlist */
+.playlist-list {
+  height: 200px;
+  overflow-y: auto;
+}
+
+.playlist-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 5px;
+}
+
+.playlist-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.playlist-item.active {
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.track-number {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-right: 10px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.track-name {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+}
+
+/* Subtitle List */
+.subtitle-list {
+  height: 300px;
+  overflow-y: auto;
+}
+
+.subtitle-item {
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 5px;
+  border-left: 3px solid transparent;
+}
+
+.subtitle-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(102, 126, 234, 0.5);
+}
+
+.subtitle-item.active {
+  background: rgba(102, 126, 234, 0.2);
+  border-left-color: #667eea;
+}
+
+.subtitle-time {
+  display: block;
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 5px;
+}
+
+.subtitle-text {
+  display: block;
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .audio-player {
+    padding: 15px;
+    margin: 10px;
+    min-width: 600px;
+    max-width: 100%;
+  }
+  
+  .control-buttons {
+    gap: 15px;
+  }
+  
+  .btn-play-pause {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .volume-slider {
+    width: 80px;
+  }
+  
+  .current-subtitle {
+    font-size: 1rem;
+  }
+  
+  .playlist-list {
+    height: 150px;
+  }
+  
+  .subtitle-list {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .audio-player {
+    padding: 10px;
+    margin: 5px;
+    min-width: 400px;
+    max-width: 100%;
+  }
+  
+  .player-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .btn-play-pause {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+  
+  .volume-slider {
+    width: 60px;
+  }
+  
+  .control-buttons {
+    gap: 10px;
+  }
+  
+  .current-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .playlist-list {
+    height: 120px;
+  }
+  
+  .subtitle-list {
+    height: 150px;
+  }
+}
+
+/* Scrollbar Styling */
+.playlist-list::-webkit-scrollbar,
+.subtitle-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.playlist-list::-webkit-scrollbar-track,
+.subtitle-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.playlist-list::-webkit-scrollbar-thumb,
+.subtitle-list::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.5);
+  border-radius: 3px;
+}
+
+.playlist-list::-webkit-scrollbar-thumb:hover,
+.subtitle-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.7);
+}

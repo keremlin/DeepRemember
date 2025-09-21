@@ -2,7 +2,7 @@ import React from 'react'
 import RadialMenu from './RadialMenu'
 import './Welcome.css'
 
-const Welcome = ({ onNavigateToDeepRemember }) => {
+const Welcome = ({ onNavigateToDeepRemember, onNavigateToPlayer }) => {
   return (
     <div className="welcome-page">
       <div className="welcome-header">
@@ -10,7 +10,10 @@ const Welcome = ({ onNavigateToDeepRemember }) => {
         <p className="welcome-subtitle">Quick Access Menu</p>
       </div>
       
-      <RadialMenu onNavigateToDeepRemember={onNavigateToDeepRemember} />
+      <RadialMenu 
+        onNavigateToDeepRemember={onNavigateToDeepRemember}
+        onNavigateToPlayer={onNavigateToPlayer}
+      />
       
       <div className="welcome-footer">
         <p>Click the center button to open the menu</p>

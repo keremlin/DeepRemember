@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import './RadialMenu.css'
 
-const RadialMenu = ({ onNavigateToDeepRemember }) => {
+const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer }) => {
   const [isOpen, setIsOpen] = useState(true)
 
   const menuItems = [
@@ -12,8 +12,8 @@ const RadialMenu = ({ onNavigateToDeepRemember }) => {
           <polygon points="5,3 19,12 5,21"/>
         </svg>
       ),
-      label: 'Play/Pause',
-      action: () => console.log('Play/Pause clicked')
+      label: 'Audio Player',
+      action: () => console.log('Audio Player clicked')
     },
     {
       id: 'new-note',
@@ -111,6 +111,11 @@ const RadialMenu = ({ onNavigateToDeepRemember }) => {
       // Navigate to DeepRemember when "Explore AI" or "Cards" is clicked
       if (onNavigateToDeepRemember) {
         onNavigateToDeepRemember()
+      }
+    } else if (item.id === 'play-pause') {
+      // Navigate to Audio Player when "Audio Player" is clicked
+      if (onNavigateToPlayer) {
+        onNavigateToPlayer()
       }
     } else {
       item.action()
