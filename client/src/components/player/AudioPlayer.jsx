@@ -17,6 +17,10 @@ const AudioPlayer = () => {
   const [showSubtitleList, setShowSubtitleList] = useState(true)
   const [subtitleTracks, setSubtitleTracks] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [translationText, setTranslationText] = useState('')
+  const [showTranslation, setShowTranslation] = useState(false)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [translationType, setTranslationType] = useState('') // 'word' or 'sentence'
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
@@ -168,6 +172,54 @@ const AudioPlayer = () => {
     }
   }
 
+  const handleSubtitleTextClick = async (text, type = 'sentence') => {
+    if (!text || isTranslating) return
+    
+    setIsTranslating(true)
+    setShowTranslation(true)
+    setTranslationType(type)
+    setTranslationText('Loading translation...')
+    
+    try {
+      // Different prompts for word vs sentence translation
+      const prompt = type === 'word' 
+        ? `answer in this format {"translation":"string", "word":"realWord"} , what is the translation of the word "${text}"`
+        : `answer in this format {"translation":"string", "sentence":"realSentence"} , what is the translation of "${text}"`
+      
+      const response = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3.2',
+          prompt: prompt,
+          stream: false
+        })
+      })
+      
+      const data = await response.json()
+      let translation = 'No translation found.'
+      
+      if (data.response) {
+        try {
+          const match = data.response.match(/\{[^}]+\}/)
+          if (match) {
+            const parsed = JSON.parse(match[0])
+            translation = parsed.translation || translation
+          }
+        } catch (e) {
+          console.error('Error parsing translation:', e)
+        }
+      }
+      
+      setTranslationText(translation)
+    } catch (error) {
+      console.error('Translation error:', error)
+      setTranslationText('Error fetching translation.')
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
   const handleVolumeChange = (e) => {
     const newVolume = parseFloat(e.target.value)
     setVolume(newVolume)
@@ -209,11 +261,70 @@ const AudioPlayer = () => {
           
           <div className="subtitle-display">
             {subtitleText && (
+              <div 
+                className="current-subtitle"
+                onClick={(e) => {
+                  const word = e.target.textContent || e.target.innerText
+                  handleSubtitleTextClick(word, 'word')
+                }}
+                style={{ cursor: 'pointer' }}
+                title="Click a word to translate"
+              >
+                {subtitleText.split(' ').map((word, index) => (
+                  <span 
+                    key={index}
+                    className="subtitle-word"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleSubtitleTextClick(word, 'word')
+                    }}
+                    style={{ 
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      borderRadius: '3px',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(102, 126, 234, 0.2)'
+                      e.target.style.color = '#667eea'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent'
+                      e.target.style.color = 'inherit'
+                    }}
+                  >
+                    {word}
+                  </span>
+                ))}
+              </div>
+            )}
+            {!subtitleText && (
               <div className="current-subtitle">
-                {subtitleText}
+                No subtitle available or playing
               </div>
             )}
           </div>
+          
+          {showTranslation && (
+            <div className="translation-display">
+              <div className="translation-header">
+                <span>
+                  🤖 {translationType === 'word' ? 'Word Translation' : 'Sentence Translation'}
+                </span>
+                <button 
+                  className="translation-close"
+                  onClick={() => setShowTranslation(false)}
+                  title="Close translation"
+                >
+                  ×
+                </button>
+              </div>
+              <p className="translation-text">
+                {translationText}
+              </p>
+            </div>
+          )}
+          
         </div>
 
         <div className="player-controls">
@@ -285,7 +396,17 @@ const AudioPlayer = () => {
                   <span className="subtitle-time">
                     {formatTime(subtitle.startTime)} - {formatTime(subtitle.endTime)}
                   </span>
-                  <span className="subtitle-text">{subtitle.text}</span>
+                  <span 
+                    className="subtitle-text"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleSubtitleTextClick(subtitle.text, 'sentence')
+                    }}
+                    style={{ cursor: 'pointer' }}
+                    title="Click to translate sentence"
+                  >
+                    {subtitle.text}
+                  </span>
                 </div>
               ))
             ) : (

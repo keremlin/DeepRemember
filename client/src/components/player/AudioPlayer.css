@@ -64,6 +64,15 @@
   font-weight: 400;
   max-width: 100%;
   word-wrap: break-word;
+  transition: all 0.3s ease;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.current-subtitle:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  transform: translateY(-1px);
 }
 
 /* Progress Bar */
@@ -276,6 +285,79 @@
   font-size: 14px;
   color: #fff;
   line-height: 1.4;
+  transition: all 0.3s ease;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.subtitle-text:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+/* Translation Display */
+.translation-display {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 15px;
+  animation: translationSlideIn 0.3s ease-out;
+}
+
+@keyframes translationSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.translation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(9, 35, 146, 0.2);
+}
+
+.translation-header span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(102, 126, 234, 0.7);
+}
+
+.translation-close {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.translation-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.translation-text {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: rgba(3, 3, 3, 0.7);
+  margin: 0;
+  font-style: italic;
 }
 
 /* Responsive Design */
