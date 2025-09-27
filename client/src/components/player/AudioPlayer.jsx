@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useToast } from '../ToastProvider'
+import Translator from './Translator'
 import './AudioPlayer.css'
 
 const AudioPlayer = () => {
@@ -21,6 +22,7 @@ const AudioPlayer = () => {
   const [showTranslation, setShowTranslation] = useState(false)
   const [isTranslating, setIsTranslating] = useState(false)
   const [translationType, setTranslationType] = useState('') // 'word' or 'sentence'
+  const [originalText, setOriginalText] = useState('')
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
@@ -178,6 +180,7 @@ const AudioPlayer = () => {
     setIsTranslating(true)
     setShowTranslation(true)
     setTranslationType(type)
+    setOriginalText(text)
     setTranslationText('Loading translation...')
     
     try {
@@ -305,25 +308,14 @@ const AudioPlayer = () => {
             )}
           </div>
           
-          {showTranslation && (
-            <div className="translation-display">
-              <div className="translation-header">
-                <span>
-                  🤖 {translationType === 'word' ? 'Word Translation' : 'Sentence Translation'}
-                </span>
-                <button 
-                  className="translation-close"
-                  onClick={() => setShowTranslation(false)}
-                  title="Close translation"
-                >
-                  ×
-                </button>
-              </div>
-              <p className="translation-text">
-                {translationText}
-              </p>
-            </div>
-          )}
+          <Translator 
+            showTranslation={showTranslation}
+            setShowTranslation={setShowTranslation}
+            translationText={translationText}
+            translationType={translationType}
+            isTranslating={isTranslating}
+            originalText={originalText}
+          />
           
         </div>
 
