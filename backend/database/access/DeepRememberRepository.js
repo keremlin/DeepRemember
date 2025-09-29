@@ -89,22 +89,31 @@ class DeepRememberRepository {
         { user_id: userId }
       );
 
-      return cards.map(card => ({
-        id: card.card_id,
-        word: card.word,
-        translation: card.translation,
-        context: card.context,
-        state: card.state,
-        due: card.due,
-        stability: card.stability,
-        difficulty: card.difficulty,
-        elapsed_days: card.elapsed_days,
-        scheduled_days: card.scheduled_days,
-        reps: card.reps,
-        lapses: card.lapses,
-        created: card.created_at,
-        lastReviewed: card.last_reviewed
-      }));
+      // Get labels for each card
+      const cardsWithLabels = await Promise.all(
+        cards.map(async (card) => {
+          const labels = await this.getCardLabels(userId, card.card_id);
+          return {
+            id: card.card_id,
+            word: card.word,
+            translation: card.translation,
+            context: card.context,
+            state: card.state,
+            due: card.due,
+            stability: card.stability,
+            difficulty: card.difficulty,
+            elapsed_days: card.elapsed_days,
+            scheduled_days: card.scheduled_days,
+            reps: card.reps,
+            lapses: card.lapses,
+            created: card.created_at,
+            lastReviewed: card.last_reviewed,
+            labels: labels
+          };
+        })
+      );
+
+      return cardsWithLabels;
     } catch (error) {
       console.error('[SRS-REPO] Get user cards error:', error);
       throw error;
@@ -168,22 +177,31 @@ class DeepRememberRepository {
         { user_id: userId, due: now }
       );
 
-      return cards.map(card => ({
-        id: card.card_id,
-        word: card.word,
-        translation: card.translation,
-        context: card.context,
-        state: card.state,
-        due: card.due,
-        stability: card.stability,
-        difficulty: card.difficulty,
-        elapsed_days: card.elapsed_days,
-        scheduled_days: card.scheduled_days,
-        reps: card.reps,
-        lapses: card.lapses,
-        created: card.created_at,
-        lastReviewed: card.last_reviewed
-      }));
+      // Get labels for each card
+      const cardsWithLabels = await Promise.all(
+        cards.map(async (card) => {
+          const labels = await this.getCardLabels(userId, card.card_id);
+          return {
+            id: card.card_id,
+            word: card.word,
+            translation: card.translation,
+            context: card.context,
+            state: card.state,
+            due: card.due,
+            stability: card.stability,
+            difficulty: card.difficulty,
+            elapsed_days: card.elapsed_days,
+            scheduled_days: card.scheduled_days,
+            reps: card.reps,
+            lapses: card.lapses,
+            created: card.created_at,
+            lastReviewed: card.last_reviewed,
+            labels: labels
+          };
+        })
+      );
+
+      return cardsWithLabels;
     } catch (error) {
       console.error('[SRS-REPO] Get due cards error:', error);
       throw error;
@@ -387,6 +405,346 @@ class DeepRememberRepository {
       );
     } catch (error) {
       console.error('[DeepRememberRepository] Error storing sentence analysis:', error);
+      throw error;
+    }
+  }
+
+  // ==================== LABEL MANAGEMENT METHODS ====================
+
+  /**
+   * Create a new label
+   */
+  async createLabel(userId, labelData) {
+    try {
+      // Only ensure user exists for user labels, not system labels
+      if (labelData.type === 'user' && userId) {
+        await this.createUser(userId);
+      }
+
+      const result = await this.db.execute(
+        `INSERT INTO labels (name, type, user_id, color, description) 
+         VALUES (?, ?, ?, ?, ?)`,
+        {
+          name: labelData.name,
+          type: labelData.type, // 'system' or 'user'
+          user_id: labelData.type === 'system' ? null : userId,
+          color: labelData.color || '#3B82F6',
+          description: labelData.description || ''
+        }
+      );
+
+      return {
+        id: result.lastInsertRowid,
+        name: labelData.name,
+        type: labelData.type,
+        user_id: labelData.type === 'system' ? null : userId,
+        color: labelData.color || '#3B82F6',
+        description: labelData.description || '',
+        created_at: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[SRS-REPO] Create label error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all labels for a user (both system and user labels)
+   */
+  async getUserLabels(userId) {
+    try {
+      const labels = await this.db.query(
+        `SELECT * FROM labels 
+         WHERE type = 'system' OR (type = 'user' AND user_id = ?) 
+         ORDER BY type ASC, name ASC`,
+        { user_id: userId }
+      );
+
+      return labels.map(label => ({
+        id: label.id,
+        name: label.name,
+        type: label.type,
+        user_id: label.user_id,
+        color: label.color,
+        description: label.description,
+        created_at: label.created_at
+      }));
+    } catch (error) {
+      console.error('[SRS-REPO] Get user labels error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get system labels
+   */
+  async getSystemLabels() {
+    try {
+      const labels = await this.db.query(
+        "SELECT * FROM labels WHERE type = 'system' ORDER BY name ASC"
+      );
+
+      return labels.map(label => ({
+        id: label.id,
+        name: label.name,
+        type: label.type,
+        user_id: label.user_id,
+        color: label.color,
+        description: label.description,
+        created_at: label.created_at
+      }));
+    } catch (error) {
+      console.error('[SRS-REPO] Get system labels error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a label
+   */
+  async updateLabel(labelId, labelData) {
+    try {
+      const result = await this.db.execute(
+        `UPDATE labels SET 
+          name = ?, color = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        {
+          name: labelData.name,
+          color: labelData.color,
+          description: labelData.description,
+          id: labelId
+        }
+      );
+
+      return result.changes > 0;
+    } catch (error) {
+      console.error('[SRS-REPO] Update label error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a user label (system labels cannot be deleted)
+   */
+  async deleteLabel(userId, labelId) {
+    try {
+      const result = await this.db.execute(
+        `DELETE FROM labels 
+         WHERE id = ? AND type = 'user' AND user_id = ?`,
+        { id: labelId, user_id: userId }
+      );
+
+      return result.changes > 0;
+    } catch (error) {
+      console.error('[SRS-REPO] Delete label error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Add a label to a card
+   */
+  async addLabelToCard(userId, cardId, labelId) {
+    try {
+      const result = await this.db.execute(
+        `INSERT INTO card_labels (card_id, user_id, label_id) 
+         VALUES (?, ?, ?)`,
+        { card_id: cardId, user_id: userId, label_id: labelId }
+      );
+
+      return result.changes > 0;
+    } catch (error) {
+      console.error('[SRS-REPO] Add label to card error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove a label from a card
+   */
+  async removeLabelFromCard(userId, cardId, labelId) {
+    try {
+      const result = await this.db.execute(
+        `DELETE FROM card_labels 
+         WHERE card_id = ? AND user_id = ? AND label_id = ?`,
+        { card_id: cardId, user_id: userId, label_id: labelId }
+      );
+
+      return result.changes > 0;
+    } catch (error) {
+      console.error('[SRS-REPO] Remove label from card error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get labels for a specific card
+   */
+  async getCardLabels(userId, cardId) {
+    try {
+      const labels = await this.db.query(
+        `SELECT l.* FROM labels l
+         JOIN card_labels cl ON l.id = cl.label_id
+         WHERE cl.card_id = ? AND cl.user_id = ?
+         ORDER BY l.type ASC, l.name ASC`,
+        { card_id: cardId, user_id: userId }
+      );
+
+      return labels.map(label => ({
+        id: label.id,
+        name: label.name,
+        type: label.type,
+        user_id: label.user_id,
+        color: label.color,
+        description: label.description,
+        created_at: label.created_at
+      }));
+    } catch (error) {
+      console.error('[SRS-REPO] Get card labels error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get cards filtered by label
+   */
+  async getCardsByLabel(userId, labelId) {
+    try {
+      const cards = await this.db.query(
+        `SELECT c.* FROM cards c
+         JOIN card_labels cl ON c.card_id = cl.card_id AND c.user_id = cl.user_id
+         WHERE cl.user_id = ? AND cl.label_id = ?
+         ORDER BY c.created_at ASC`,
+        { user_id: userId, label_id: labelId }
+      );
+
+      return cards.map(card => ({
+        id: card.card_id,
+        word: card.word,
+        translation: card.translation,
+        context: card.context,
+        state: card.state,
+        due: card.due,
+        stability: card.stability,
+        difficulty: card.difficulty,
+        elapsed_days: card.elapsed_days,
+        scheduled_days: card.scheduled_days,
+        reps: card.reps,
+        lapses: card.lapses,
+        created: card.created_at,
+        lastReviewed: card.last_reviewed
+      }));
+    } catch (error) {
+      console.error('[SRS-REPO] Get cards by label error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get due cards filtered by label
+   */
+  async getDueCardsByLabel(userId, labelId) {
+    try {
+      const now = new Date().toISOString();
+      const cards = await this.db.query(
+        `SELECT c.* FROM cards c
+         JOIN card_labels cl ON c.card_id = cl.card_id AND c.user_id = cl.user_id
+         WHERE cl.user_id = ? AND cl.label_id = ? AND c.due <= ?
+         ORDER BY c.due ASC`,
+        { user_id: userId, label_id: labelId, due: now }
+      );
+
+      return cards.map(card => ({
+        id: card.card_id,
+        word: card.word,
+        translation: card.translation,
+        context: card.context,
+        state: card.state,
+        due: card.due,
+        stability: card.stability,
+        difficulty: card.difficulty,
+        elapsed_days: card.elapsed_days,
+        scheduled_days: card.scheduled_days,
+        reps: card.reps,
+        lapses: card.lapses,
+        created: card.created_at,
+        lastReviewed: card.last_reviewed
+      }));
+    } catch (error) {
+      console.error('[SRS-REPO] Get due cards by label error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if system labels exist
+   */
+  async checkSystemLabelsExist() {
+    try {
+      const wordLabel = await this.db.queryOne(
+        "SELECT * FROM labels WHERE name = 'word' AND type = 'system'"
+      );
+      const sentenceLabel = await this.db.queryOne(
+        "SELECT * FROM labels WHERE name = 'sentence' AND type = 'system'"
+      );
+      
+      return {
+        word: !!wordLabel,
+        sentence: !!sentenceLabel,
+        allExist: !!(wordLabel && sentenceLabel)
+      };
+    } catch (error) {
+      console.error('[SRS-REPO] Check system labels error:', error);
+      return { word: false, sentence: false, allExist: false };
+    }
+  }
+
+  /**
+   * Initialize default system labels
+   */
+  async initializeSystemLabels() {
+    try {
+      // Check current status
+      const status = await this.checkSystemLabelsExist();
+      
+      if (status.allExist) {
+        console.log('[SRS-REPO] All system labels already exist');
+        return;
+      }
+
+      const systemLabels = [
+        { name: 'word', color: '#3B82F6', description: 'Cards created from individual words' },
+        { name: 'sentence', color: '#10B981', description: 'Cards created from sentences' }
+      ];
+
+      for (const labelData of systemLabels) {
+        try {
+          // Check if this specific label already exists
+          const existingLabel = await this.db.queryOne(
+            "SELECT * FROM labels WHERE name = ? AND type = 'system'",
+            { name: labelData.name }
+          );
+
+          if (!existingLabel) {
+            await this.createLabel(null, { ...labelData, type: 'system' });
+            console.log(`[SRS-REPO] Created system label: ${labelData.name}`);
+          } else {
+            console.log(`[SRS-REPO] System label '${labelData.name}' already exists`);
+          }
+        } catch (error) {
+          console.error(`[SRS-REPO] Error creating system label '${labelData.name}':`, error);
+        }
+      }
+
+      // Verify final status
+      const finalStatus = await this.checkSystemLabelsExist();
+      if (finalStatus.allExist) {
+        console.log('[SRS-REPO] System labels initialization completed successfully');
+      } else {
+        console.warn('[SRS-REPO] System labels initialization completed with some issues');
+      }
+    } catch (error) {
+      console.error('[SRS-REPO] Initialize system labels error:', error);
       throw error;
     }
   }

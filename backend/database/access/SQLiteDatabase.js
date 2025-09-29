@@ -98,12 +98,50 @@ class SQLiteDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_sentence_analysis_hash ON sentence_analysis_cache(hash);
     `;
 
+    const createLabelsTable = `
+      CREATE TABLE IF NOT EXISTS labels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('system', 'user')),
+        user_id TEXT,
+        color TEXT DEFAULT '#3B82F6',
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(name, user_id, type),
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+      )
+    `;
+
+    const createCardLabelsTable = `
+      CREATE TABLE IF NOT EXISTS card_labels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        card_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        label_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (card_id, user_id) REFERENCES cards(card_id, user_id) ON DELETE CASCADE,
+        FOREIGN KEY (label_id) REFERENCES labels(id) ON DELETE CASCADE,
+        UNIQUE(card_id, user_id, label_id)
+      )
+    `;
+
+    const createLabelIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_labels_user_id ON labels(user_id);
+      CREATE INDEX IF NOT EXISTS idx_labels_type ON labels(type);
+      CREATE INDEX IF NOT EXISTS idx_card_labels_card_id ON card_labels(card_id, user_id);
+      CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
+    `;
+
     try {
       this.db.exec(createUsersTable);
       this.db.exec(createCardsTable);
       this.db.exec(createSentenceAnalysisCacheTable);
+      this.db.exec(createLabelsTable);
+      this.db.exec(createCardLabelsTable);
       this.db.exec(createIndexes);
       this.db.exec(createSentenceAnalysisIndexes);
+      this.db.exec(createLabelIndexes);
       console.log('[DB] Database tables created successfully');
     } catch (error) {
       console.error('[DB] Failed to create tables:', error);

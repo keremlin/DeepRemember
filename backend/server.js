@@ -7,6 +7,7 @@ const indexRoutes = require('./routes/index');
 const uploadRoutes = require('./routes/upload');
 const filesRoutes = require('./routes/files');
 const deepRememberRoutes = require('./routes/deepRemember');
+const srsRoutes = require('./routes/srs');
 
 // Import configuration
 const config = require('./config/app');
@@ -48,6 +49,7 @@ app.use('/', indexRoutes);
 app.use('/', uploadRoutes);
 app.use('/', filesRoutes);
 app.use('/deepRemember', deepRememberRoutes);
+app.use('/api/srs', srsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
