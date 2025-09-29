@@ -161,7 +161,7 @@ router.post('/convert-to-speech', async (req, res) => {
         // Create a safe filename for the audio
         const safeWord = word.replace(/[^a-zA-Z0-9]/g, '_');
         const filename = `${safeWord}_${sentenceHash}.wav`;
-        const filepath = path.join(__dirname, '../voice', filename);
+        const filepath = path.resolve(process.cwd(), '..', 'voice', filename);
 
         // Check if audio file already exists
         if (fs.existsSync(filepath)) {
@@ -229,7 +229,7 @@ router.get('/get-audio/:word/:sentence', async (req, res) => {
         // Create the expected filename
         const safeWord = word.replace(/[^a-zA-Z0-9]/g, '_');
         const filename = `${safeWord}_${sentenceHash}.wav`;
-        const filepath = path.join(__dirname, '../voice', filename);
+        const filepath = path.resolve(process.cwd(), '..', 'voice', filename);
 
         // Check if audio file exists
         if (fs.existsSync(filepath)) {

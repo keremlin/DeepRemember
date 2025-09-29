@@ -1,0 +1,20 @@
+{
+  "name": "aitrainer-backend",
+  "version": "0.0.1",
+  "description": "Backend for AI Trainer - Express.js server with subtitle processing and learning system",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build-production.js",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "Arash Yehanehrad",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "ts-fsrs": "^5.2.2"
+  }
+}

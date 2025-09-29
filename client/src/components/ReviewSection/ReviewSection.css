@@ -1,0 +1,199 @@
+/* Review Section Component */
+.review-section {
+  width: 100%;
+}
+
+.review-section h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.current-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.current-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.card-content {
+  margin-bottom: 20px;
+}
+
+.word-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.word-display strong {
+  font-size: 1.8rem;
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+.answer-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.answer-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.answer-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.answer-shortcuts {
+  display: flex;
+  gap: 8px;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.shortcut-item {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.answer-content {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.translation-section {
+  margin-bottom: 15px;
+}
+
+.translation-section:last-child {
+  margin-bottom: 0;
+}
+
+.translation-section h4 {
+  color: #495057;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 5px;
+}
+
+.translation-text {
+  font-size: 1.2rem;
+  color: #2c3e50;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+
+
+/* Disabled states for always-visible sections */
+.translation-section.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.translation-section.disabled .translation-text {
+  color: #999;
+  font-style: italic;
+}
+
+.rating-buttons-container.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.rating-buttons-container.disabled .rating-btn {
+  cursor: not-allowed;
+}
+
+/* Ensure consistent sizing */
+.answer-content {
+  min-height: 450px; /* Maintain consistent height */
+}
+
+.translation-section {
+  min-height: 80px; /* Maintain consistent section heights */
+}
+
+
+.rating-buttons-container {
+  min-height: 60px; /* Maintain consistent button container height */
+}
+
+/* Shining effect for answer button shortcut keys */
+.shortcut-item.shining {
+  animation: keyShine 0.3s ease-in-out;
+  color: #ffd700 !important;
+  font-weight: bold !important;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.8) !important;
+  border: 1px solid rgba(255, 215, 0, 0.6) !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+}
+
+@keyframes keyShine {
+  0% {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+  50% {
+    color: #ffed4e;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 1);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+  100% {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  /* Rating button styles moved to ReviewButt.css */
+  
+  .answer-content {
+    min-height: 180px; /* Slightly smaller on mobile */
+  }
+  
+  .translation-section {
+    min-height: 70px; /* Slightly smaller on mobile */
+  }
+  
+}

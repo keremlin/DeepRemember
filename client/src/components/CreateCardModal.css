@@ -1,0 +1,286 @@
+/* CreateCardModal Component Styles */
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  max-width: 500px;
+  width: 90%;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Modal close button - now handled by CloseButton component */
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal-form input,
+.modal-form textarea {
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+}
+
+.modal-form input:focus,
+.modal-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.modal-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-modal {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-modal-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-modal-primary:hover {
+  background: #5a6fd8;
+  transform: translateY(-2px);
+}
+
+.btn-modal-secondary {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.btn-modal-secondary:hover {
+  background: #e0e0e0;
+}
+
+/* Similar words section */
+.similar-words-section {
+  margin-top: 15px;
+}
+
+.similar-words-section h4 {
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.similar-words-table {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.similar-words-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.similar-words-table th {
+  background: #f8f9fa;
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+}
+
+.similar-words-table td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.state-badge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: white;
+}
+
+/* Translation result */
+.translation-result {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.translation-result:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.translation-result h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.translation-result .translation-text {
+  color: #007bff;
+  font-weight: 500;
+}
+
+.sample-sentences {
+  color: #28a745;
+  font-style: italic;
+  white-space: pre-line;
+  margin-top: 5px;
+}
+
+.translation-hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 10px;
+}
+
+/* Input with button container */
+.input-with-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-with-button input {
+  flex: 1;
+  padding-right: 50px; /* Make space for the AI button */
+}
+
+/* AI Button */
+.ai-button {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 35px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ai-button:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.ai-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #ccc;
+  transform: translateY(-50%);
+}
+
+.ai-button strong {
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+/* Loading states */
+.btn-modal:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.translation-result.loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.translation-hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.translation-hint.loading {
+  color: #007bff;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-buttons {
+    flex-direction: column;
+  }
+}

@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Ensure files directory exists
-const filesDir = path.join(__dirname, '..', 'files');
+const filesDir = path.join(__dirname, '..', '..', 'files');
 if (!fs.existsSync(filesDir)) {
   fs.mkdirSync(filesDir);
 }

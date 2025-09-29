@@ -1,0 +1,15 @@
+{
+  "name": "aitrainer-frontend",
+  "version": "0.0.1",
+  "description": "Frontend for AI Trainer - Subtitle Player and Learning System",
+  "main": "index.js",
+  "scripts": {
+    "start": "echo 'Frontend files are served by the backend server'",
+    "dev": "echo 'Frontend files are served by the backend server'"
+  },
+  "keywords": ["frontend", "subtitle", "learning", "ai"],
+  "author": "Arash Yehanehrad",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

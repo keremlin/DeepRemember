@@ -29,7 +29,8 @@ const initializeSampleData = () => {
       scheduled_days: 0,
       reps: 0,
       lapses: 0,
-      created: new Date(Date.now() - 86400000).toISOString() // 1 day ago
+      created: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+      labels: [] // Labels will be added when using database
     },
     {
       id: 'card_002',
@@ -44,7 +45,8 @@ const initializeSampleData = () => {
       scheduled_days: 1,
       reps: 2,
       lapses: 0,
-      created: new Date(Date.now() - 172800000).toISOString() // 2 days ago
+      created: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+      labels: []
     },
     {
       id: 'card_003',
@@ -59,7 +61,8 @@ const initializeSampleData = () => {
       scheduled_days: 3,
       reps: 5,
       lapses: 1,
-      created: new Date(Date.now() - 259200000).toISOString() // 3 days ago
+      created: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+      labels: []
     },
     {
       id: 'card_004',
@@ -74,7 +77,8 @@ const initializeSampleData = () => {
       scheduled_days: 0,
       reps: 0,
       lapses: 0,
-      created: new Date().toISOString()
+      created: new Date().toISOString(),
+      labels: []
     },
     {
       id: 'card_005',
@@ -89,7 +93,8 @@ const initializeSampleData = () => {
       scheduled_days: 2,
       reps: 3,
       lapses: 0,
-      created: new Date(Date.now() - 345600000).toISOString() // 4 days ago
+      created: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
+      labels: []
     }
   ];
   
@@ -121,10 +126,55 @@ async function initializeDatabase() {
 // Initialize database and sample data on startup
 initializeDatabase();
 
+// Initialize system labels when database is ready
+async function initializeSystemLabels() {
+  try {
+    if (useDatabase && srsRepository) {
+      await srsRepository.initializeSystemLabels();
+      console.log('[SRS] System labels initialization completed');
+    } else {
+      console.log('[SRS] System labels initialization skipped (using memory mode)');
+    }
+  } catch (error) {
+    console.error('[SRS] Failed to initialize system labels:', error);
+  }
+}
+
+// Initialize system labels after database initialization with retry mechanism
+async function initializeSystemLabelsWithRetry() {
+  let attempts = 0;
+  const maxAttempts = 5;
+  
+  while (attempts < maxAttempts) {
+    try {
+      if (useDatabase && srsRepository) {
+        await srsRepository.initializeSystemLabels();
+        console.log('[SRS] System labels initialization completed');
+        return;
+      } else {
+        console.log('[SRS] System labels initialization skipped (using memory mode)');
+        return;
+      }
+    } catch (error) {
+      attempts++;
+      console.warn(`[SRS] System labels initialization attempt ${attempts} failed:`, error.message);
+      
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempts)); // Exponential backoff
+      } else {
+        console.error('[SRS] Failed to initialize system labels after all attempts');
+      }
+    }
+  }
+}
+
+// Initialize system labels after database initialization
+setTimeout(initializeSystemLabelsWithRetry, 2000);
+
 // Create a new card for learning
 router.post('/create-card', async (req, res) => {
   try {
-    const { userId, word, translation, context } = req.body;
+    const { userId, word, translation, context, labels } = req.body;
     
     if (!userId || !word) {
       return res.status(400).json({ error: 'userId and word are required' });
@@ -150,9 +200,24 @@ router.post('/create-card', async (req, res) => {
     if (useDatabase && srsRepository) {
       // Use database
       const result = await srsRepository.createCard(userId, cardData);
+      
+      // Add labels to the card if provided
+      if (labels && Array.isArray(labels) && labels.length > 0) {
+        for (const labelId of labels) {
+          try {
+            await srsRepository.addLabelToCard(userId, result.id, labelId);
+          } catch (labelError) {
+            console.warn(`[SRS] Failed to add label ${labelId} to card ${result.id}:`, labelError);
+          }
+        }
+      }
+      
+      // Get the card with its labels
+      const cardLabels = await srsRepository.getCardLabels(userId, result.id);
+      
       res.json({
         success: true,
-        card: result,
+        card: { ...result, labels: cardLabels },
         message: 'Card created successfully in database'
       });
     } else {
@@ -164,7 +229,7 @@ router.post('/create-card', async (req, res) => {
       
       res.json({
         success: true,
-        card: cardData,
+        card: { ...cardData, labels: [] },
         message: 'Card created successfully in memory'
       });
     }
@@ -612,6 +677,302 @@ router.get('/debug/log', async (req, res) => {
   } catch (error) {
     console.error('[SRS] Log error:', error);
     res.status(500).json({ error: 'Failed to generate log' });
+  }
+});
+
+// ==================== LABEL MANAGEMENT ENDPOINTS ====================
+
+// Get all labels for a user (system + user labels)
+router.get('/labels/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (useDatabase && srsRepository) {
+      const labels = await srsRepository.getUserLabels(userId);
+      res.json({
+        success: true,
+        labels
+      });
+    } else {
+      // Memory fallback - return empty array for now
+      res.json({
+        success: true,
+        labels: []
+      });
+    }
+  } catch (error) {
+    console.error('[SRS] Get labels error:', error);
+    res.status(500).json({ error: 'Failed to get labels' });
+  }
+});
+
+// Get system labels only
+router.get('/labels/system', async (req, res) => {
+  try {
+    if (useDatabase && srsRepository) {
+      const labels = await srsRepository.getSystemLabels();
+      res.json({
+        success: true,
+        labels
+      });
+    } else {
+      // Memory fallback - return basic system labels
+      res.json({
+        success: true,
+        labels: [
+          { id: 'sys_word', name: 'word', type: 'system', color: '#3B82F6', description: 'Cards created from individual words' },
+          { id: 'sys_sentence', name: 'sentence', type: 'system', color: '#10B981', description: 'Cards created from sentences' }
+        ]
+      });
+    }
+  } catch (error) {
+    console.error('[SRS] Get system labels error:', error);
+    res.status(500).json({ error: 'Failed to get system labels' });
+  }
+});
+
+// Check system labels status (for debugging)
+router.get('/labels/system/status', async (req, res) => {
+  try {
+    if (useDatabase && srsRepository) {
+      const status = await srsRepository.checkSystemLabelsExist();
+      const labels = await srsRepository.getSystemLabels();
+      
+      res.json({
+        success: true,
+        status,
+        labels,
+        message: status.allExist ? 'All system labels exist' : 'Some system labels are missing'
+      });
+    } else {
+      res.json({
+        success: true,
+        status: { word: true, sentence: true, allExist: true },
+        labels: [
+          { id: 'sys_word', name: 'word', type: 'system', color: '#3B82F6', description: 'Cards created from individual words' },
+          { id: 'sys_sentence', name: 'sentence', type: 'system', color: '#10B981', description: 'Cards created from sentences' }
+        ],
+        message: 'Using memory mode - system labels available'
+      });
+    }
+  } catch (error) {
+    console.error('[SRS] Get system labels status error:', error);
+    res.status(500).json({ error: 'Failed to get system labels status' });
+  }
+});
+
+// Create a new user label
+router.post('/labels/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, color, description } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Label name is required' });
+    }
+
+    if (useDatabase && srsRepository) {
+      const label = await srsRepository.createLabel(userId, {
+        name,
+        type: 'user',
+        color: color || '#3B82F6',
+        description: description || ''
+      });
+      
+      res.json({
+        success: true,
+        label,
+        message: 'Label created successfully'
+      });
+    } else {
+      // Memory fallback - not implemented for labels
+      res.status(503).json({ error: 'Label management not available in memory mode' });
+    }
+  } catch (error) {
+    console.error('[SRS] Create label error:', error);
+    res.status(500).json({ error: 'Failed to create label' });
+  }
+});
+
+// Update a user label
+router.put('/labels/:userId/:labelId', async (req, res) => {
+  try {
+    const { userId, labelId } = req.params;
+    const { name, color, description } = req.body;
+    
+    if (useDatabase && srsRepository) {
+      const success = await srsRepository.updateLabel(labelId, {
+        name,
+        color,
+        description
+      });
+      
+      if (!success) {
+        return res.status(404).json({ error: 'Label not found or not editable' });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Label updated successfully'
+      });
+    } else {
+      res.status(503).json({ error: 'Label management not available in memory mode' });
+    }
+  } catch (error) {
+    console.error('[SRS] Update label error:', error);
+    res.status(500).json({ error: 'Failed to update label' });
+  }
+});
+
+// Delete a user label
+router.delete('/labels/:userId/:labelId', async (req, res) => {
+  try {
+    const { userId, labelId } = req.params;
+    
+    if (useDatabase && srsRepository) {
+      const success = await srsRepository.deleteLabel(userId, labelId);
+      
+      if (!success) {
+        return res.status(404).json({ error: 'Label not found or not deletable' });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Label deleted successfully'
+      });
+    } else {
+      res.status(503).json({ error: 'Label management not available in memory mode' });
+    }
+  } catch (error) {
+    console.error('[SRS] Delete label error:', error);
+    res.status(500).json({ error: 'Failed to delete label' });
+  }
+});
+
+// Add a label to a card
+router.post('/cards/:userId/:cardId/labels', async (req, res) => {
+  try {
+    const { userId, cardId } = req.params;
+    const { labelId } = req.body;
+    
+    if (!labelId) {
+      return res.status(400).json({ error: 'labelId is required' });
+    }
+
+    if (useDatabase && srsRepository) {
+      const success = await srsRepository.addLabelToCard(userId, cardId, labelId);
+      
+      if (!success) {
+        return res.status(400).json({ error: 'Failed to add label to card' });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Label added to card successfully'
+      });
+    } else {
+      res.status(503).json({ error: 'Label management not available in memory mode' });
+    }
+  } catch (error) {
+    console.error('[SRS] Add label to card error:', error);
+    res.status(500).json({ error: 'Failed to add label to card' });
+  }
+});
+
+// Remove a label from a card
+router.delete('/cards/:userId/:cardId/labels/:labelId', async (req, res) => {
+  try {
+    const { userId, cardId, labelId } = req.params;
+    
+    if (useDatabase && srsRepository) {
+      const success = await srsRepository.removeLabelFromCard(userId, cardId, labelId);
+      
+      if (!success) {
+        return res.status(404).json({ error: 'Label not found on card' });
+      }
+      
+      res.json({
+        success: true,
+        message: 'Label removed from card successfully'
+      });
+    } else {
+      res.status(503).json({ error: 'Label management not available in memory mode' });
+    }
+  } catch (error) {
+    console.error('[SRS] Remove label from card error:', error);
+    res.status(500).json({ error: 'Failed to remove label from card' });
+  }
+});
+
+// Get labels for a specific card
+router.get('/cards/:userId/:cardId/labels', async (req, res) => {
+  try {
+    const { userId, cardId } = req.params;
+    
+    if (useDatabase && srsRepository) {
+      const labels = await srsRepository.getCardLabels(userId, cardId);
+      
+      res.json({
+        success: true,
+        labels
+      });
+    } else {
+      res.json({
+        success: true,
+        labels: []
+      });
+    }
+  } catch (error) {
+    console.error('[SRS] Get card labels error:', error);
+    res.status(500).json({ error: 'Failed to get card labels' });
+  }
+});
+
+// Get cards filtered by label
+router.get('/cards/:userId/label/:labelId', async (req, res) => {
+  try {
+    const { userId, labelId } = req.params;
+    
+    if (useDatabase && srsRepository) {
+      const cards = await srsRepository.getCardsByLabel(userId, labelId);
+      
+      res.json({
+        success: true,
+        cards
+      });
+    } else {
+      res.json({
+        success: true,
+        cards: []
+      });
+    }
+  } catch (error) {
+    console.error('[SRS] Get cards by label error:', error);
+    res.status(500).json({ error: 'Failed to get cards by label' });
+  }
+});
+
+// Get due cards filtered by label
+router.get('/review-cards/:userId/label/:labelId', async (req, res) => {
+  try {
+    const { userId, labelId } = req.params;
+    
+    if (useDatabase && srsRepository) {
+      const cards = await srsRepository.getDueCardsByLabel(userId, labelId);
+      
+      res.json({
+        success: true,
+        cards
+      });
+    } else {
+      res.json({
+        success: true,
+        cards: []
+      });
+    }
+  } catch (error) {
+    console.error('[SRS] Get due cards by label error:', error);
+    res.status(500).json({ error: 'Failed to get due cards by label' });
   }
 });
 
