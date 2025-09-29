@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import CreateCardModal from '../CreateCardModal'
 
 const Translator = ({ 
   showTranslation, 
@@ -6,8 +7,11 @@ const Translator = ({
   translationText, 
   translationType, 
   isTranslating,
-  originalText 
+  originalText,
+  currentUserId 
 }) => {
+  const [showCreateCardModal, setShowCreateCardModal] = useState(false)
+  
   if (!showTranslation) return null
 
   return (
@@ -16,13 +20,22 @@ const Translator = ({
         <span>
           🤖 {translationType === 'word' ? 'Word Translation' : 'Sentence Translation'}
         </span>
-        <button 
-          className="translation-close"
-          onClick={() => setShowTranslation(false)}
-          title="Close translation"
-        >
-          ×
-        </button>
+        <div className="translation-actions">
+          <button 
+            className="translation-add"
+            onClick={() => setShowCreateCardModal(true)}
+            title="Add to cards"
+          >
+            ➕
+          </button>
+          <button 
+            className="translation-close"
+            onClick={() => setShowTranslation(false)}
+            title="Close translation"
+          >
+            ×
+          </button>
+        </div>
       </div>
       {originalText && (
         <div className="original-text">
@@ -32,6 +45,21 @@ const Translator = ({
       <p className="translation-text">
         <strong>Translation:</strong> {translationText}
       </p>
+      
+      <CreateCardModal
+        isOpen={showCreateCardModal}
+        onClose={() => setShowCreateCardModal(false)}
+        onCreateCard={() => {
+          setShowCreateCardModal(false)
+          setShowTranslation(false)
+        }}
+        currentUserId={currentUserId}
+        prefillData={{
+          word: originalText,
+          translation: translationText,
+          type: translationType
+        }}
+      />
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { useToast } from '../ToastProvider'
 import Translator from './Translator'
 import './AudioPlayer.css'
 
-const AudioPlayer = () => {
+const AudioPlayer = ({ currentUserId = 'user123' }) => {
   const { showSuccess, showError } = useToast()
   const [currentTrack, setCurrentTrack] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -315,6 +315,7 @@ const AudioPlayer = () => {
             translationType={translationType}
             isTranslating={isTranslating}
             originalText={originalText}
+            currentUserId={currentUserId}
           />
           
         </div>

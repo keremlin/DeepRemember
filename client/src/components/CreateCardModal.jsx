@@ -3,13 +3,14 @@ import CloseButton from './CloseButton'
 import { useToast } from './ToastProvider'
 import './CreateCardModal.css'
 
-const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
+const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefillData }) => {
   const { showSuccess, showError, showWarning, showInfo } = useToast()
   
   // Create card form states
   const [newWord, setNewWord] = useState('')
   const [newTranslation, setNewTranslation] = useState('')
   const [newContext, setNewContext] = useState('')
+  const [cardType, setCardType] = useState('word') // 'word' or 'sentence'
   const [similarWords, setSimilarWords] = useState([])
   const [showSimilarWords, setShowSimilarWords] = useState(false)
   const [translationData, setTranslationData] = useState(null)
@@ -242,7 +243,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
           userId: currentUserId,
           word: newWord,
           translation: newTranslation,
-          context: newContext
+          context: newContext,
+          type: cardType
         })
       })
       
@@ -269,6 +271,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
         setNewWord('')
         setNewTranslation('')
         setNewContext('')
+        setCardType('word')
         setShowSimilarWords(false)
         setShowTranslationResult(false)
         setTranslationData(null)
@@ -294,6 +297,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     setNewWord('')
     setNewTranslation('')
     setNewContext('')
+    setCardType('word')
     setShowSimilarWords(false)
     setShowTranslationResult(false)
     setTranslationData(null)
@@ -304,6 +308,15 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
     setIsCreatingCard(false)
     onClose()
   }
+
+  // Handle prefill data when modal opens
+  useEffect(() => {
+    if (isOpen && prefillData) {
+      setNewWord(prefillData.word || '')
+      setNewTranslation(prefillData.translation || '')
+      setCardType(prefillData.type || 'word')
+    }
+  }, [isOpen, prefillData])
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -331,6 +344,27 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
           />
         </div>
         <div className="modal-form">
+          <div className="card-type-selector">
+            <label>
+              <input
+                type="radio"
+                value="word"
+                checked={cardType === 'word'}
+                onChange={(e) => setCardType(e.target.value)}
+              />
+              Word
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="sentence"
+                checked={cardType === 'sentence'}
+                onChange={(e) => setCardType(e.target.value)}
+              />
+              Sentence
+            </label>
+          </div>
+          
           <div className="input-with-button">
             <input 
               type="text" 
@@ -340,7 +374,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId }) => {
                 searchSimilarWords(e.target.value)
               }}
               onBlur={handleWordBlur}
-              placeholder="Enter word to learn"
+              placeholder={cardType === 'word' ? "Enter word to learn" : "Enter sentence to learn"}
               tabIndex={1}
             />
             <button
