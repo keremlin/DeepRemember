@@ -41,6 +41,51 @@ async function initializeDatabase() {
 // Initialize database and sample data on startup
 initializeDatabase();
 
+// Initialize system labels when database is ready
+async function initializeSystemLabels() {
+  try {
+    if (useDatabase && deepRememberRepository) {
+      await deepRememberRepository.initializeSystemLabels();
+      console.log('[DeepRemember] System labels initialization completed');
+    } else {
+      console.log('[DeepRemember] System labels initialization skipped (using memory mode)');
+    }
+  } catch (error) {
+    console.error('[DeepRemember] Failed to initialize system labels:', error);
+  }
+}
+
+// Initialize system labels after database initialization with retry mechanism
+async function initializeSystemLabelsWithRetry() {
+  let attempts = 0;
+  const maxAttempts = 5;
+  
+  while (attempts < maxAttempts) {
+    try {
+      if (useDatabase && deepRememberRepository) {
+        await deepRememberRepository.initializeSystemLabels();
+        console.log('[DeepRemember] System labels initialization completed');
+        return;
+      } else {
+        console.log('[DeepRemember] System labels initialization skipped (using memory mode)');
+        return;
+      }
+    } catch (error) {
+      attempts++;
+      console.warn(`[DeepRemember] System labels initialization attempt ${attempts} failed:`, error.message);
+      
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempts)); // Exponential backoff
+      } else {
+        console.error('[DeepRemember] Failed to initialize system labels after all attempts');
+      }
+    }
+  }
+}
+
+// Initialize system labels after database initialization
+setTimeout(initializeSystemLabelsWithRetry, 2000);
+
 // Function to generate hash for sentence analysis caching
 function generateSentenceHash(sentence, word = '') {
     const normalizedSentence = sentence.toLowerCase().trim();
@@ -52,7 +97,7 @@ function generateSentenceHash(sentence, word = '') {
 // Create a new card for learning
 router.post('/create-card', async (req, res) => {
   try {
-    const { userId, word, translation, context } = req.body;
+    const { userId, word, translation, context, type } = req.body;
     
     if (!userId || !word) {
       return res.status(400).json({ error: 'userId and word are required' });
@@ -78,9 +123,29 @@ router.post('/create-card', async (req, res) => {
     if (useDatabase && deepRememberRepository) {
       // Use database
       const result = await deepRememberRepository.createCard(userId, cardData);
+      
+      // Automatically associate card with appropriate system label based on type
+      if (type) {
+        try {
+          // Get system labels to find the appropriate label ID
+          const systemLabels = await deepRememberRepository.getSystemLabels();
+          const labelToAdd = systemLabels.find(label => label.name === type);
+          
+          if (labelToAdd) {
+            await deepRememberRepository.addLabelToCard(userId, result.id, labelToAdd.id);
+            console.log(`[DeepRemember] Added ${type} label to card ${result.id}`);
+          }
+        } catch (labelError) {
+          console.warn(`[DeepRemember] Failed to add ${type} label to card ${result.id}:`, labelError);
+        }
+      }
+      
+      // Get the card with its labels
+      const cardLabels = await deepRememberRepository.getCardLabels(userId, result.id);
+      
       res.json({
         success: true,
-        card: result,
+        card: { ...result, labels: cardLabels },
         message: 'Card created successfully in database'
       });
     } else {
@@ -92,7 +157,7 @@ router.post('/create-card', async (req, res) => {
       
       res.json({
         success: true,
-        card: cardData,
+        card: { ...cardData, labels: [] },
         message: 'Card created successfully in memory'
       });
     }
@@ -789,11 +854,18 @@ router.get('/stats/:userId', async (req, res) => {
       // Use memory storage
       if (!userCards.has(userId)) {
         return res.json({
-          totalCards: 0,
-          dueCards: 0,
-          learningCards: 0,
-          reviewCards: 0,
-          relearningCards: 0
+          success: true,
+          stats: {
+            totalCards: 0,
+            dueCards: 0,
+            learningCards: 0,
+            reviewCards: 0,
+            relearningCards: 0,
+            labelCounts: [
+              { name: 'word', color: '#3B82F6', count: 0 },
+              { name: 'sentence', color: '#10B981', count: 0 }
+            ]
+          }
         });
       }
       
@@ -805,7 +877,11 @@ router.get('/stats/:userId', async (req, res) => {
         dueCards: cards.filter(card => new Date(card.due) <= now).length,
         learningCards: cards.filter(card => card.state === 0).length,
         reviewCards: cards.filter(card => card.state === 1).length,
-        relearningCards: cards.filter(card => card.state === 2).length
+        relearningCards: cards.filter(card => card.state === 2).length,
+        labelCounts: [
+          { name: 'word', color: '#3B82F6', count: 0 },
+          { name: 'sentence', color: '#10B981', count: 0 }
+        ]
       };
       
       res.json({

@@ -31,6 +31,27 @@ const StatsSection = ({
             <div className="stat-label">Review</div>
           </div>
         </div>
+        
+        {/* Label Statistics */}
+        {stats.labelCounts && stats.labelCounts.length > 0 && (
+          <div className="label-stats-section">
+            <h4>🏷️ Cards by Labels</h4>
+            <div className="label-stats-grid">
+              {stats.labelCounts.map((label, index) => (
+                <div key={index} className="label-stat-item">
+                  <div className="label-stat-header">
+                    <div 
+                      className="label-color-indicator" 
+                      style={{ backgroundColor: label.color }}
+                    ></div>
+                    <span className="label-name">{label.name}</span>
+                  </div>
+                  <div className="label-stat-number">{label.count}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="create-card-button">
