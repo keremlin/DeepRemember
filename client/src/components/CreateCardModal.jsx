@@ -210,6 +210,9 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
             
             const data = await response.json()
             // Audio generation completed (success or failure handled silently)
+            if (!data.success || !data.audioUrl) {
+              console.warn('Audio generation failed or TTS service unavailable')
+            }
           } catch (error) {
             // Individual sentence errors are handled silently
           }
@@ -219,6 +222,52 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
       // Fatal errors are handled silently
     } finally {
       setIsCreatingVoice(false)
+    }
+  }
+
+  // Function to convert translation to speech
+  const convertTranslationToSpeech = async (translation, word) => {
+    if (!translation || !word) return
+    
+    try {
+      // Check if audio already exists first
+      const encodedTranslation = encodeURIComponent(translation.trim())
+      const checkResponse = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedTranslation}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors'
+      })
+      
+      const checkData = await checkResponse.json()
+      
+      if (checkData.success && checkData.exists) {
+        return // Skip if already exists
+      }
+      
+      // Generate new audio if it doesn't exist
+      const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+        body: JSON.stringify({ 
+          text: translation.trim(), 
+          word: word.trim() 
+        })
+      })
+      
+      if (!response.ok) {
+        return
+      }
+      
+      const data = await response.json()
+      // Audio generation completed (success or failure handled silently)
+      if (!data.success || !data.audioUrl) {
+        console.warn('Translation audio generation failed or TTS service unavailable')
+      }
+    } catch (error) {
+      // Translation audio errors are handled silently
     }
   }
 
@@ -254,16 +303,32 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
       
       const data = await response.json()
       if (data.success) {
-        // If card creation is successful and there's context, convert to speech
+        // If card creation is successful, convert to speech
+        let audioCreated = false
+        
+        // Create audio for translation
+        if (newTranslation && newTranslation.trim()) {
+          try {
+            await convertTranslationToSpeech(newTranslation.trim(), newWord.trim())
+            audioCreated = true
+          } catch (ttsError) {
+            // Translation audio errors are handled silently
+          }
+        }
+        
+        // Create audio for context if provided
         if (newContext && newContext.trim()) {
           showInfo(`🎤 Creating voice files for "${newWord.trim()}"...`)
           try {
             await convertContextToSpeech(newContext.trim(), newWord.trim())
+            audioCreated = true
             showSuccess(`🎵 Voice files created successfully for "${newWord.trim()}"!`)
           } catch (ttsError) {
             showWarning('Card created successfully, but voice files could not be generated')
             // Don't fail the card creation if TTS fails
           }
+        } else if (audioCreated) {
+          showSuccess(`🎵 Translation audio created successfully for "${newWord.trim()}"!`)
         }
         
         showSuccess('Card created successfully!')

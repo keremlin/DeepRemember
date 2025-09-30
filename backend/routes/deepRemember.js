@@ -176,35 +176,50 @@ router.post('/convert-to-speech', async (req, res) => {
 
         // Call the matatonic/openai-speech API
         console.log(`[DeepRemember] Converting to speech: "${text}"`);
-        const response = await fetch('http://localhost:8000/v1/audio/speech', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                input: text,
-                voice: 'pavoque',
-                model: 'tts-1-hd'
-            })
-        });
+        
+        try {
+            const response = await fetch('http://localhost:8000/v1/audio/speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    input: text,
+                    voice: 'pavoque',
+                    model: 'tts-1-hd'
+                }),
+                timeout: 10000 // 10 second timeout
+            });
 
-        if (!response.ok) {
-            throw new Error(`TTS API error: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`TTS API error: ${response.status}`);
+            }
+
+            // Get the audio data
+            const audioBuffer = await response.arrayBuffer();
+            
+            // Save the audio file
+            fs.writeFileSync(filepath, Buffer.from(audioBuffer));
+            
+            console.log(`[DeepRemember] Audio file saved: ${filepath}`);
+            
+            res.json({
+                success: true,
+                audioUrl: `/voice/${filename}`,
+                filename: filename
+            });
+        } catch (fetchError) {
+            console.warn(`[DeepRemember] TTS service unavailable: ${fetchError.message}`);
+            console.warn(`[DeepRemember] Skipping audio generation for: "${text}"`);
+            
+            // Return success but without audio
+            res.json({
+                success: true,
+                audioUrl: null,
+                filename: null,
+                message: 'TTS service unavailable - audio not generated'
+            });
         }
-
-        // Get the audio data
-        const audioBuffer = await response.arrayBuffer();
-        
-        // Save the audio file
-        fs.writeFileSync(filepath, Buffer.from(audioBuffer));
-        
-        console.log(`[DeepRemember] Audio file saved: ${filepath}`);
-        
-        res.json({
-            success: true,
-            audioUrl: `/voice/${filename}`,
-            filename: filename
-        });
         
     } catch (error) {
         console.error('[DeepRemember] TTS conversion error:', error);

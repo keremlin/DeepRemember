@@ -12,6 +12,7 @@ const SampleSentence = ({
   const [audioUrl, setAudioUrl] = useState(null)
   const [audio, setAudio] = useState(null)
   const [pressedKey, setPressedKey] = useState(null)
+  const [isCreatingAudio, setIsCreatingAudio] = useState(false)
 
   // Generate hash for the sentence
   const generateHash = (text) => {
@@ -30,8 +31,6 @@ const SampleSentence = ({
     
     try {
       const encodedSentence = encodeURIComponent(sentence.trim())
-      console.log('🔍 Fetching audio for:', word.trim(), 'sentence:', sentence.trim())
-      console.log('🔗 API URL:', `http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedSentence}`)
       
       const response = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedSentence}`, {
         method: 'GET',
@@ -39,76 +38,101 @@ const SampleSentence = ({
         mode: 'cors'
       })
       
-      console.log('📡 Response status:', response.status)
       const data = await response.json()
-      console.log('📦 Response data:', data)
       
       if (data.success && data.exists) {
         // Convert relative URL to absolute URL
         const baseUrl = 'http://localhost:4004'
         const fullUrl = `${baseUrl}${data.audioUrl}`
-        console.log('✅ Full audio URL:', fullUrl)
         return fullUrl
       } else {
-        console.log('❌ Audio not found or API error:', data)
+        // Audio doesn't exist, create it
+        return await createAudio()
       }
     } catch (error) {
-      console.error('❌ Error getting audio URL:', error)
+      console.error('Error getting audio URL:', error)
+      return null
     }
-    return null
+  }
+
+  // Create audio for the sentence
+  const createAudio = async () => {
+    if (!sentence || !word) return null
+    
+    setIsCreatingAudio(true)
+    
+    try {
+      const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+        body: JSON.stringify({ 
+          text: sentence.trim(), 
+          word: word.trim() 
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.success && data.audioUrl) {
+        // Convert relative URL to absolute URL
+        const baseUrl = 'http://localhost:4004'
+        const fullUrl = `${baseUrl}${data.audioUrl}`
+        return fullUrl
+      } else {
+        console.warn('Audio generation failed or TTS service unavailable')
+        return null
+      }
+    } catch (error) {
+      console.error('Error creating audio:', error)
+      return null
+    } finally {
+      setIsCreatingAudio(false)
+    }
   }
 
   // Play audio
   const playAudio = async () => {
-    if (!showAnswer || isPlaying) return
+    if (!showAnswer || isPlaying || isCreatingAudio) return
     
     try {
       setIsPlaying(true)
-      console.log('🎵 Attempting to play audio for sentence:', sentence.trim())
       
       // Get audio URL if not already cached
       if (!audioUrl) {
-        console.log('🔍 Getting audio URL for:', word, sentence.trim())
         const url = await getAudioUrl()
         if (url) {
-          console.log('✅ Audio URL found:', url)
           setAudioUrl(url)
         } else {
-          console.log('❌ No audio URL found')
           setIsPlaying(false)
           return
         }
       }
       
       // Create and play audio
-      console.log('🎶 Creating audio element with URL:', audioUrl)
       const audioElement = new Audio(audioUrl)
       setAudio(audioElement)
       
       audioElement.onended = () => {
-        console.log('✅ Audio playback ended')
         setIsPlaying(false)
         setAudio(null)
       }
       
       audioElement.onerror = (e) => {
-        console.error('❌ Audio playback error:', e)
+        console.error('Audio playback error:', e)
         setIsPlaying(false)
         setAudio(null)
       }
       
-      audioElement.onloadstart = () => {
-        console.log('🔄 Audio loading started')
-      }
-      
-      audioElement.oncanplay = () => {
-        console.log('✅ Audio can play')
-      }
-      
       await audioElement.play()
-      console.log('▶️ Audio playback started')
     } catch (error) {
-      console.error('❌ Error playing audio:', error)
+      console.error('Error playing audio:', error)
       setIsPlaying(false)
       setAudio(null)
     }
@@ -131,7 +155,6 @@ const SampleSentence = ({
       
       // Check if this is the correct sentence
       if (sentenceIndex === index && word === eventWord && sentence.trim() === eventSentence) {
-        console.log('🎵 Keyboard shortcut triggered for sentence:', index + 1)
         playAudio()
       }
     }
@@ -163,13 +186,23 @@ const SampleSentence = ({
               type="play"
               isPlaying={isPlaying}
               onClick={isPlaying ? stopAudio : playAudio}
-              title={isPlaying ? 'Stop audio' : `Play audio (Press ${index + 1})`}
+              title={
+                isCreatingAudio 
+                  ? 'Creating audio...' 
+                  : isPlaying 
+                    ? 'Stop audio' 
+                    : `Play audio (Press ${index + 1})`
+              }
             />
             <SampleSentenceCircle
               type="number"
               number={index + 1}
               onClick={playAudio}
-              title={`Play audio (Press ${index + 1})`}
+              title={
+                isCreatingAudio 
+                  ? 'Creating audio...' 
+                  : `Play audio (Press ${index + 1})`
+              }
               pressedKey={pressedKey}
               index={index}
             />

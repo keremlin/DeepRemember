@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ReviewButt from './ReviewButt'
 import Samples from './Samples'
+import SampleSentenceCircle from './SampleSentenceCircle'
 import './ReviewSection.css'
 
 const ReviewSection = ({ 
@@ -10,6 +11,94 @@ const ReviewSection = ({
   answerCard 
 }) => {
   const [pressedKey, setPressedKey] = useState(null)
+  const [isPlayingWord, setIsPlayingWord] = useState(false)
+  const [isCreatingWordAudio, setIsCreatingWordAudio] = useState(false)
+
+  // Function to create word audio
+  const createWordAudio = async () => {
+    if (!currentCard?.word) return null
+    
+    setIsCreatingWordAudio(true)
+    
+    try {
+      const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+        body: JSON.stringify({ 
+          text: currentCard.word.trim(), 
+          word: currentCard.word.trim() 
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.success && data.audioUrl) {
+        // Convert relative URL to absolute URL
+        const baseUrl = 'http://localhost:4004'
+        const fullUrl = `${baseUrl}${data.audioUrl}`
+        return fullUrl
+      } else {
+        console.warn('Word audio generation failed or TTS service unavailable')
+        return null
+      }
+    } catch (error) {
+      console.error('Error creating word audio:', error)
+      return null
+    } finally {
+      setIsCreatingWordAudio(false)
+    }
+  }
+
+  // Function to play word audio
+  const playWordAudio = async () => {
+    if (!currentCard?.word || isCreatingWordAudio) return
+    
+    setIsPlayingWord(true)
+    
+    try {
+      const encodedWord = encodeURIComponent(currentCard.word.trim())
+      const response = await fetch(`http://localhost:4004/deepRemember/get-audio/${currentCard.word.trim()}/${encodedWord}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors'
+      })
+      
+      const data = await response.json()
+      let audioUrl = null
+      
+      if (data.success && data.exists && data.audioUrl) {
+        // Convert relative URL to absolute URL
+        const baseUrl = 'http://localhost:4004'
+        audioUrl = `${baseUrl}${data.audioUrl}`
+      } else {
+        // Audio doesn't exist, create it
+        audioUrl = await createWordAudio()
+      }
+      
+      if (audioUrl) {
+        const audio = new Audio(audioUrl)
+        audio.onended = () => setIsPlayingWord(false)
+        audio.onerror = () => {
+          console.warn('Word audio not available')
+          setIsPlayingWord(false)
+        }
+        await audio.play()
+      } else {
+        console.warn('Word audio not available or TTS service unavailable')
+        setIsPlayingWord(false)
+      }
+    } catch (error) {
+      console.error('Error playing word audio:', error)
+      setIsPlayingWord(false)
+    }
+  }
 
   // Keyboard event handlers
   const handleKeyDown = (event) => {
@@ -59,7 +148,21 @@ const ReviewSection = ({
       <div className="srs-card current-card">
         <div className="card-content">
           <div className="word-display">
-            <strong>{currentCard?.word || 'Loading...'}</strong>
+            <div className="word-with-audio">
+              <strong>{currentCard?.word || 'Loading...'}</strong>
+              {currentCard?.word && (
+                <SampleSentenceCircle
+                  type="play"
+                  isPlaying={isPlayingWord}
+                  onClick={playWordAudio}
+                  title={
+                    isCreatingWordAudio 
+                      ? 'Creating audio...' 
+                      : 'Play word audio'
+                  }
+                />
+              )}
+            </div>
             <button 
               className="answer-btn" 
               onClick={() => setShowAnswer(true)}
@@ -76,7 +179,9 @@ const ReviewSection = ({
           {/* Always show translation section, but disable when not answered */}
           <div className="answer-content">
             <div className={`translation-section ${!showAnswer ? 'disabled' : ''}`}>
-              <h4>Answer</h4>
+              <div className="translation-header">
+                <h4>Answer</h4>
+              </div>
               <div className="translation-text">
                 {showAnswer && currentCard ? (currentCard.translation || '') : 'Click ANSWER to reveal translation'}
               </div>
