@@ -293,12 +293,28 @@ class DeepRememberRepository {
         { user_id: userId }
       );
 
+      // Get label counts (including labels with 0 cards)
+      const labelCounts = await this.db.query(
+        `SELECT l.name, l.color, COALESCE(COUNT(cl.card_id), 0) as count
+         FROM labels l
+         LEFT JOIN card_labels cl ON l.id = cl.label_id AND cl.user_id = ?
+         WHERE l.type = 'system' OR (l.type = 'user' AND l.user_id = ?)
+         GROUP BY l.id, l.name, l.color
+         ORDER BY l.type DESC, l.name ASC`,
+        { user_id: userId, user_id2: userId }
+      );
+
       return {
         totalCards: totalCards.count,
         dueCards: dueCards.count,
         learningCards: learningCards.count,
         reviewCards: reviewCards.count,
-        relearningCards: relearningCards.count
+        relearningCards: relearningCards.count,
+        labelCounts: labelCounts.map(label => ({
+          name: label.name,
+          color: label.color,
+          count: label.count
+        }))
       };
     } catch (error) {
       console.error('[SRS-REPO] Get user stats error:', error);
