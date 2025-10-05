@@ -157,18 +157,56 @@
   background: #f8f9fa;
   border-radius: 8px;
   border-left: 4px solid #007bff;
+  transition: all 0.3s ease;
+}
+
+.translation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.translation-header h4 {
+  margin: 0;
+  color: #333;
+}
+
+.translation-content {
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.translation-result:hover {
-  background: #e9ecef;
-  transform: translateY(-2px);
+.translation-content:hover {
+  transform: translateY(-1px);
 }
 
-.translation-result h4 {
-  margin: 0 0 10px 0;
-  color: #333;
+.btn-refresh-translation {
+  background: white;
+  color: #28a745;
+  border: 2px solid #28a745;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.btn-refresh-translation:hover:not(:disabled) {
+  background: #28a745;
+  color: white;
+  transform: scale(1.1);
+}
+
+.btn-refresh-translation:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .translation-result .translation-text {

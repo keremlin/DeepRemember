@@ -512,24 +512,37 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
           
           {/* Translation Result */}
           {showTranslationResult && translationData && (
-            <div className="translation-result" onClick={!isTranslating ? useTranslationData : undefined}>
-              <h4>🤖 AI Translation:</h4>
-              <div>
-                <strong>Translation:</strong> <span className="translation-text">{translationData.translation}</span>
+            <div className="translation-result">
+              <div className="translation-header">
+                <h4>🤖 AI Translation:</h4>
+                <button
+                  type="button"
+                  className="btn-refresh-translation"
+                  onClick={handleAIClick}
+                  disabled={!newWord.trim() || newWord.length < 2 || isTranslating}
+                  title="Refresh translation"
+                >
+                  {isTranslating ? '🔄' : '↻'}
+                </button>
               </div>
-              <div>
-                <strong>Sample Sentences:</strong> 
-                <div className="sample-sentences">{translationData.sampleSentence}</div>
+              <div className="translation-content" onClick={!isTranslating ? useTranslationData : undefined}>
+                <div>
+                  <strong>Translation:</strong> <span className="translation-text">{translationData.translation}</span>
+                </div>
+                <div>
+                  <strong>Sample Sentences:</strong> 
+                  <div className="sample-sentences">{translationData.sampleSentence}</div>
+                </div>
+                {isTranslating ? (
+                  <div className="translation-hint">
+                    🔄 Getting translation from AI...
+                  </div>
+                ) : (
+                  <div className="translation-hint">
+                    💡 Click to use this translation
+                  </div>
+                )}
               </div>
-              {isTranslating ? (
-                <div className="translation-hint">
-                  🔄 Getting translation from AI...
-                </div>
-              ) : (
-                <div className="translation-hint">
-                  💡 Click to use this translation
-                </div>
-              )}
             </div>
           )}
           
