@@ -9,7 +9,7 @@
     "start": "node server.js"
   },
   "keywords": [],
-  "author": "Arash Yehanehrad",
+  "author": "Arash Yeganehrad",
   "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^12.2.0",
