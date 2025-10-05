@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { useToast } from './ToastProvider'
+import { useToast } from '../ToastProvider'
+import EditCard from './EditCard'
 import './ManageCards.css'
 
 const ManageCards = ({ currentUserId, onCardDeleted }) => {
   const { showSuccess, showError } = useToast()
   const [allCards, setAllCards] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [editingCard, setEditingCard] = useState(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   // Helper function to format context with dot delimiters
   const formatContext = (context) => {
@@ -95,6 +98,26 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     }
   }
 
+  // Edit card handlers
+  const handleEditCard = (card) => {
+    setEditingCard(card)
+    setIsEditModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+    setEditingCard(null)
+  }
+
+  const handleCardUpdated = async () => {
+    // Reload cards after successful update
+    await loadAllCards(false)
+    // Notify parent component
+    if (onCardDeleted) {
+      onCardDeleted()
+    }
+  }
+
   // Load cards when component mounts or userId changes
   useEffect(() => {
     if (currentUserId) {
@@ -157,6 +180,13 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
                 </div>
                 <div className="card-actions">
                   <button 
+                    className="btn-edit" 
+                    onClick={() => handleEditCard(card)}
+                    title="Edit card"
+                  >
+                    ✏️
+                  </button>
+                  <button 
                     className="btn-delete" 
                     onClick={() => deleteCard(card.id)}
                     title="Delete card"
@@ -169,6 +199,15 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
           </div>
         )}
       </div>
+      
+      {/* Edit Card Modal */}
+      <EditCard
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        card={editingCard}
+        currentUserId={currentUserId}
+        onCardUpdated={handleCardUpdated}
+      />
     </div>
   )
 }

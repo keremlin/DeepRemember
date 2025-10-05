@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import CreateCardModal from './CreateCardModal'
 import DashboardView from './DashboardView'
-import ManageCards from './ManageCards'
+import ManageCards from './ManageCards/ManageCards'
 import HelpDeepRememberModal from './HelpDeepRememberModal'
 import Header from './header/Header'
 import UserManage from './header/user/UserManage'
