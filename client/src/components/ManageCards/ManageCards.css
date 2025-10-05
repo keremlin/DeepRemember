@@ -36,6 +36,12 @@
   border-bottom: 1px solid #dee2e6;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .btn-refresh {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -59,6 +65,35 @@
 }
 
 .btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-add-list {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  min-width: 100px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-add-list:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-add-list:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
@@ -269,6 +304,11 @@
     flex-direction: column;
     gap: 15px;
     align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
   }
   
   .card-item {

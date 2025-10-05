@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useToast } from '../ToastProvider'
 import EditCard from './EditCard'
+import AddList from './AddList'
 import './ManageCards.css'
 
 const ManageCards = ({ currentUserId, onCardDeleted }) => {
@@ -9,6 +10,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isAddListOpen, setIsAddListOpen] = useState(false)
 
   // Helper function to format context with dot delimiters
   const formatContext = (context) => {
@@ -118,6 +120,24 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     }
   }
 
+  // AddList handlers
+  const handleOpenAddList = () => {
+    setIsAddListOpen(true)
+  }
+
+  const handleCloseAddList = () => {
+    setIsAddListOpen(false)
+  }
+
+  const handleCardsCreated = async () => {
+    // Reload cards after successful creation
+    await loadAllCards(false)
+    // Notify parent component
+    if (onCardDeleted) {
+      onCardDeleted()
+    }
+  }
+
   // Load cards when component mounts or userId changes
   useEffect(() => {
     if (currentUserId) {
@@ -143,14 +163,23 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
       <div className="srs-card">
         <div className="cards-header">
           <h3>📚 All My Cards</h3>
-          <button 
-            className="btn-refresh" 
-            onClick={() => loadAllCards(true)}
-            disabled={isLoading}
-            title="Refresh cards"
-          >
-            {isLoading ? '🔄' : '↻'}
-          </button>
+          <div className="header-actions">
+            <button 
+              className="btn-add-list" 
+              onClick={handleOpenAddList}
+              title="Add multiple cards"
+            >
+              📝 Add List
+            </button>
+            <button 
+              className="btn-refresh" 
+              onClick={() => loadAllCards(true)}
+              disabled={isLoading}
+              title="Refresh cards"
+            >
+              {isLoading ? '🔄' : '↻'}
+            </button>
+          </div>
         </div>
         
         {isLoading ? (
@@ -207,6 +236,14 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
         card={editingCard}
         currentUserId={currentUserId}
         onCardUpdated={handleCardUpdated}
+      />
+      
+      {/* Add List Modal */}
+      <AddList
+        isOpen={isAddListOpen}
+        onClose={handleCloseAddList}
+        currentUserId={currentUserId}
+        onCardsCreated={handleCardsCreated}
       />
     </div>
   )
