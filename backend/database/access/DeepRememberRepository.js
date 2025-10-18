@@ -149,7 +149,7 @@ class DeepRememberRepository {
         }
       );
 
-      return cards.map(card => ({
+      return (cards || []).map(card => ({
         id: card.card_id,
         word: card.word,
         translation: card.translation,
@@ -305,12 +305,12 @@ class DeepRememberRepository {
       );
 
       return {
-        totalCards: totalCards.count,
-        dueCards: dueCards.count,
-        learningCards: learningCards.count,
-        reviewCards: reviewCards.count,
-        relearningCards: relearningCards.count,
-        labelCounts: labelCounts.map(label => ({
+        totalCards: totalCards?.count || 0,
+        dueCards: dueCards?.count || 0,
+        learningCards: learningCards?.count || 0,
+        reviewCards: reviewCards?.count || 0,
+        relearningCards: relearningCards?.count || 0,
+        labelCounts: (labelCounts || []).map(label => ({
           name: label.name,
           color: label.color,
           count: label.count
@@ -476,7 +476,7 @@ class DeepRememberRepository {
         { user_id: userId }
       );
 
-      return labels.map(label => ({
+      return (labels || []).map(label => ({
         id: label.id,
         name: label.name,
         type: label.type,
@@ -500,7 +500,7 @@ class DeepRememberRepository {
         "SELECT * FROM labels WHERE type = 'system' ORDER BY name ASC"
       );
 
-      return labels.map(label => ({
+      return (labels || []).map(label => ({
         id: label.id,
         name: label.name,
         type: label.type,
@@ -606,7 +606,7 @@ class DeepRememberRepository {
         { card_id: cardId, user_id: userId }
       );
 
-      return labels.map(label => ({
+      return (labels || []).map(label => ({
         id: label.id,
         name: label.name,
         type: label.type,
@@ -634,7 +634,7 @@ class DeepRememberRepository {
         { user_id: userId, label_id: labelId }
       );
 
-      return cards.map(card => ({
+      return (cards || []).map(card => ({
         id: card.card_id,
         word: card.word,
         translation: card.translation,
@@ -670,7 +670,7 @@ class DeepRememberRepository {
         { user_id: userId, label_id: labelId, due: now }
       );
 
-      return cards.map(card => ({
+      return (cards || []).map(card => ({
         id: card.card_id,
         word: card.word,
         translation: card.translation,

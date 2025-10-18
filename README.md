@@ -57,6 +57,7 @@ aitrainer/
 ### Prerequisites
 - Node.js (version 14 or higher)
 - Whisper (for subtitle generation): `pip install openai-whisper`
+- Supabase account (for remote database) - optional, can use SQLite for local development
 
 ### Quick Start
 ```bash
@@ -83,6 +84,35 @@ npm install
 # Start the server
 cd ../backend
 npm start
+```
+
+### Database Configuration
+
+The application supports both SQLite (local) and Supabase (remote) databases:
+
+#### Option 1: Supabase (Recommended for production)
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Create a `.env` file in the `backend/` directory:
+```env
+DB_TYPE=supabase
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+3. Run the setup SQL in your Supabase SQL editor (see `backend/SUPABASE_SETUP.md`)
+4. Test the connection: `npm run test:supabase`
+
+#### Option 2: SQLite (Local development)
+1. Create a `.env` file in the `backend/` directory:
+```env
+DB_TYPE=sqlite
+SQLITE_DB_PATH=./database/db/deepRemember.db
+```
+
+#### Migration from SQLite to Supabase
+If you have existing data in SQLite and want to migrate to Supabase:
+```bash
+npm run migrate:supabase
 ```
 
 ## 🎯 Usage
@@ -134,7 +164,7 @@ Configuration is centralized in `backend/config/app.js`:
 ### Backend (`/backend/`)
 - **Express.js Server**: RESTful API endpoints
 - **File Processing**: Upload handling and Whisper integration
-- **Database Layer**: SQLite with repository pattern
+- **Database Layer**: Supports both SQLite (local) and Supabase (remote) with repository pattern
 - **Middleware**: Upload configuration and error handling
 - **Route Organization**: Separated by functionality
 

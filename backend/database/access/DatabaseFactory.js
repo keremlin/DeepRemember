@@ -1,4 +1,5 @@
 const SQLiteDatabase = require('./SQLiteDatabase');
+const SupabaseDatabase = require('./SupabaseDatabase');
 const DeepRememberRepository = require('./DeepRememberRepository');
 
 /**
@@ -13,16 +14,19 @@ class DatabaseFactory {
 
   /**
    * Initialize database with specified type
-   * @param {string} type - Database type ('sqlite', 'mysql', 'postgresql', etc.)
+   * @param {string} type - Database type ('sqlite', 'supabase', 'mysql', 'postgresql', etc.)
    * @param {Object} config - Database configuration
    */
-  async initialize(type = 'sqlite', config = {}) {
+  async initialize(type = 'supabase', config = {}) {
     try {
       this.databaseType = type.toLowerCase();
       
       switch (this.databaseType) {
         case 'sqlite':
           this.database = new SQLiteDatabase(config.dbPath);
+          break;
+        case 'supabase':
+          this.database = new SupabaseDatabase(config);
           break;
         case 'mysql':
           // TODO: Implement MySQL database

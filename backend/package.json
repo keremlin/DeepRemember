@@ -12,9 +12,12 @@
   "author": "Arash Yeganehrad",
   "license": "MIT",
   "dependencies": {
+    "@supabase/supabase-js": "^2.75.1",
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "pg": "^8.16.3",
     "ts-fsrs": "^5.2.2"
   }
 }

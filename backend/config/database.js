@@ -3,7 +3,7 @@
  */
 module.exports = {
   // Default database type
-  type: process.env.DB_TYPE || 'sqlite',
+  type: process.env.DB_TYPE || 'supabase',
   
   // SQLite configuration
   sqlite: {
@@ -36,6 +36,14 @@ module.exports = {
     password: process.env.PG_PASSWORD || '',
     database: process.env.PG_DATABASE || 'deepRemember_app',
     ssl: process.env.PG_SSL === 'true'
+  },
+  
+  // Supabase configuration
+  supabase: {
+    url: process.env.SUPABASE_URL || '',
+    anonKey: process.env.SUPABASE_ANON_KEY || '',
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    schema: process.env.SUPABASE_SCHEMA || 'public'
   },
   
   // Connection pool settings
