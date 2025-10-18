@@ -11,6 +11,7 @@ const uploadRoutes = require('./routes/upload');
 const filesRoutes = require('./routes/files');
 const deepRememberRoutes = require('./routes/deepRemember');
 const srsRoutes = require('./routes/srs');
+const authRoutes = require('./routes/auth');
 
 // Import configuration
 const config = require('./config/app');
@@ -53,6 +54,7 @@ app.use('/', uploadRoutes);
 app.use('/', filesRoutes);
 app.use('/deepRemember', deepRememberRoutes);
 app.use('/api/srs', srsRoutes);
+app.use('/api/auth', authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -3,11 +3,13 @@ const { FSRS } = require('ts-fsrs');
 const databaseFactory = require('../database/access/DatabaseFactory');
 const dbConfig = require('../config/database');
 const { initializeSampleData } = require('../database/sampledata/sampleCardData');
+const AuthMiddleware = require('../security/authMiddleware');
 const path = require('path'); // Added for file path handling
 const fs = require('fs'); // Added for file system operations
 const crypto = require('crypto'); // Added for hash generation
 
 const router = express.Router();
+const authMiddleware = new AuthMiddleware();
 
 // Initialize FSRS instance
 const fsrs = new FSRS();
@@ -95,12 +97,13 @@ function generateSentenceHash(sentence, word = '') {
 }
 
 // Create a new card for learning
-router.post('/create-card', async (req, res) => {
+router.post('/create-card', authMiddleware.verifyToken, async (req, res) => {
   try {
-    const { userId, word, translation, context, type } = req.body;
+    const { word, translation, context, type } = req.body;
+    const userId = req.userId; // Get userId from authenticated user
     
-    if (!userId || !word) {
-      return res.status(400).json({ error: 'userId and word are required' });
+    if (!word) {
+      return res.status(400).json({ error: 'word is required' });
     }
 
     // Create a new card with basic FSRS structure
@@ -168,7 +171,7 @@ router.post('/create-card', async (req, res) => {
 });
 
 // Get cards for review
-router.get('/review-cards/:userId', async (req, res) => {
+router.get('/review-cards/:userId', authMiddleware.verifyToken, authMiddleware.checkResourceOwnership('userId'), async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -210,7 +213,7 @@ router.get('/review-cards/:userId', async (req, res) => {
 });
 
 // Text-to-Speech conversion endpoint
-router.post('/convert-to-speech', async (req, res) => {
+router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) => {
     try {
         const { text, word } = req.body;
         
@@ -293,7 +296,7 @@ router.post('/convert-to-speech', async (req, res) => {
 });
 
 // Get audio URL for a sentence (without generating new audio)
-router.get('/get-audio/:word/:sentence', async (req, res) => {
+router.get('/get-audio/:word/:sentence', authMiddleware.verifyToken, async (req, res) => {
     try {
         const { word, sentence } = req.params;
         
@@ -334,7 +337,7 @@ router.get('/get-audio/:word/:sentence', async (req, res) => {
 });
 
 // Get translation and sample sentences from Ollama
-router.post('/translate-word', async (req, res) => {
+router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
     try {
         const { word } = req.body;
         
@@ -399,7 +402,7 @@ router.post('/translate-word', async (req, res) => {
 });
 
 // Analyze sentence for grammatical structure and translation
-router.post('/analyze-sentence', async (req, res) => {
+router.post('/analyze-sentence', authMiddleware.verifyToken, async (req, res) => {
     try {
         const { sentence, word } = req.body;
         
@@ -513,7 +516,7 @@ Provide a comprehensive analysis in this exact JSON format:
 });
 
 // Save sentence analysis manually
-router.post('/save-sentence-analysis', async (req, res) => {
+router.post('/save-sentence-analysis', authMiddleware.verifyToken, async (req, res) => {
     try {
         const { sentence, word, analysis } = req.body;
         
@@ -545,7 +548,7 @@ router.post('/save-sentence-analysis', async (req, res) => {
 });
 
 // Search for similar words
-router.get('/search-similar/:userId/:query', async (req, res) => {
+router.get('/search-similar/:userId/:query', authMiddleware.verifyToken, authMiddleware.checkResourceOwnership('userId'), async (req, res) => {
     try {
         const { userId, query } = req.params;
         
@@ -585,7 +588,7 @@ router.get('/search-similar/:userId/:query', async (req, res) => {
 });
 
 // Get all cards for a user (not just due cards)
-router.get('/all-cards/:userId', async (req, res) => {
+router.get('/all-cards/:userId', authMiddleware.verifyToken, authMiddleware.checkResourceOwnership('userId'), async (req, res) => {
   try {
     const { userId } = req.params;
     
