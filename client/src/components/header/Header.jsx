@@ -1,8 +1,8 @@
 import React from 'react'
+import UserInfo from '../security/UserInfo'
 import './Header.css'
 
 const Header = ({ 
-  currentUserId, 
   isCardsView, 
   onUserSetup, 
   onToggleCardsView, 
@@ -15,9 +15,7 @@ const Header = ({
         <p>Spaced Repetition System for vocabulary learning</p>
       </div>
       <div className="header-right">
-        <div className="username-display" onClick={onUserSetup}>
-          👤 <span>{currentUserId}</span>
-        </div>
+        <UserInfo onUserSetup={onUserSetup} />
         <button className="btn-manage-cards" onClick={onToggleCardsView}>
           {isCardsView ? '📊 Back to Dashboard' : '📚 Manage Cards'}
         </button>

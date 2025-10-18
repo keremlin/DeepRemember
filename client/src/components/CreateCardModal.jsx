@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react'
 import CloseButton from './CloseButton'
 import { useToast } from './ToastProvider'
+import { useAuth } from './security/AuthContext'
 import './CreateCardModal.css'
 
 const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefillData }) => {
   const { showSuccess, showError, showWarning, showInfo } = useToast()
+  const { getAuthHeaders } = useAuth()
   
   // Create card form states
   const [newWord, setNewWord] = useState('')
@@ -59,10 +61,11 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
     
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`http://localhost:4004/deepRemember/search-similar/${currentUserId}/${encodeURIComponent(query)}`, {
+        const response = await fetch(`/deepRemember/search-similar/${currentUserId}/${encodeURIComponent(query)}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            ...getAuthHeaders(),
           },
           mode: 'cors'
         })
@@ -112,10 +115,11 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
         sampleSentence: 'Please wait while we get the translation from AI'
       })
       
-      const response = await fetch('http://localhost:4004/deepRemember/translate-word', {
+      const response = await fetch('/deepRemember/translate-word', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({ word: newWord })
@@ -179,9 +183,12 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
           try {
             // Check if audio already exists first
             const encodedSentence = encodeURIComponent(sentence.trim())
-            const checkResponse = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedSentence}`, {
+            const checkResponse = await fetch(`/deepRemember/get-audio/${word.trim()}/${encodedSentence}`, {
               method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders(),
+              },
               mode: 'cors'
             })
             
@@ -192,10 +199,11 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
             }
             
             // Generate new audio if it doesn't exist
-            const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+            const response = await fetch('/deepRemember/convert-to-speech', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                ...getAuthHeaders(),
               },
               mode: 'cors',
               body: JSON.stringify({ 
@@ -282,14 +290,14 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
     
     try {
       // First create the card
-      const response = await fetch('http://localhost:4004/deepRemember/create-card', {
+      const response = await fetch('/deepRemember/create-card', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({
-          userId: currentUserId,
           word: newWord,
           translation: newTranslation,
           context: newContext,

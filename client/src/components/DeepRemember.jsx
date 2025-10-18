@@ -6,13 +6,15 @@ import HelpDeepRememberModal from './HelpDeepRememberModal'
 import Header from './header/Header'
 import UserManage from './header/user/UserManage'
 import { useToast } from './ToastProvider'
+import { useAuth } from './security/AuthContext'
 import './DeepRemember.css'
 
 const DeepRemember = ({ onNavigateToWelcome }) => {
   const { showSuccess, showError, showInfo } = useToast()
+  const { user, getAuthHeaders } = useAuth()
   
   // State management
-  const [currentUserId, setCurrentUserId] = useState('user123')
+  const [currentUserId, setCurrentUserId] = useState(user?.email || 'user123')
   const [currentCards, setCurrentCards] = useState([])
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [isCardsView, setIsCardsView] = useState(false)
@@ -33,6 +35,13 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
   const lastNumberKeyRef = useRef(null)
   const lastNumberKeyTimeRef = useRef(null)
   const isLoadingRef = useRef(false)
+
+  // Update user ID when user changes
+  useEffect(() => {
+    if (user?.email) {
+      setCurrentUserId(user.email)
+    }
+  }, [user])
 
   // Helper function to format context with dot delimiters
   const formatContext = (context) => {
@@ -80,10 +89,11 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     isLoadingRef.current = true
     
     try {
-      const response = await fetch(`http://localhost:4004/deepRemember/stats/${currentUserId}`, {
+      const response = await fetch(`/deepRemember/stats/${currentUserId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         mode: 'cors'
       })
@@ -117,10 +127,11 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
 
   const loadReviewCards = async (showAlert = true) => {
     try {
-      const response = await fetch(`http://localhost:4004/deepRemember/review-cards/${currentUserId}`, {
+      const response = await fetch(`/deepRemember/review-cards/${currentUserId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         mode: 'cors'
       })
@@ -164,10 +175,11 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     const card = currentCards[currentCardIndex]
     
     try {
-      const response = await fetch('http://localhost:4004/deepRemember/answer-card', {
+      const response = await fetch('/deepRemember/answer-card', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({
@@ -230,7 +242,6 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
   return (
     <div className="deep-remember-container">
       <Header
-        currentUserId={currentUserId}
         isCardsView={isCardsView}
         onUserSetup={() => setShowUserSetup(true)}
         onToggleCardsView={() => setIsCardsView(!isCardsView)}

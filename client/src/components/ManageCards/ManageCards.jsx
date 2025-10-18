@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useToast } from '../ToastProvider'
+import { useAuth } from '../security/AuthContext'
 import EditCard from './EditCard'
 import AddList from './AddList'
 import './ManageCards.css'
 
 const ManageCards = ({ currentUserId, onCardDeleted }) => {
   const { showSuccess, showError } = useToast()
+  const { getAuthHeaders } = useAuth()
   const [allCards, setAllCards] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
@@ -36,9 +38,12 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     
     setIsLoading(true)
     try {
-      const response = await fetch(`http://localhost:4004/deepRemember/all-cards/${currentUserId}`, {
+      const response = await fetch(`/deepRemember/all-cards/${currentUserId}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         mode: 'cors'
       })
 
@@ -71,9 +76,12 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     if (!confirm('Are you sure you want to delete this card?')) return
     
     try {
-      const response = await fetch(`http://localhost:4004/deepRemember/delete-card/${currentUserId}/${cardId}`, {
+      const response = await fetch(`/deepRemember/delete-card/${currentUserId}/${cardId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         mode: 'cors'
       })
 
