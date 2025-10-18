@@ -568,13 +568,9 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
       // Convert SQLite-style parameterized queries to Supabase format
       const { processedSql, processedParams } = this.processQuery(sql, params);
       
-      // For SELECT queries, use Supabase client methods
-      if (processedSql.trim().toUpperCase().startsWith('SELECT')) {
-        return await this.executeSelectQuery(processedSql, processedParams);
-      }
-      
-      // For other queries, use direct PostgreSQL connection
-      return await this.executeDirectSQL(processedSql, processedParams);
+      // Use direct PostgreSQL connection for all queries to ensure compatibility
+      const result = await this.executeDirectSQL(processedSql, processedParams);
+      return result.rows || [];
     } catch (error) {
       console.error('[DB] Query error:', error);
       throw error;
@@ -620,26 +616,6 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
       console.error('[DB] Execute error:', error);
       throw error;
     }
-  }
-
-  /**
-   * Execute SELECT queries using Supabase client
-   */
-  async executeSelectQuery(sql, params) {
-    // Parse simple SELECT queries and convert to Supabase client calls
-    const tableMatch = sql.match(/FROM\s+(\w+)/i);
-    if (!tableMatch) {
-      throw new Error('Unable to parse SELECT query for Supabase client');
-    }
-    
-    const tableName = tableMatch[1];
-    const { data, error } = await this.client.from(tableName).select('*');
-    
-    if (error) {
-      throw error;
-    }
-    
-    return data || [];
   }
 
   /**

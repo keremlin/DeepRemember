@@ -62,8 +62,8 @@ class DeepRememberRepository {
           due: cardData.due,
           stability: cardData.stability,
           difficulty: cardData.difficulty,
-          elapsed_days: cardData.elapsed_days,
-          scheduled_days: cardData.scheduled_days,
+          elapsed_days: Math.round(cardData.elapsed_days || 0),
+          scheduled_days: Math.round(cardData.scheduled_days || 0),
           reps: cardData.reps,
           lapses: cardData.lapses
         }
@@ -227,8 +227,8 @@ class DeepRememberRepository {
           due: cardData.due,
           stability: cardData.stability,
           difficulty: cardData.difficulty,
-          elapsed_days: cardData.elapsed_days,
-          scheduled_days: cardData.scheduled_days,
+          elapsed_days: Math.round(cardData.elapsed_days || 0),
+          scheduled_days: Math.round(cardData.scheduled_days || 0),
           reps: cardData.reps,
           lapses: cardData.lapses,
           last_reviewed: cardData.lastReviewed || new Date().toISOString(),

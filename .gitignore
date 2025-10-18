@@ -35,9 +35,7 @@ build/
 # Uploaded files (your "files/" dir)
 files/
 
-# Database files
-backend/database/
-backend/database/db/
+
 # OS-specific
 .DS_Store
 Thumbs.db
@@ -82,8 +80,3 @@ production-v0.0.1/routes/upload.js
 production-v0.0.1/views/deepRemember.html
 production-v0.0.1/views/index.html
 production-v0.0.1/views/sentenceAnalysisModal.html
-backend/database/db/deepRemember.db-wal
-backend/database/db/deepRemember.db-shm
-backend/database/db/deepRemember.db-wal
-backend/database/db/deepRemember.db-shm
-backend/database/db/deepRemember.db-wal

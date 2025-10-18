@@ -4,12 +4,29 @@ const DeepRememberRepository = require('./DeepRememberRepository');
 
 /**
  * Database Factory - Manages database instances and provides easy switching
+ * Singleton pattern to ensure only one instance exists
  */
 class DatabaseFactory {
   constructor() {
+    if (DatabaseFactory.instance) {
+      return DatabaseFactory.instance;
+    }
+    
     this.database = null;
     this.repository = null;
     this.databaseType = null;
+    
+    DatabaseFactory.instance = this;
+  }
+
+  /**
+   * Get singleton instance
+   */
+  static getInstance() {
+    if (!DatabaseFactory.instance) {
+      DatabaseFactory.instance = new DatabaseFactory();
+    }
+    return DatabaseFactory.instance;
   }
 
   /**
