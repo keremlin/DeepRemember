@@ -9,7 +9,18 @@ import EmailConfirmationRedirect from './components/security/EmailConfirmationRe
 import './App.css'
 
 function App() {
-  const [currentView, setCurrentView] = useState('welcome')
+  // Check if user is already authenticated
+  const isAlreadyAuthenticated = () => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('access_token');
+      return !!(storedUser && storedToken);
+    } catch {
+      return false;
+    }
+  };
+
+  const [currentView, setCurrentView] = useState(isAlreadyAuthenticated() ? 'welcome' : 'login')
 
   // Check if this is an email confirmation redirect
   const urlParams = new URLSearchParams(window.location.search);
@@ -41,9 +52,14 @@ function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <AuthWrapper>
+        <AuthWrapper onNavigateToWelcome={navigateToWelcome}>
           <div className="App">
-            {currentView === 'welcome' ? (
+            {currentView === 'login' ? (
+              <div style={{padding: '20px', textAlign: 'center'}}>
+                <h2>Please log in to continue</h2>
+                <p>The login modal should appear above this message.</p>
+              </div>
+            ) : currentView === 'welcome' ? (
               <Welcome 
                 onNavigateToDeepRemember={navigateToDeepRemember}
                 onNavigateToPlayer={navigateToPlayer}

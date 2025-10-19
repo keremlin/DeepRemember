@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import CloseButton from '../CloseButton';
 import { useToast } from '../ToastProvider';
+import { useAuth } from './AuthContext';
 import './AuthModal.css';
 
 const LoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) => {
   const { showSuccess, showError, showWarning, showInfo } = useToast();
+  const { login } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -39,45 +41,30 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) => 
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
         showSuccess('Login successful!');
-        
-        // Store session data
-        if (data.session) {
-          localStorage.setItem('access_token', data.session.access_token);
-          localStorage.setItem('refresh_token', data.session.refresh_token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
         
         // Reset form
         setFormData({ email: '', password: '' });
         
         // Call success callback
         if (onLoginSuccess) {
-          onLoginSuccess(data.user, data.session);
+          onLoginSuccess(result.user, { access_token: result.user.access_token });
         }
         
         onClose();
       } else {
         // Check if it's an email confirmation error
-        if (data.error && data.error.includes('Email not confirmed')) {
+        if (result.error && result.error.includes('Email not confirmed')) {
           showError('Please check your email and click the confirmation link before logging in.');
         } else {
-          showError(data.error || 'Login failed');
+          showError(result.error || 'Login failed');
         }
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('LoginModal: Login error:', error);
       showError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
