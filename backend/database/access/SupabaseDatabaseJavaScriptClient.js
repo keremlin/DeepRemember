@@ -260,17 +260,24 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       throw new Error('Database not initialized');
     }
 
+    console.log('[DB] Query called:', sql);
+    console.log('[DB] Query params:', params);
+
     try {
       // Check if this is a complex query that should use RPC
       if (this.isComplexQuery(sql)) {
+        console.log('[DB] Detected as complex query, using executeComplexQuery');
         return await this.executeComplexQuery(sql, params);
       }
 
       // Convert SQL to Supabase JavaScript Client format
       const { tableName, operation, conditions, fields } = this.parseSQL(sql, params);
       
+      console.log('[DB] Parsed SQL:', { tableName, operation, conditions, fields });
+      
       if (!tableName || tableName === 'unknown') {
         // Fallback to RPC for unrecognized queries
+        console.log('[DB] Unknown table, using executeComplexQuery');
         return await this.executeComplexQuery(sql, params);
       }
       
@@ -284,6 +291,10 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
             query = query.select('*');
           }
           break;
+        case 'count':
+          // Handle COUNT queries using count: 'exact'
+          query = query.select('*', { count: 'exact', head: true });
+          break;
         case 'insert':
           return await this.handleInsert(query, sql, params);
         case 'update':
@@ -292,6 +303,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           return await this.handleDelete(query, sql, params);
         default:
           // For complex queries, use RPC
+          console.log('[DB] Unknown operation, using executeComplexQuery');
           return await this.executeComplexQuery(sql, params);
       }
 
@@ -302,15 +314,22 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         }
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       
       if (error) {
         throw error;
       }
 
+      // Handle COUNT queries differently
+      if (operation.toLowerCase() === 'count') {
+        console.log('[DB] COUNT result:', count);
+        return [{ count: count || 0 }];
+      }
+
       const rows = Array.isArray(data) ? data : (data ? [data] : []);
       // Normalize known tables/fields to app expectations
       const normalized = this.normalizeRowsForSelect(tableName, rows);
+      console.log('[DB] Query result:', normalized.length, 'rows');
       return normalized;
     } catch (error) {
       console.error('[DB] Query error:', error);
@@ -339,6 +358,11 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    */
   isComplexQuery(sql) {
     const sqlLower = sql.toLowerCase().trim();
+    
+    // Simple COUNT queries should NOT be complex
+    if (sqlLower.startsWith('select count(*) as count from cards where user_id = ?')) {
+      return false; // Handle these in trySimpleQuery
+    }
     
     // Check for SQL functions
     const sqlFunctions = ['count', 'sum', 'avg', 'min', 'max', 'distinct', 'group by', 'having', 'order by', 'limit', 'offset'];
@@ -590,36 +614,59 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
 
       // Handle COUNT stats on cards table (total, due, by state)
       if (sqlLower.startsWith('select') && sqlLower.includes('count') && sqlLower.includes('from cards')) {
-        // Build a count query with filters based on provided params
-        const userIdParam = params.user_id ?? params.$1;
-        const dueParam = params.due ?? params.$2;
-        const stateParam = params.state ?? params.$3;
-        if (userIdParam) {
-          let query = this.client
-            .from('cards')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userIdParam);
-
-          if (dueParam) {
-            query = query.lte('due', typeof dueParam === 'string' ? dueParam : new Date(dueParam).toISOString());
-          }
-
-          // Apply state filter if provided via params OR as a literal in SQL
-          if (typeof stateParam === 'number') {
-            query = query.eq('state', stateParam);
-          } else {
-            const stateLiteralMatch = sqlLower.match(/state\s*=\s*(\d+)/i);
-            if (stateLiteralMatch) {
-              const stateValue = parseInt(stateLiteralMatch[1], 10);
-              if (Number.isFinite(stateValue)) {
-                query = query.eq('state', stateValue);
-              }
+        console.log('[DB] COUNT query detected:', sql);
+        console.log('[DB] COUNT params:', params);
+        
+        // Parse the specific query patterns from DeepRememberRepository
+        if (sqlLower.includes('where user_id = ?')) {
+          // Total cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ?
+          if (!sqlLower.includes('and')) {
+            const userId = params.user_id || params.$1;
+            console.log('[DB] Total cards query - userId:', userId);
+            if (userId) {
+              const { count, error } = await this.client
+                .from('cards')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+              if (error) throw error;
+              console.log('[DB] Total cards result:', count);
+              return [{ count: count || 0 }];
             }
           }
-
-          const { count, error } = await query;
-          if (error) throw error;
-          return [{ count: count || 0 }];
+          // Due cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ? AND due <= ?
+          else if (sqlLower.includes('due <= ?')) {
+            const userId = params.user_id || params.$1;
+            const dueTime = params.due || params.$2;
+            console.log('[DB] Due cards query - userId:', userId, 'dueTime:', dueTime);
+            if (userId && dueTime) {
+              const dueIso = typeof dueTime === 'string' ? dueTime : new Date(dueTime).toISOString();
+              const { count, error } = await this.client
+                .from('cards')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .or(`due.lte.${dueIso},next_review.lte.${dueIso}`);
+              if (error) throw error;
+              console.log('[DB] Due cards result:', count);
+              return [{ count: count || 0 }];
+            }
+          }
+          // State cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ? AND state = 0/1/2
+          else if (sqlLower.includes('state =')) {
+            const userId = params.user_id || params.$1;
+            const stateMatch = sqlLower.match(/state\s*=\s*(\d+)/i);
+            console.log('[DB] State cards query - userId:', userId, 'stateMatch:', stateMatch);
+            if (userId && stateMatch) {
+              const stateValue = parseInt(stateMatch[1], 10);
+              const { count, error } = await this.client
+                .from('cards')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .eq('state', stateValue);
+              if (error) throw error;
+              console.log('[DB] State cards result:', count, 'for state:', stateValue);
+              return [{ count: count || 0 }];
+            }
+          }
         }
       }
 
@@ -821,10 +868,23 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
   parseSelectSQL(sql, params) {
     const match = sql.match(/select\s+(.*?)\s+from\s+(\w+)/i);
     if (match) {
+      const fields = match[1];
+      const tableName = match[2];
+      
+      // Handle COUNT queries specially
+      if (fields.toLowerCase().includes('count(*)')) {
+        return {
+          tableName,
+          operation: 'count',
+          fields: '*',
+          conditions: this.extractConditions(sql, params)
+        };
+      }
+      
       return {
-        tableName: match[2],
+        tableName,
         operation: 'select',
-        fields: match[1],
+        fields,
         conditions: this.extractConditions(sql, params)
       };
     }
@@ -884,17 +944,91 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     
     if (whereMatch) {
       const whereClause = whereMatch[1];
-      // Simple condition parsing - can be enhanced
-      const conditionMatch = whereClause.match(/(\w+)\s*=\s*\$(\d+)/i);
-      if (conditionMatch) {
-        const column = conditionMatch[1];
-        const paramIndex = parseInt(conditionMatch[2]);
-        const paramKey = `$${paramIndex}`;
-        
-        conditions.push({
-          column: column,
-          operator: 'eq',
-          value: params[paramKey]
+      
+      // Handle ? placeholders (used by DeepRememberRepository)
+      const questionMarkMatches = whereClause.match(/(\w+)\s*=\s*\?/gi);
+      if (questionMarkMatches) {
+        let paramIndex = 0;
+        questionMarkMatches.forEach(match => {
+          const columnMatch = match.match(/(\w+)\s*=\s*\?/i);
+          if (columnMatch) {
+            const column = columnMatch[1];
+            const paramKey = `$${paramIndex + 1}`;
+            const paramValue = params[paramKey] || params[column];
+            
+            if (paramValue !== undefined) {
+              conditions.push({
+                column: column,
+                operator: 'eq',
+                value: paramValue
+              });
+            }
+            paramIndex++;
+          }
+        });
+      }
+      
+      // Handle $1, $2 patterns
+      const dollarMatches = whereClause.match(/(\w+)\s*=\s*\$(\d+)/gi);
+      if (dollarMatches) {
+        dollarMatches.forEach(match => {
+          const conditionMatch = match.match(/(\w+)\s*=\s*\$(\d+)/i);
+          if (conditionMatch) {
+            const column = conditionMatch[1];
+            const paramIndex = parseInt(conditionMatch[2]);
+            const paramKey = `$${paramIndex}`;
+            
+            conditions.push({
+              column: column,
+              operator: 'eq',
+              value: params[paramKey]
+            });
+          }
+        });
+      }
+      
+      // Handle special operators like <=
+      const lteMatches = whereClause.match(/(\w+)\s*<=\s*\?/gi);
+      if (lteMatches) {
+        let paramIndex = 0;
+        lteMatches.forEach(match => {
+          const columnMatch = match.match(/(\w+)\s*<=\s*\?/i);
+          if (columnMatch) {
+            const column = columnMatch[1];
+            const paramKey = `$${paramIndex + 1}`;
+            const paramValue = params[paramKey] || params[column];
+            
+            if (paramValue !== undefined) {
+              conditions.push({
+                column: column,
+                operator: 'lte',
+                value: paramValue
+              });
+            }
+            paramIndex++;
+          }
+        });
+      }
+      
+      // Handle literal values like "state = 0"
+      const literalMatches = whereClause.match(/(\w+)\s*=\s*(\d+)/gi);
+      if (literalMatches) {
+        literalMatches.forEach(match => {
+          const literalMatch = match.match(/(\w+)\s*=\s*(\d+)/i);
+          if (literalMatch) {
+            const column = literalMatch[1];
+            const value = parseInt(literalMatch[2], 10);
+            
+            // Only add if we don't already have this column
+            const existingCondition = conditions.find(c => c.column === column);
+            if (!existingCondition) {
+              conditions.push({
+                column: column,
+                operator: 'eq',
+                value: value
+              });
+            }
+          }
         });
       }
     }
