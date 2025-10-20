@@ -351,7 +351,7 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
         
         console.log('[DeepRemember] Sending prompt to Ollama:', prompt);
         
-        const data = await llmClient.query(prompt, { model: 'llama3.2', stream: false });
+        const data = await llmClient.query(prompt, { stream: false });
         console.log('[DeepRemember] Raw Ollama response:', data.response);
         
         let translation = 'No translation found.';
@@ -443,7 +443,7 @@ Provide a comprehensive analysis in this exact JSON format:
         
         console.log('[DeepRemember] Sending sentence analysis prompt to Ollama:', prompt);
         
-        const data = await llmClient.query(prompt, { model: 'llama3.2', stream: false });
+        const data = await llmClient.query(prompt, { stream: false });
         console.log('[DeepRemember] Raw Ollama response for sentence analysis:', data.response);
         
         let analysis = {
