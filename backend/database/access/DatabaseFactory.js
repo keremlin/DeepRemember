@@ -1,5 +1,6 @@
 const SQLiteDatabase = require('./SQLiteDatabase');
 const SupabaseDatabase = require('./SupabaseDatabase');
+const SupabaseDatabaseJavaScriptClient = require('./SupabaseDatabaseJavaScriptClient');
 const DeepRememberRepository = require('./DeepRememberRepository');
 
 /**
@@ -44,6 +45,9 @@ class DatabaseFactory {
           break;
         case 'supabase':
           this.database = new SupabaseDatabase(config);
+          break;
+        case 'supabase-js-client':
+          this.database = new SupabaseDatabaseJavaScriptClient(config);
           break;
         case 'mysql':
           // TODO: Implement MySQL database
