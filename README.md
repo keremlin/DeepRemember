@@ -99,7 +99,7 @@ SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
-3. Run the setup SQL in your Supabase SQL editor (see `backend/SUPABASE_SETUP.md`)
+3. Run the setup SQL in your Supabase SQL editor (see [Supabase Setup Guide](backend/SUPABASE_SETUP.md))
 4. Test the connection: `npm run test:supabase`
 
 #### Option 2: SQLite (Local development)
@@ -108,6 +108,9 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 DB_TYPE=sqlite
 SQLITE_DB_PATH=./database/db/deepRemember.db
 ```
+
+#### Switching DB implementations
+You can switch between SQLite, Supabase (hybrid), and Supabase JavaScript Client by setting `DB_TYPE` in `backend/.env`. See the [Supabase Setup Guide](backend/SUPABASE_SETUP.md) for details and recommended settings.
 
 #### Migration from SQLite to Supabase
 If you have existing data in SQLite and want to migrate to Supabase:

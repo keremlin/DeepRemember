@@ -1,4 +1,59 @@
 # Supabase Setup Guide
+## Choosing a database implementation
+
+DeepRemember supports three backend database implementations behind a common `IDatabase` interface. You can switch between them without changing code by setting `DB_TYPE` in the backend `.env` file.
+
+- `sqlite`: Local SQLite database (single file on disk)
+- `supabase`: Supabase hybrid (legacy) client that used both `@supabase/supabase-js` and direct Postgres (pg) connections
+- `supabase-js-client`: Modern implementation that uses only `@supabase/supabase-js` over HTTPS (recommended)
+
+### How to switch
+
+1) Open `backend/.env` and set one of:
+
+```env
+DB_TYPE=sqlite
+```
+
+```env
+DB_TYPE=supabase
+```
+
+```env
+DB_TYPE=supabase-js-client
+```
+
+2) Restart the backend server:
+
+```bash
+node server.js
+```
+
+The `DB_TYPE` is read by `backend/database/access/DatabaseFactory.js`, which instantiates the appropriate implementation and initializes tables and services accordingly.
+
+### Recommended setting
+
+- Use `DB_TYPE=supabase-js-client` for production and for environments where direct Postgres connectivity (IPv4/IPv6) may be restricted. This mode uses only HTTPS via the Supabase JavaScript Client and avoids direct TCP connections.
+
+### Required environment variables (Supabase)
+
+When using `supabase` or `supabase-js-client`, ensure the following are present in `backend/.env`:
+
+```env
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+```
+
+Optional (performance/network tuning):
+
+```env
+NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=4096
+PGSSLMODE=require
+```
+
+No code changes are required when switching DB implementations; only update `DB_TYPE` and restart the server.
+
 
 This guide provides complete instructions for setting up Supabase database for the DeepRemember application.
 
