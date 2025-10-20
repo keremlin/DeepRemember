@@ -48,12 +48,12 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       await this.createTables();
       
       this.isInitialized = true;
-      console.log(`[DB] Supabase JavaScript Client database initialized with URL: ${this.config.url}`);
+      
       
       // Always ensure admin user exists (after initialization)
       await this.createAdminUser();
     } catch (error) {
-      console.error('[DB] Failed to initialize Supabase JavaScript Client database:', error);
+      
       throw error;
     }
   }
@@ -62,7 +62,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    * Create database tables using Supabase JavaScript Client
    */
   async createTables() {
-    console.log('[DB] Creating tables using Supabase JavaScript Client...');
+    
     
     const tables = [
       {
@@ -134,13 +134,13 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     for (const table of tables) {
       try {
         await this.executeSQLDirectly(table.sql);
-        console.log(`[DB] ✅ Table '${table.name}' ready`);
+        
       } catch (error) {
-        console.log(`[DB] ⚠️ Table '${table.name}' may already exist: ${error.message}`);
+        
       }
     }
     
-    console.log('[DB] Database tables created successfully');
+    
   }
 
   /**
@@ -212,9 +212,9 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         throw new Error(`Failed to create execute_sql function: ${response.statusText}`);
       }
       
-      console.log('[DB] ✅ Created execute_sql function');
+      
     } catch (error) {
-      console.log('[DB] ⚠️ Could not create execute_sql function, using alternative method');
+      
     }
   }
 
@@ -234,12 +234,12 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           'INSERT INTO users (user_id) VALUES ($1)',
           { $1: adminUserId }
         );
-        console.log('[DB] ✅ Admin user created');
+        
       } else {
-        console.log('[DB] ✅ Admin user already exists');
+        
       }
     } catch (error) {
-      console.log('[DB] ❌ Failed to create admin user:', error.message);
+      
     }
   }
 
@@ -249,7 +249,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
   async close() {
     this.client = null;
     this.isInitialized = false;
-    console.log('[DB] Supabase JavaScript Client connection closed');
+    
   }
 
   /**
@@ -260,24 +260,23 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       throw new Error('Database not initialized');
     }
 
-    console.log('[DB] Query called:', sql);
-    console.log('[DB] Query params:', params);
+    
 
     try {
       // Check if this is a complex query that should use RPC
       if (this.isComplexQuery(sql)) {
-        console.log('[DB] Detected as complex query, using executeComplexQuery');
+        
         return await this.executeComplexQuery(sql, params);
       }
 
       // Convert SQL to Supabase JavaScript Client format
       const { tableName, operation, conditions, fields } = this.parseSQL(sql, params);
       
-      console.log('[DB] Parsed SQL:', { tableName, operation, conditions, fields });
+      
       
       if (!tableName || tableName === 'unknown') {
         // Fallback to RPC for unrecognized queries
-        console.log('[DB] Unknown table, using executeComplexQuery');
+        
         return await this.executeComplexQuery(sql, params);
       }
       
@@ -303,7 +302,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           return await this.handleDelete(query, sql, params);
         default:
           // For complex queries, use RPC
-          console.log('[DB] Unknown operation, using executeComplexQuery');
+          
           return await this.executeComplexQuery(sql, params);
       }
 
@@ -322,17 +321,17 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
 
       // Handle COUNT queries differently
       if (operation.toLowerCase() === 'count') {
-        console.log('[DB] COUNT result:', count);
+        
         return [{ count: count || 0 }];
       }
 
       const rows = Array.isArray(data) ? data : (data ? [data] : []);
       // Normalize known tables/fields to app expectations
       const normalized = this.normalizeRowsForSelect(tableName, rows);
-      console.log('[DB] Query result:', normalized.length, 'rows');
+      
       return normalized;
     } catch (error) {
-      console.error('[DB] Query error:', error);
+      
       throw error;
     }
   }
@@ -403,7 +402,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       // For complex queries, use direct REST API instead of RPC
       return await this.executeViaRestAPI(sql, params);
     } catch (error) {
-      console.error('[DB] Complex query error:', error);
+      
       throw error;
     }
   }
@@ -453,7 +452,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         return [];
       }
     } catch (error) {
-      console.error('[DB] REST API query error:', error);
+      
       // Fallback to using the JavaScript client
       return await this.fallbackToClientQuery(sql, params);
     }
@@ -535,10 +534,10 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       }
       
       // If we can't handle it, return empty array
-      console.log('[DB] ⚠️ Could not convert SQL to Supabase client query:', sql);
+      
       return [];
     } catch (error) {
-      console.error('[DB] Fallback query error:', error);
+      
       return [];
     }
   }
@@ -614,22 +613,21 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
 
       // Handle COUNT stats on cards table (total, due, by state)
       if (sqlLower.startsWith('select') && sqlLower.includes('count') && sqlLower.includes('from cards')) {
-        console.log('[DB] COUNT query detected:', sql);
-        console.log('[DB] COUNT params:', params);
+        
         
         // Parse the specific query patterns from DeepRememberRepository
         if (sqlLower.includes('where user_id = ?')) {
           // Total cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ?
           if (!sqlLower.includes('and')) {
             const userId = params.user_id || params.$1;
-            console.log('[DB] Total cards query - userId:', userId);
+            
             if (userId) {
               const { count, error } = await this.client
                 .from('cards')
                 .select('*', { count: 'exact', head: true })
                 .eq('user_id', userId);
               if (error) throw error;
-              console.log('[DB] Total cards result:', count);
+              
               return [{ count: count || 0 }];
             }
           }
@@ -637,7 +635,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           else if (sqlLower.includes('due <= ?')) {
             const userId = params.user_id || params.$1;
             const dueTime = params.due || params.$2;
-            console.log('[DB] Due cards query - userId:', userId, 'dueTime:', dueTime);
+            
             if (userId && dueTime) {
               const dueIso = typeof dueTime === 'string' ? dueTime : new Date(dueTime).toISOString();
               const { count, error } = await this.client
@@ -646,7 +644,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
                 .eq('user_id', userId)
                 .or(`due.lte.${dueIso},next_review.lte.${dueIso}`);
               if (error) throw error;
-              console.log('[DB] Due cards result:', count);
+              
               return [{ count: count || 0 }];
             }
           }
@@ -654,7 +652,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           else if (sqlLower.includes('state =')) {
             const userId = params.user_id || params.$1;
             const stateMatch = sqlLower.match(/state\s*=\s*(\d+)/i);
-            console.log('[DB] State cards query - userId:', userId, 'stateMatch:', stateMatch);
+            
             if (userId && stateMatch) {
               const stateValue = parseInt(stateMatch[1], 10);
               const { count, error } = await this.client
@@ -663,7 +661,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
                 .eq('user_id', userId)
                 .eq('state', stateValue);
               if (error) throw error;
-              console.log('[DB] State cards result:', count, 'for state:', stateValue);
+              
               return [{ count: count || 0 }];
             }
           }
@@ -758,7 +756,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       }
       return result;
     } catch (error) {
-      console.error('[DB] Execute error:', error);
+      
       throw error;
     }
   }
@@ -770,14 +768,12 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     const values = this.extractValues(sql, params);
     
     // Debug logging to see what values we're trying to insert
-    console.log('[DB] INSERT values:', values);
-    console.log('[DB] INSERT SQL:', sql);
-    console.log('[DB] INSERT params:', params);
+    
     
     const { data, error } = await query.insert(values).select();
     
     if (error) {
-      console.error('[DB] INSERT error:', error);
+      
       throw error;
     }
 
@@ -1217,7 +1213,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    * Begin a transaction (Supabase doesn't support explicit transactions via JS client)
    */
   async beginTransaction() {
-    console.log('[DB] ⚠️ Supabase JavaScript Client doesn\'t support explicit transactions');
+    
     return { id: 'no-transaction', client: this.client };
   }
 
@@ -1225,14 +1221,14 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    * Commit a transaction (no-op for Supabase JavaScript Client)
    */
   async commitTransaction(transaction) {
-    console.log('[DB] ⚠️ Supabase JavaScript Client doesn\'t support explicit transactions');
+    
   }
 
   /**
    * Rollback a transaction (no-op for Supabase JavaScript Client)
    */
   async rollbackTransaction(transaction) {
-    console.log('[DB] ⚠️ Supabase JavaScript Client doesn\'t support explicit transactions');
+    
   }
 
   /**
