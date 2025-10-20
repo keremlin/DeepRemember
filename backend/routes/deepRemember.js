@@ -9,6 +9,8 @@ const fs = require('fs'); // Added for file system operations
 const crypto = require('crypto'); // Added for hash generation
 
 const router = express.Router();
+const { LlmFactory } = require('../llm/LlmFactory');
+const llmClient = LlmFactory.create();
 const authMiddleware = new AuthMiddleware();
 
 // Initialize FSRS instance
@@ -349,17 +351,7 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
         
         console.log('[DeepRemember] Sending prompt to Ollama:', prompt);
         
-        const response = await fetch('http://localhost:11434/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'llama3.2',
-                prompt: prompt,
-                stream: false
-            })
-        });
-
-        const data = await response.json();
+        const data = await llmClient.query(prompt, { model: 'llama3.2', stream: false });
         console.log('[DeepRemember] Raw Ollama response:', data.response);
         
         let translation = 'No translation found.';
@@ -451,17 +443,7 @@ Provide a comprehensive analysis in this exact JSON format:
         
         console.log('[DeepRemember] Sending sentence analysis prompt to Ollama:', prompt);
         
-        const response = await fetch('http://localhost:11434/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'llama3.2',
-                prompt: prompt,
-                stream: false
-            })
-        });
-
-        const data = await response.json();
+        const data = await llmClient.query(prompt, { model: 'llama3.2', stream: false });
         console.log('[DeepRemember] Raw Ollama response for sentence analysis:', data.response);
         
         let analysis = {

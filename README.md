@@ -112,6 +112,10 @@ SQLITE_DB_PATH=./database/db/deepRemember.db
 #### Switching DB implementations
 You can switch between SQLite, Supabase (hybrid), and Supabase JavaScript Client by setting `DB_TYPE` in `backend/.env`. See the [Supabase Setup Guide](backend/SUPABASE_SETUP.md) for details and recommended settings.
 
+### LLM Integration
+
+See the LLM documentation: [backend/llm/LLM.md](backend/llm/LLM.md)
+
 #### Migration from SQLite to Supabase
 If you have existing data in SQLite and want to migrate to Supabase:
 ```bash
