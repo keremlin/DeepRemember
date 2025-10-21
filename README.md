@@ -120,6 +120,10 @@ See the LLM documentation: [backend/llm/LLM.md](backend/llm/LLM.md)
 The application supports multiple STT services for subtitle generation.
 See the STT documentation: [backend/stt/README.md](backend/stt/README.md)
 
+### TTS (Text-to-Speech) Services
+The application supports configurable TTS services for audio generation.
+See the TTS documentation: [backend/tts/TTS.md](backend/tts/TTS.md)
+
 #### Migration from SQLite to Supabase
 If you have existing data in SQLite and want to migrate to Supabase:
 ```bash
