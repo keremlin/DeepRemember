@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useAuth } from '../security/AuthContext'
 import { useToast } from '../ToastProvider'
 import Translator from './Translator'
 import './AudioPlayer.css'
@@ -26,6 +27,7 @@ const AudioPlayer = ({ currentUserId = 'user123' }) => {
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
+  const { getAuthHeaders } = useAuth()
 
   // Load available tracks from files folder
   useEffect(() => {
@@ -189,30 +191,14 @@ const AudioPlayer = ({ currentUserId = 'user123' }) => {
         ? `answer in this format {"translation":"string", "word":"realWord"} , what is the translation of the word "${text}"`
         : `answer in this format {"translation":"string", "sentence":"realSentence"} , what is the translation of "${text}"`
       
-      const response = await fetch('http://localhost:11434/api/generate', {
+      const response = await fetch('http://localhost:4004/deepRemember/translate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'llama3.2',
-          prompt: prompt,
-          stream: false
-        })
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ text, type })
       })
       
       const data = await response.json()
-      let translation = 'No translation found.'
-      
-      if (data.response) {
-        try {
-          const match = data.response.match(/\{[^}]+\}/)
-          if (match) {
-            const parsed = JSON.parse(match[0])
-            translation = parsed.translation || translation
-          }
-        } catch (e) {
-          console.error('Error parsing translation:', e)
-        }
-      }
+      let translation = data?.translation || 'No translation found.'
       
       setTranslationText(translation)
     } catch (error) {

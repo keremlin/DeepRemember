@@ -497,6 +497,43 @@ Provide a comprehensive analysis in this exact JSON format:
     }
 });
 
+// Unified translate endpoint using configured LLM (word or sentence)
+router.post('/translate', authMiddleware.verifyToken, async (req, res) => {
+    try {
+        const { text, type } = req.body; // type: 'word' | 'sentence'
+
+        if (!text) {
+            return res.status(400).json({ error: 'text is required' });
+        }
+
+        const prompt = type === 'word'
+            ? `answer in this format {"translation":"string", "word":"realWord"} , what is the translation of the word "${text}"`
+            : `answer in this format {"translation":"string", "sentence":"realSentence"} , what is the translation of "${text}"`;
+
+        console.log('[DeepRemember] Sending unified translate prompt to LLM:', { type: type || 'sentence', prompt });
+
+        const data = await llmClient.query(prompt, { model: 'llama3.2', stream: false });
+
+        let translation = 'No translation found.';
+        if (data && data.response) {
+            try {
+                const match = data.response.match(/\{[^}]+\}/);
+                if (match) {
+                    const parsed = JSON.parse(match[0]);
+                    translation = parsed.translation || translation;
+                }
+            } catch (e) {
+                console.error('[DeepRemember] Translate JSON parse error:', e);
+            }
+        }
+
+        res.json({ success: true, translation });
+    } catch (error) {
+        console.error('[DeepRemember] Unified translate error:', error);
+        res.status(500).json({ error: 'Failed to translate text' });
+    }
+});
+
 // Save sentence analysis manually
 router.post('/save-sentence-analysis', authMiddleware.verifyToken, async (req, res) => {
     try {
