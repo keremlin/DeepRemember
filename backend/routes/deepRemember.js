@@ -7,11 +7,16 @@ const AuthMiddleware = require('../security/authMiddleware');
 const path = require('path'); // Added for file path handling
 const fs = require('fs'); // Added for file system operations
 const crypto = require('crypto'); // Added for hash generation
+const TtsFactory = require('../tts/TtsFactory');
+const appConfig = require('../config/app');
 
 const router = express.Router();
 const { LlmFactory } = require('../llm/LlmFactory');
 const llmClient = LlmFactory.create();
 const authMiddleware = new AuthMiddleware();
+
+// Initialize TTS service with configuration
+const ttsService = TtsFactory.createTtsService();
 
 // Initialize FSRS instance
 const fsrs = new FSRS();
@@ -248,28 +253,15 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
         console.log(`[DeepRemember] Converting to speech: "${text}"`);
         
         try {
-            const response = await fetch('http://localhost:8000/v1/audio/speech', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    input: text,
-                    voice: 'pavoque',
-                    model: 'tts-1-hd'
-                }),
-                timeout: 10000 // 10 second timeout
+            // Use the TTS service to convert text to speech with configuration
+            const audioBuffer = await ttsService.convert(text, {
+                voice: appConfig.TTS_VOICE,
+                model: appConfig.TTS_MODEL,
+                timeout: 10000
             });
-
-            if (!response.ok) {
-                throw new Error(`TTS API error: ${response.status}`);
-            }
-
-            // Get the audio data
-            const audioBuffer = await response.arrayBuffer();
             
             // Save the audio file
-            fs.writeFileSync(filepath, Buffer.from(audioBuffer));
+            fs.writeFileSync(filepath, audioBuffer);
             
             console.log(`[DeepRemember] Audio file saved: ${filepath}`);
             

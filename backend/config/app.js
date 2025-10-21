@@ -12,6 +12,12 @@ module.exports = {
   WHISPER_MODEL: process.env.WHISPER_MODEL || 'whisper-large-v3-turbo', // For Groq: whisper-large-v3-turbo, whisper-large-v3, etc. For LocalWhisper: tiny, base, small, medium, large, large-v2, large-v3
   WHISPER_OUTPUT_FORMAT: 'srt',
   
+  // TTS Service settings
+  TTS_TYPE: process.env.TTS_TYPE || 'piper', // Available: piper, elevenlabs
+  TTS_VOICE: process.env.TTS_VOICE || 'pavoque', // Voice for TTS
+  TTS_MODEL: process.env.TTS_MODEL || 'tts-1-hd', // Model for TTS
+  TTS_API_KEY: process.env.TTS_API_KEY || '', // API key for TTS services (ElevenLabs)
+  
   // Logging
   LOG_LEVEL: process.env.LOG_LEVEL || 'info'
 };
