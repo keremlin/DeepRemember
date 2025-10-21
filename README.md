@@ -116,6 +116,10 @@ You can switch between SQLite, Supabase (hybrid), and Supabase JavaScript Client
 User can use different llm base on its usage.
 See the LLM documentation: [backend/llm/LLM.md](backend/llm/LLM.md)
 
+### STT (Speech-to-Text) Services
+The application supports multiple STT services for subtitle generation.
+See the STT documentation: [backend/stt/README.md](backend/stt/README.md)
+
 #### Migration from SQLite to Supabase
 If you have existing data in SQLite and want to migrate to Supabase:
 ```bash
