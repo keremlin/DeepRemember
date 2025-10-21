@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Groq = require('groq-sdk');
 const IStt = require('./IStt');
+const ConvertJsonToSrt = require('../tools/ConvertJsonToSrt');
 
 /**
  * Groq implementation of STT service
@@ -71,11 +72,11 @@ class GroqStt extends IStt {
       if (conversionOptions.responseFormat === 'verbose_json') {
         // Handle verbose JSON response with timestamps
         subtitleText = transcription.text;
-        subtitleContent = this.createSRTFromVerboseJson(transcription);
+        subtitleContent = ConvertJsonToSrt.convert(transcription, 'verbose_json');
       } else {
         // Handle simple text response
         subtitleText = transcription.text;
-        subtitleContent = this.createSimpleSRT(subtitleText);
+        subtitleContent = ConvertJsonToSrt.convert(transcription, 'text');
       }
 
       // Write subtitle file
@@ -95,56 +96,6 @@ class GroqStt extends IStt {
       console.error('[GROQ_STT] Error:', error);
       throw new Error(`Groq STT conversion failed: ${error.message}`);
     }
-  }
-
-  /**
-   * Create SRT content from verbose JSON response
-   * @param {Object} transcription - Groq transcription response
-   * @returns {string} - SRT formatted content
-   */
-  createSRTFromVerboseJson(transcription) {
-    if (!transcription.segments || !Array.isArray(transcription.segments)) {
-      return this.createSimpleSRT(transcription.text);
-    }
-
-    let srtContent = '';
-    let index = 1;
-
-    transcription.segments.forEach(segment => {
-      const startTime = this.formatTime(segment.start);
-      const endTime = this.formatTime(segment.end);
-      
-      srtContent += `${index}\n`;
-      srtContent += `${startTime} --> ${endTime}\n`;
-      srtContent += `${segment.text.trim()}\n\n`;
-      
-      index++;
-    });
-
-    return srtContent;
-  }
-
-  /**
-   * Create simple SRT content from text
-   * @param {string} text - Transcription text
-   * @returns {string} - SRT formatted content
-   */
-  createSimpleSRT(text) {
-    return `1\n00:00:00,000 --> 00:00:10,000\n${text.trim()}\n`;
-  }
-
-  /**
-   * Format time in seconds to SRT format (HH:MM:SS,mmm)
-   * @param {number} seconds - Time in seconds
-   * @returns {string} - Formatted time string
-   */
-  formatTime(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    const milliseconds = Math.floor((seconds % 1) * 1000);
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
   }
 
   /**
@@ -174,22 +125,6 @@ class GroqStt extends IStt {
    */
   getSupportedFormats() {
     return ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.wma', '.aac', '.mp4', '.avi', '.mov'];
-  }
-
-  /**
-   * Get available Groq models
-   * @returns {string[]} - Array of available Groq Whisper models
-   */
-  getAvailableModels() {
-    return [
-      'whisper-large-v3-turbo',
-      'whisper-large-v3',
-      'whisper-large-v2',
-      'whisper-large-v1',
-      'whisper-medium',
-      'whisper-small',
-      'whisper-tiny'
-    ];
   }
 }
 
