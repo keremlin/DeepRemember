@@ -512,7 +512,7 @@ router.post('/translate', authMiddleware.verifyToken, async (req, res) => {
 
         console.log('[DeepRemember] Sending unified translate prompt to LLM:', { type: type || 'sentence', prompt });
 
-        const data = await llmClient.query(prompt, { model: 'llama3.2', stream: false });
+        const data = await llmClient.query(prompt, { stream: false });
 
         let translation = 'No translation found.';
         if (data && data.response) {
