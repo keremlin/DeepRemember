@@ -7,7 +7,9 @@ module.exports = {
   ALLOWED_MEDIA_TYPES: ['audio/*', 'video/*'],
   ALLOWED_SUBTITLE_TYPES: ['.srt', '.vtt', '.txt'],
   
-  // Whisper settings
+  // STT Service settings
+  WHISPER_TYPE: process.env.WHISPER_TYPE || 'LocalWhisper', // Available: LocalWhisper, Groq
+  WHISPER_MODEL: process.env.WHISPER_MODEL || 'whisper-large-v3-turbo', // For Groq: whisper-large-v3-turbo, whisper-large-v3, etc. For LocalWhisper: tiny, base, small, medium, large, large-v2, large-v3
   WHISPER_OUTPUT_FORMAT: 'srt',
   
   // Logging

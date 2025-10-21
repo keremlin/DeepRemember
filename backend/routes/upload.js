@@ -1,8 +1,8 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
 const { upload, filesDir } = require('../middleware/uploadConfig');
+const SstFactory = require('../stt/SstFactory');
 
 const router = express.Router();
 
@@ -31,29 +31,33 @@ router.post('/upload-files', (req, res, next) => {
         subtitleFile: subtitleFile.originalname
       }});
     } else if (generateSubtitle) {
-      // Audio-only upload with Whisper subtitle generation
-      console.log('[UPLOAD] Audio uploaded, generating subtitle with Whisper:', mediaFile.originalname);
+      // Audio-only upload with STT subtitle generation
+      console.log('[UPLOAD] Audio uploaded, generating subtitle with STT service:', mediaFile.originalname);
       
       const mediaPath = path.join(filesDir, mediaFile.originalname);
       const baseName = path.basename(mediaFile.originalname, path.extname(mediaFile.originalname));
       const subtitlePath = path.join(filesDir, baseName + '.srt');
       
-      // Run Whisper command
-      const whisperCommand = `whisper --output_format srt "${mediaPath}"`;
-      console.log('[WHISPER] Running command:', whisperCommand);
-      
-      exec(whisperCommand, { cwd: filesDir }, (error, stdout, stderr) => {
-        if (error) {
-          console.error('[WHISPER] Error:', error);
-          return res.status(500).json({ error: 'Failed to generate subtitle: ' + error.message });
-        }
+      try {
+        // Create STT service instance using configured type
+        const sstService = SstFactory.createSstService();
         
-        console.log('[WHISPER] Subtitle generated successfully');
-        res.json({ success: true, files: {
-          mediaFile: mediaFile.originalname,
-          subtitleFile: baseName + '.srt'
-        }});
-      });
+        // Convert audio to subtitles
+        const result = await sstService.convert(mediaPath, subtitlePath);
+        
+        if (result.success) {
+          console.log('[UPLOAD] Subtitle generated successfully');
+          res.json({ success: true, files: {
+            mediaFile: mediaFile.originalname,
+            subtitleFile: baseName + '.srt'
+          }});
+        } else {
+          throw new Error('STT conversion failed');
+        }
+      } catch (sstError) {
+        console.error('[UPLOAD] STT Error:', sstError);
+        return res.status(500).json({ error: 'Failed to generate subtitle: ' + sstError.message });
+      }
     } else {
       // Only media file provided but no subtitle generation requested
       console.log('[UPLOAD] Media file uploaded without subtitle:', mediaFile.originalname);
