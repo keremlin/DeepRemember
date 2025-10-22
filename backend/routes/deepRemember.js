@@ -5,7 +5,8 @@ const dbConfig = require('../config/database');
 const { initializeSampleData } = require('../database/sampledata/sampleCardData');
 const AuthMiddleware = require('../security/authMiddleware');
 const path = require('path'); // Added for file path handling
-const fs = require('fs'); // Added for file system operations
+const FileSystemFactory = require('../filesystem/FileSystemFactory');
+const fileSystem = FileSystemFactory.createDefault();
 const crypto = require('crypto'); // Added for hash generation
 const TtsFactory = require('../tts/TtsFactory');
 const appConfig = require('../config/app');
@@ -240,13 +241,13 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
 
         // Ensure the voice directory exists
         const voiceDir = path.resolve(process.cwd(), '..', 'voice');
-        if (!fs.existsSync(voiceDir)) {
-            fs.mkdirSync(voiceDir, { recursive: true });
+        if (!fileSystem.existsSync(voiceDir)) {
+            fileSystem.mkdirSync(voiceDir, { recursive: true });
             console.log(`[DeepRemember] Created voice directory: ${voiceDir}`);
         }
 
         // Check if audio file already exists
-        if (fs.existsSync(filepath)) {
+        if (fileSystem.existsSync(filepath)) {
             console.log(`[DeepRemember] Audio file already exists: ${filepath}`);
             res.json({
                 success: true,
@@ -268,7 +269,7 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
             });
             
             // Save the audio file
-            fs.writeFileSync(filepath, audioBuffer);
+            fileSystem.writeFileSync(filepath, audioBuffer);
             
             console.log(`[DeepRemember] Audio file saved: ${filepath}`);
             
@@ -316,7 +317,7 @@ router.get('/get-audio/:word/:sentence', authMiddleware.verifyToken, async (req,
         const filepath = path.resolve(process.cwd(), '..', 'voice', filename);
 
         // Check if audio file exists
-        if (fs.existsSync(filepath)) {
+        if (fileSystem.existsSync(filepath)) {
             res.json({
                 success: true,
                 audioUrl: `/voice/${filename}`,

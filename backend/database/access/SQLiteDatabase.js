@@ -19,10 +19,11 @@ class SQLiteDatabase extends IDatabase {
   async initialize() {
     try {
       // Create database directory if it doesn't exist
-      const fs = require('fs');
+      const FileSystemFactory = require('../../filesystem/FileSystemFactory');
+      const fileSystem = FileSystemFactory.createDefault();
       const dbDir = path.dirname(this.dbPath);
-      if (!fs.existsSync(dbDir)) {
-        fs.mkdirSync(dbDir, { recursive: true });
+      if (!fileSystem.existsSync(dbDir)) {
+        fileSystem.mkdirSync(dbDir, { recursive: true });
       }
 
       // Open database connection

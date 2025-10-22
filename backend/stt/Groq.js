@@ -1,4 +1,5 @@
-const fs = require('fs');
+const FileSystemFactory = require('../filesystem/FileSystemFactory');
+const fileSystem = FileSystemFactory.createDefault();
 const path = require('path');
 const Groq = require('groq-sdk');
 const IStt = require('./IStt');
@@ -34,7 +35,7 @@ class GroqStt extends IStt {
   async convert(audioPath, outputPath, options = {}) {
     try {
       // Validate input file exists
-      if (!fs.existsSync(audioPath)) {
+      if (!fileSystem.existsSync(audioPath)) {
         throw new Error(`Audio file not found: ${audioPath}`);
       }
 
@@ -53,7 +54,7 @@ class GroqStt extends IStt {
       console.log('[GROQ_STT] Using model:', conversionOptions.model);
 
       // Create read stream from audio file
-      const audioStream = fs.createReadStream(audioPath);
+      const audioStream = fileSystem.createReadStream(audioPath);
 
       // Call Groq API for transcription
       const transcription = await this.groq.audio.transcriptions.create({
@@ -80,7 +81,7 @@ class GroqStt extends IStt {
       }
 
       // Write subtitle file
-      fs.writeFileSync(outputPath, subtitleContent, 'utf8');
+      fileSystem.writeFileSync(outputPath, subtitleContent, 'utf8');
 
       console.log('[GROQ_STT] Subtitle file saved:', outputPath);
 

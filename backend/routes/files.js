@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
+const FileSystemFactory = require('../filesystem/FileSystemFactory');
+const fileSystem = FileSystemFactory.createDefault();
 const { filesDir } = require('../middleware/uploadConfig');
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 // List all uploaded files as playlist
 router.get('/files-list', (req, res) => {
   console.log('[FILES] Reading directory:', filesDir);
-  fs.readdir(filesDir, (err, files) => {
+  fileSystem.readdir(filesDir, (err, files) => {
     if (err) {
       console.log('[FILES] Error reading directory:', err);
       return res.status(500).json({ error: 'Failed to read files directory.' });
@@ -47,11 +48,11 @@ router.post('/delete-files', (req, res) => {
   const mediaPath = path.join(filesDir, media);
   let deleted = { media: false, subtitle: false };
   
-  fs.unlink(mediaPath, err => {
+  fileSystem.unlink(mediaPath, err => {
     deleted.media = !err;
     if (subtitle) {
       const subtitlePath = path.join(filesDir, subtitle);
-      fs.unlink(subtitlePath, err2 => {
+      fileSystem.unlink(subtitlePath, err2 => {
         deleted.subtitle = !err2;
         res.json({ success: true, deleted });
       });

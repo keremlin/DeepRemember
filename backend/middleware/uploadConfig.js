@@ -1,11 +1,12 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const FileSystemFactory = require('../filesystem/FileSystemFactory');
+const fileSystem = FileSystemFactory.createDefault();
 
 // Ensure files directory exists
 const filesDir = path.join(__dirname, '..', '..', 'files');
-if (!fs.existsSync(filesDir)) {
-  fs.mkdirSync(filesDir);
+if (!fileSystem.existsSync(filesDir)) {
+  fileSystem.mkdirSync(filesDir);
 }
 
 // Configure multer storage

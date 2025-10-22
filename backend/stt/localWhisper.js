@@ -1,6 +1,7 @@
 const { exec } = require('child_process');
 const path = require('path');
-const fs = require('fs');
+const FileSystemFactory = require('../filesystem/FileSystemFactory');
+const fileSystem = FileSystemFactory.createDefault();
 const IStt = require('./IStt');
 
 /**
@@ -28,7 +29,7 @@ class LocalWhisper extends IStt {
   async convert(audioPath, outputPath, options = {}) {
     return new Promise((resolve, reject) => {
       // Validate input file exists
-      if (!fs.existsSync(audioPath)) {
+      if (!fileSystem.existsSync(audioPath)) {
         return reject(new Error(`Audio file not found: ${audioPath}`));
       }
 
@@ -53,7 +54,7 @@ class LocalWhisper extends IStt {
         }
 
         // Check if output file was created
-        if (!fs.existsSync(outputPath)) {
+        if (!fileSystem.existsSync(outputPath)) {
           console.warn('[LOCAL_WHISPER] Warning: Output file not found after conversion');
         }
 
