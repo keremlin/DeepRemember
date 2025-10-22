@@ -63,6 +63,15 @@ class IFileSystem {
   createReadStream(path, options) {
     throw new Error('createReadStream method must be implemented');
   }
+
+  /**
+   * Create required application folders if they don't exist
+   * @param {string[]} folderNames - Array of folder names to create
+   * @returns {Promise<void>|void} - Promise for async implementations, void for sync
+   */
+  createFoldersIfNotExist(folderNames) {
+    throw new Error('createFoldersIfNotExist method must be implemented');
+  }
 }
 
 module.exports = IFileSystem;

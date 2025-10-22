@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build-production.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "setup-google-oauth": "node filesystem/setup-oauth.js",
+    "setup-google-oauth-alt": "node filesystem/setup-oauth-alternative.js"
   },
   "keywords": [],
   "author": "Arash Yeganehrad",
@@ -18,6 +20,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "googleapis": "^164.1.0",
     "groq-sdk": "^0.6.0",
     "multer": "^2.0.2",
     "pg": "^8.16.3",

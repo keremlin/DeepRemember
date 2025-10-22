@@ -16,6 +16,9 @@ const authRoutes = require('./routes/auth');
 // Import configuration
 const config = require('./config/app');
 
+// Import folder initialization
+const { initializeAppFolders } = require('./filesystem/initializeFolders');
+
 const app = express();
 
 // Enable CORS for all routes
@@ -68,8 +71,11 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(config.PORT, () => {
+app.listen(config.PORT, async () => {
   console.log(`🚀 Server running at http://localhost:${config.PORT}`);
   console.log(`📁 Environment: ${config.NODE_ENV}`);
   console.log(`📊 Log level: ${config.LOG_LEVEL}`);
+  
+  // Initialize application folders
+  await initializeAppFolders();
 });

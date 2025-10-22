@@ -1,4 +1,5 @@
 const NodeFileSystem = require('./NodeFileSystem');
+const GoogleDrive = require('./GoogleDrive');
 
 /**
  * Factory for creating FileSystem implementations
@@ -12,17 +13,31 @@ class FileSystemFactory {
    * @returns {IFileSystem} - File system instance
    */
   static createFileSystem(type = 'node', config = {}) {
+    const rootDir = process.env.FS_ROOT_DIR || process.env.fs_root_dir || '';
+    const normalizedRoot = (rootDir || '').toString().replace(/^[\/]+/, '').replace(/[\/]+$/, '');
+    const mergedConfig = { ...config };
+
     switch (type.toLowerCase()) {
       case 'node':
       case 'fs':
       case 'filesystem':
-        return new NodeFileSystem();
+        return new NodeFileSystem({ rootDir: normalizedRoot });
+      
+      case 'google':
+      case 'googledrive':
+      case 'gdrive':
+        // Only set basePath if not already provided in config
+        const googleConfig = { ...mergedConfig };
+        if (!googleConfig.basePath && normalizedRoot) {
+          googleConfig.basePath = `/${normalizedRoot}`;
+        }
+        return new GoogleDrive(googleConfig);
       
       // Future implementations can be added here
       // case 'memory':
       //   return new MemoryFileSystem(config);
-      // case 'cloud':
-      //   return new CloudFileSystem(config);
+      // case 'aws':
+      //   return new AWSFileSystem(config);
       // case 'mock':
       //   return new MockFileSystem(config);
       
@@ -37,7 +52,9 @@ class FileSystemFactory {
    * @returns {NodeFileSystem} - Node file system instance
    */
   static createNodeFileSystem(config = {}) {
-    return new NodeFileSystem();
+    const rootDir = process.env.FS_ROOT_DIR || process.env.fs_root_dir || '';
+    const normalizedRoot = (rootDir || '').toString().replace(/^[\/]+/, '').replace(/[\/]+$/, '');
+    return new NodeFileSystem({ rootDir: normalizedRoot, ...config });
   }
 
   /**
@@ -58,11 +75,28 @@ class FileSystemFactory {
   }
 
   /**
+   * Create a Google Drive file system instance
+   * @param {Object} config - Configuration options
+   * @returns {GoogleDrive} - Google Drive file system instance
+   */
+  static createGoogleDriveFileSystem(config = {}) {
+    const rootDir = process.env.FS_ROOT_DIR || process.env.fs_root_dir || '';
+    const normalizedRoot = (rootDir || '').toString().replace(/^[\/]+/, '').replace(/[\/]+$/, '');
+    
+    // Only set basePath if not already provided in config
+    const googleConfig = { ...config };
+    if (!googleConfig.basePath && normalizedRoot) {
+      googleConfig.basePath = `/${normalizedRoot}`;
+    }
+    return new GoogleDrive(googleConfig);
+  }
+
+  /**
    * Get available file system types
    * @returns {string[]} - Array of available file system types
    */
   static getAvailableTypes() {
-    return ['node'];
+    return ['node', 'google', 'googledrive', 'gdrive'];
   }
 
   /**

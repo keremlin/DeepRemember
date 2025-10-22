@@ -6,13 +6,25 @@ const IFileSystem = require('./IFileSystem');
  * Wraps the native Node.js fs module methods
  */
 class NodeFileSystem extends IFileSystem {
+  constructor(config = {}) {
+    super();
+    this.rootDir = (config.rootDir || '').toString().replace(/[\\/]+$/, '');
+    this.appRoot = process.cwd();
+  }
+
+  resolvePath(p) {
+    const pathModule = require('path');
+    const normalized = (p || '').toString();
+    const base = this.rootDir ? pathModule.join(this.appRoot, this.rootDir) : this.appRoot;
+    return pathModule.isAbsolute(normalized) ? normalized : pathModule.join(base, normalized);
+  }
   /**
    * Synchronously check if a file or directory exists
    * @param {string} path - The path to check
    * @returns {boolean} - True if the path exists, false otherwise
    */
   existsSync(path) {
-    return fs.existsSync(path);
+    return fs.existsSync(this.resolvePath(path));
   }
 
   /**
@@ -22,7 +34,7 @@ class NodeFileSystem extends IFileSystem {
    * @returns {string|undefined} - The first directory path created, or undefined
    */
   mkdirSync(path, options) {
-    return fs.mkdirSync(path, options);
+    return fs.mkdirSync(this.resolvePath(path), options);
   }
 
   /**
@@ -33,7 +45,7 @@ class NodeFileSystem extends IFileSystem {
    * @returns {undefined}
    */
   writeFileSync(file, data, options) {
-    return fs.writeFileSync(file, data, options);
+    return fs.writeFileSync(this.resolvePath(file), data, options);
   }
 
   /**
@@ -49,7 +61,7 @@ class NodeFileSystem extends IFileSystem {
       callback = options;
       options = undefined;
     }
-    return fs.readdir(path, options, callback);
+    return fs.readdir(this.resolvePath(path), options, callback);
   }
 
   /**
@@ -59,7 +71,7 @@ class NodeFileSystem extends IFileSystem {
    * @returns {undefined}
    */
   unlink(path, callback) {
-    return fs.unlink(path, callback);
+    return fs.unlink(this.resolvePath(path), callback);
   }
 
   /**
@@ -69,7 +81,38 @@ class NodeFileSystem extends IFileSystem {
    * @returns {ReadStream} - A readable stream
    */
   createReadStream(path, options) {
-    return fs.createReadStream(path, options);
+    return fs.createReadStream(this.resolvePath(path), options);
+  }
+
+  /**
+   * Create required application folders if they don't exist
+   * @param {string[]} folderNames - Array of folder names to create
+   * @returns {void} - Synchronous implementation
+   */
+  createFoldersIfNotExist(folderNames) {
+    if (!Array.isArray(folderNames)) {
+      throw new Error('folderNames must be an array');
+    }
+
+    folderNames.forEach(folderName => {
+      if (typeof folderName !== 'string' || !folderName.trim()) {
+        console.warn(`[NODE_FS] Skipping invalid folder name: ${folderName}`);
+        return;
+      }
+
+      const folderPath = this.resolvePath(folderName.trim());
+      
+      if (!this.existsSync(folderPath)) {
+        try {
+          this.mkdirSync(folderPath, { recursive: true });
+          console.log(`[NODE_FS] Created folder: ${folderPath}`);
+        } catch (error) {
+          console.error(`[NODE_FS] Failed to create folder ${folderPath}:`, error.message);
+        }
+      } else {
+        console.log(`[NODE_FS] Folder already exists: ${folderPath}`);
+      }
+    });
   }
 }
 

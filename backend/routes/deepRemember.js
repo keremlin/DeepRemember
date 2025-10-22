@@ -237,10 +237,10 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
         // Create a safe filename for the audio
         const safeWord = word.replace(/[^a-zA-Z0-9]/g, '_');
         const filename = `${safeWord}_${sentenceHash}.wav`;
-        const filepath = path.resolve(process.cwd(), '..', 'voice', filename);
+        const filepath = path.posix.join('voice', filename);
 
         // Ensure the voice directory exists
-        const voiceDir = path.resolve(process.cwd(), '..', 'voice');
+        const voiceDir = 'voice';
         if (!fileSystem.existsSync(voiceDir)) {
             fileSystem.mkdirSync(voiceDir, { recursive: true });
             console.log(`[DeepRemember] Created voice directory: ${voiceDir}`);
