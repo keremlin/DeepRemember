@@ -393,11 +393,21 @@ class GoogleDrive extends IFileSystem {
       // Ensure directory exists
       let parentId = this.baseFolderId || this.config.rootFolderId;
       if (pathParts.length > 0) {
-        parentId = await this.mkdir(dirPath);
+        // Don't use mkdir here as it will duplicate the basePath
+        // Instead, navigate through the path parts manually
+        for (const folderName of pathParts) {
+          parentId = await this.findOrCreateFolder(folderName, parentId);
+        }
       }
       
       // Convert data to buffer if needed
       const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data, options.encoding || 'utf8');
+      
+      // Create a readable stream from the buffer
+      const { Readable } = require('stream');
+      const stream = new Readable();
+      stream.push(buffer);
+      stream.push(null); // End the stream
       
       // Check if file already exists
       const existingFileId = await this.findFile(fileName, parentId);
@@ -415,7 +425,7 @@ class GoogleDrive extends IFileSystem {
           requestBody: metadata,
           media: {
             mimeType: options.mimeType || 'text/plain',
-            body: buffer
+            body: stream
           }
         });
       } else {
@@ -424,7 +434,7 @@ class GoogleDrive extends IFileSystem {
           requestBody: metadata,
           media: {
             mimeType: options.mimeType || 'text/plain',
-            body: buffer
+            body: stream
           },
           fields: 'id'
         });
@@ -590,16 +600,12 @@ class GoogleDrive extends IFileSystem {
       const normalizedFolderName = folderName.trim();
       
       try {
-        // Check if folder exists using resolveFolderId
-        const folderId = await this.resolveFolderId(normalizedFolderName);
+        // For folder creation, we need to create the folder under the base path
+        // So we pass the folder name directly to mkdir, which will handle the basePath
+        const folderId = await this.mkdir(normalizedFolderName);
         
-        // If resolveFolderId returns a valid ID, folder exists
-        if (folderId && folderId !== this.config.rootFolderId) {
-          console.log(`[GOOGLE_DRIVE] Folder already exists: ${normalizedFolderName}`);
-        } else {
-          // Create the folder
-          await this.mkdir(normalizedFolderName);
-          console.log(`[GOOGLE_DRIVE] Created folder: ${normalizedFolderName}`);
+        if (folderId) {
+          console.log(`[GOOGLE_DRIVE] Folder created/verified: ${normalizedFolderName}`);
         }
       } catch (error) {
         console.error(`[GOOGLE_DRIVE] Failed to create folder ${normalizedFolderName}:`, error.message);

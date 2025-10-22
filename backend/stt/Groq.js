@@ -4,6 +4,7 @@ const path = require('path');
 const Groq = require('groq-sdk');
 const IStt = require('./IStt');
 const ConvertJsonToSrt = require('../tools/ConvertJsonToSrt');
+const fs = require('fs'); // Add local filesystem for temp files
 
 /**
  * Groq implementation of STT service
@@ -35,7 +36,11 @@ class GroqStt extends IStt {
   async convert(audioPath, outputPath, options = {}) {
     try {
       // Validate input file exists
-      if (!fileSystem.existsSync(audioPath)) {
+      // Use local filesystem for temp files, configured filesystem for others
+      const isTempFile = audioPath.includes('temp') || audioPath.includes('\\temp\\') || audioPath.includes('/temp/');
+      const fileExists = isTempFile ? fs.existsSync(audioPath) : fileSystem.existsSync(audioPath);
+      
+      if (!fileExists) {
         throw new Error(`Audio file not found: ${audioPath}`);
       }
 
@@ -54,7 +59,8 @@ class GroqStt extends IStt {
       console.log('[GROQ_STT] Using model:', conversionOptions.model);
 
       // Create read stream from audio file
-      const audioStream = fileSystem.createReadStream(audioPath);
+      // Use local filesystem for temp files, configured filesystem for others
+      const audioStream = isTempFile ? fs.createReadStream(audioPath) : fileSystem.createReadStream(audioPath);
 
       // Call Groq API for transcription
       const transcription = await this.groq.audio.transcriptions.create({
@@ -81,7 +87,13 @@ class GroqStt extends IStt {
       }
 
       // Write subtitle file
-      fileSystem.writeFileSync(outputPath, subtitleContent, 'utf8');
+      // Use local filesystem for temp files, configured filesystem for others
+      const isTempOutput = outputPath.includes('temp') || outputPath.includes('\\temp\\') || outputPath.includes('/temp/');
+      if (isTempOutput) {
+        fs.writeFileSync(outputPath, subtitleContent, 'utf8');
+      } else {
+        fileSystem.writeFileSync(outputPath, subtitleContent, 'utf8');
+      }
 
       console.log('[GROQ_STT] Subtitle file saved:', outputPath);
 
