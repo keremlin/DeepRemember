@@ -98,7 +98,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
       const result = await response.json()
 
       if (result.success) {
-        onUploadSuccess?.(result.files)
+        onUploadSuccess?.(result)
         
         // Reset form
         setMediaFile(null)

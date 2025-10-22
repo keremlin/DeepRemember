@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import AudioPlayer from './AudioPlayer'
 import FileUpload from './FileUpload'
 import CloseButton from '../CloseButton'
@@ -8,10 +8,17 @@ import './PlayerPage.css'
 const PlayerPage = ({ onNavigateToWelcome }) => {
   const { showSuccess, showError } = useToast()
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const audioPlayerRef = useRef(null)
 
-  const handleUploadSuccess = (files) => {
+  const handleUploadSuccess = (result) => {
+    const { files, refreshPlaylist } = result
     showSuccess(`Files uploaded successfully! ${files.subtitleFile ? 'Subtitle generated.' : 'Media uploaded.'}`)
     setShowUploadModal(false)
+    
+    // Refresh playlist if requested by backend
+    if (refreshPlaylist && audioPlayerRef.current) {
+      audioPlayerRef.current.refreshPlaylist()
+    }
   }
 
   const handleUploadError = (error) => {
@@ -39,7 +46,7 @@ const PlayerPage = ({ onNavigateToWelcome }) => {
       </div>
       
       <div className="player-content">
-        <AudioPlayer />
+        <AudioPlayer ref={audioPlayerRef} />
       </div>
       
       {/* Upload Modal */}

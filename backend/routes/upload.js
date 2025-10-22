@@ -44,10 +44,14 @@ router.post('/upload-files', (req, res, next) => {
         }
       }
       
-      res.json({ success: true, files: {
-        mediaFile: mediaFile.originalname,
-        subtitleFile: subtitleFile.originalname
-      }});
+      res.json({ 
+        success: true, 
+        files: {
+          mediaFile: mediaFile.originalname,
+          subtitleFile: subtitleFile.originalname
+        },
+        refreshPlaylist: true
+      });
     } else if (generateSubtitle) {
       // Audio-only upload with STT subtitle generation
       console.log('[UPLOAD] Audio uploaded, generating subtitle with STT service:', mediaFile.originalname);
@@ -111,10 +115,14 @@ router.post('/upload-files', (req, res, next) => {
             console.log('[UPLOAD] Temporary files cleaned up');
           }
           
-          res.json({ success: true, files: {
-            mediaFile: mediaFile.originalname,
-            subtitleFile: baseName + '.srt'
-          }});
+          res.json({ 
+            success: true, 
+            files: {
+              mediaFile: mediaFile.originalname,
+              subtitleFile: baseName + '.srt'
+            },
+            refreshPlaylist: true
+          });
         } else {
           throw new Error('STT conversion failed');
         }
@@ -138,10 +146,14 @@ router.post('/upload-files', (req, res, next) => {
         }
       }
       
-      res.json({ success: true, files: {
-        mediaFile: mediaFile.originalname,
-        subtitleFile: null
-      }});
+      res.json({ 
+        success: true, 
+        files: {
+          mediaFile: mediaFile.originalname,
+          subtitleFile: null
+        },
+        refreshPlaylist: true
+      });
     }
   } catch (error) {
     console.error('[UPLOAD] Error:', error);

@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { useAuth } from '../security/AuthContext'
 import { useToast } from '../ToastProvider'
 import Translator from './Translator'
 import './AudioPlayer.css'
 
-const AudioPlayer = ({ currentUserId = 'user123' }) => {
+const AudioPlayer = forwardRef(({ currentUserId = 'user123' }, ref) => {
   const { showSuccess, showError } = useToast()
   const [currentTrack, setCurrentTrack] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -28,6 +28,11 @@ const AudioPlayer = ({ currentUserId = 'user123' }) => {
   const audioRef = useRef(null)
   const progressRef = useRef(null)
   const { getAuthHeaders } = useAuth()
+
+  // Expose refreshPlaylist method to parent component
+  useImperativeHandle(ref, () => ({
+    refreshPlaylist: loadTracks
+  }))
 
   // Load available tracks from files folder
   useEffect(() => {
@@ -429,6 +434,6 @@ const AudioPlayer = ({ currentUserId = 'user123' }) => {
       />
     </div>
   )
-}
+})
 
 export default AudioPlayer
