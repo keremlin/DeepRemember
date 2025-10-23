@@ -124,6 +124,13 @@ See the STT documentation: [backend/stt/README.md](backend/stt/README.md)
 The application supports configurable TTS services for audio generation.
 See the TTS documentation: [backend/tts/TTS.md](backend/tts/TTS.md)
 
+### FileSystem Configuration
+The application supports multiple file system implementations including local storage and Google Drive.
+See the FileSystem documentation: [backend/filesystem/FILESYSTEM.md](backend/filesystem/FILESYSTEM.md)
+- [Fallback Storage](backend/filesystem/fallback-storage.md) - Local backup system for cloud storage
+- [Google Drive Setup](backend/filesystem/GOOGLE_CLOUD_SETUP.md) - Google Drive configuration guide
+- [Google Drive Environment Variables](backend/filesystem/GOOGLE_DRIVE_ENV.md) - Environment configuration
+
 #### Migration from SQLite to Supabase
 If you have existing data in SQLite and want to migrate to Supabase:
 ```bash
