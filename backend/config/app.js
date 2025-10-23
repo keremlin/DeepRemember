@@ -13,10 +13,15 @@ module.exports = {
   WHISPER_OUTPUT_FORMAT: 'srt',
   
   // TTS Service settings
-  TTS_TYPE: process.env.TTS_TYPE || 'piper', // Available: piper, elevenlabs
-  TTS_VOICE: process.env.TTS_VOICE || 'pavoque', // Voice for TTS
+  TTS_TYPE: process.env.TTS_TYPE || 'piper', // Available: piper, elevenlabs, google
+  TTS_VOICE: process.env.TTS_VOICE || 'pavoque', // Voice for TTS (ElevenLabs format), NOT used for Google TTS
   TTS_MODEL: process.env.TTS_MODEL || 'tts-1-hd', // Model for TTS
   TTS_API_KEY: process.env.TTS_API_KEY || '', // API key for TTS services (ElevenLabs)
+  
+  // Google Cloud TTS specific settings
+  GOOGLE_TTS_VOICE: process.env.GOOGLE_TTS_VOICE || 'de-DE-Neural2-F', // Voice for Google TTS
+  GOOGLE_TTS_LANGUAGE_CODE: process.env.GOOGLE_TTS_LANGUAGE_CODE || 'de-DE', // Language code for Google TTS
+  GOOGLE_TTS_SSML_GENDER: process.env.GOOGLE_TTS_SSML_GENDER || 'FEMALE', // Gender for Google TTS (MALE or FEMALE)
   
   // Logging
   LOG_LEVEL: process.env.LOG_LEVEL || 'info'

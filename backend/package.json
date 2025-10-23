@@ -16,6 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.20.0",
+    "@google-cloud/text-to-speech": "^6.4.0",
     "@supabase/supabase-js": "^2.75.1",
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",

@@ -1,6 +1,7 @@
 const ITts = require('./ITts');
 const Piper = require('./Piper');
 const ElevenLabs = require('./ElevenLabs');
+const GoogleTts = require('./GoogleTts');
 const appConfig = require('../config/app');
 
 /**
@@ -32,6 +33,19 @@ class TtsFactory {
                 return new Piper(mergedOptions);
             case 'elevenlabs':
                 return new ElevenLabs(mergedOptions);
+            case 'google':
+            case 'googletts':
+                // Don't pass voice/model from defaultOptions for Google TTS
+                // Google TTS uses different voice format
+                const googleOptions = { ...options };
+                // Only include voice if explicitly provided in options
+                if (!googleOptions.voice && !googleOptions.defaultVoice) {
+                    // Use Google-specific voice config if available
+                    if (appConfig.GOOGLE_TTS_VOICE) {
+                        googleOptions.voice = appConfig.GOOGLE_TTS_VOICE;
+                    }
+                }
+                return new GoogleTts(googleOptions);
             case 'openai':
                 // Future implementation
                 throw new Error('OpenAI TTS implementation not yet available');
@@ -55,7 +69,7 @@ class TtsFactory {
      * @returns {string[]} - Array of available service types
      */
     static getAvailableTypes() {
-        return ['piper', 'elevenlabs'];
+        return ['piper', 'elevenlabs', 'google'];
     }
 
     /**
