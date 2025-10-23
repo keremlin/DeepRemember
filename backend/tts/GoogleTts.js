@@ -30,7 +30,7 @@ class GoogleTts extends ITts {
             defaultVoice: options.voice || options.defaultVoice || appConfig.GOOGLE_TTS_VOICE || 'de-DE-Neural2-F',
             defaultLanguageCode: options.languageCode || appConfig.GOOGLE_TTS_LANGUAGE_CODE || 'de-DE',
             defaultSsmlGender: options.ssmlGender || appConfig.GOOGLE_TTS_SSML_GENDER || 'FEMALE',
-            defaultAudioEncoding: options.audioEncoding || 'MP3',
+            defaultAudioEncoding: options.audioEncoding || appConfig.GOOGLE_TTS_AUDIO_ENCODING || 'MP3',
             defaultSampleRate: options.sampleRate || 24000,
             
             ...options

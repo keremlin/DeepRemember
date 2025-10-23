@@ -236,8 +236,36 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
 
         // Create a safe filename for the audio
         const safeWord = word.replace(/[^a-zA-Z0-9]/g, '_');
-        const filename = `${safeWord}_${sentenceHash}.wav`;
+        
+        // Determine file extension based on TTS service type
+        // Google TTS outputs MP3, Piper/ElevenLabs output WAV
+        const getFileExtension = () => {
+            const ttsType = appConfig.TTS_TYPE.toLowerCase();
+            return (ttsType === 'google' || ttsType === 'googletts') ? '.mp3' : '.wav';
+        };
+        
+        const extension = getFileExtension();
+        const filename = `${safeWord}_${sentenceHash}${extension}`;
         const filepath = path.posix.join('voice', filename);
+        
+        // Check for old files with wrong extension and delete them
+        const oldExtension = extension === '.mp3' ? '.wav' : '.mp3';
+        const oldFilename = `${safeWord}_${sentenceHash}${oldExtension}`;
+        const oldFilepath = path.posix.join('voice', oldFilename);
+        
+        if (fileSystem.existsSync(oldFilepath)) {
+            console.log(`[DeepRemember] Removing old file with wrong extension: ${oldFilepath}`);
+            try {
+                await new Promise((resolve, reject) => {
+                    fileSystem.unlink(oldFilepath, (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+            } catch (err) {
+                console.warn(`[DeepRemember] Failed to remove old file: ${err.message}`);
+            }
+        }
 
         // Ensure the voice directory exists
         const voiceDir = 'voice';

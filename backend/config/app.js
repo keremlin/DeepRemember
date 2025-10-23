@@ -22,7 +22,9 @@ module.exports = {
   GOOGLE_TTS_VOICE: process.env.GOOGLE_TTS_VOICE || 'de-DE-Neural2-F', // Voice for Google TTS
   GOOGLE_TTS_LANGUAGE_CODE: process.env.GOOGLE_TTS_LANGUAGE_CODE || 'de-DE', // Language code for Google TTS
   GOOGLE_TTS_SSML_GENDER: process.env.GOOGLE_TTS_SSML_GENDER || 'FEMALE', // Gender for Google TTS (MALE or FEMALE)
+  GOOGLE_TTS_AUDIO_ENCODING: process.env.GOOGLE_TTS_AUDIO_ENCODING || 'MP3', // Audio encoding (MP3, LINEAR16, OGG_OPUS)
   
   // Logging
   LOG_LEVEL: process.env.LOG_LEVEL || 'info'
 };
+
