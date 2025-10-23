@@ -262,9 +262,8 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
         
         try {
             // Use the TTS service to convert text to speech with configuration
+            // Don't pass voice/model as they're service-specific and handled internally
             const audioBuffer = await ttsService.convert(text, {
-                voice: appConfig.TTS_VOICE,
-                model: appConfig.TTS_MODEL,
                 timeout: 10000
             });
             
