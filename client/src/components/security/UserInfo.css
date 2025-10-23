@@ -41,12 +41,14 @@
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
+  color: #333;
 }
 
-.logout-icon {
+.logout-btn svg {
   width: 20px;
   height: 20px;
-  object-fit: contain;
+  stroke: currentColor;
+  fill: none;
 }
 
 .logout-btn:hover {
