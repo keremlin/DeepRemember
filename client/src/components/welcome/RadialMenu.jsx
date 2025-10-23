@@ -1,8 +1,17 @@
 import React, { useState } from 'react'
+import { useAuth } from '../security/AuthContext'
+import logoutIcon from '../../assets/icons/logout_icon.png'
 import './RadialMenu.css'
 
 const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer }) => {
   const [isOpen, setIsOpen] = useState(true)
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    if (confirm('Are you sure you want to logout?')) {
+      await logout()
+    }
+  }
 
   const menuItems = [
     {
@@ -53,17 +62,9 @@ const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer }) => {
     },
     {
       id: 'logi-options',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-          <line x1="8" y1="21" x2="16" y2="21"/>
-          <line x1="12" y1="17" x2="12" y2="21"/>
-          <text x="8" y="10" fontSize="8" fill="currentColor">0</text>
-          <text x="16" y="10" fontSize="8" fill="currentColor">1</text>
-        </svg>
-      ),
-      label: 'Logi Options+',
-      action: () => console.log('Logi Options+ clicked')
+      icon: <img src={logoutIcon} alt="Logout" />,
+      label: 'Logout',
+      action: handleLogout
     },
     {
       id: 'screenshot',
