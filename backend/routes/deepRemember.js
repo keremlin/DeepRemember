@@ -340,8 +340,16 @@ router.get('/get-audio/:word/:sentence', authMiddleware.verifyToken, async (req,
 
         // Create the expected filename
         const safeWord = word.replace(/[^a-zA-Z0-9]/g, '_');
-        const filename = `${safeWord}_${sentenceHash}.wav`;
-        const filepath = path.resolve(process.cwd(), '..', 'voice', filename);
+        
+        // Determine file extension based on TTS service type
+        const getFileExtension = () => {
+            const ttsType = appConfig.TTS_TYPE.toLowerCase();
+            return (ttsType === 'google' || ttsType === 'googletts') ? '.mp3' : '.wav';
+        };
+        
+        const extension = getFileExtension();
+        const filename = `${safeWord}_${sentenceHash}${extension}`;
+        const filepath = path.posix.join('voice', filename);
 
         // Check if audio file exists
         if (fileSystem.existsSync(filepath)) {
@@ -352,11 +360,25 @@ router.get('/get-audio/:word/:sentence', authMiddleware.verifyToken, async (req,
                 exists: true
             });
         } else {
-            res.json({
-                success: false,
-                error: 'Audio file not found',
-                exists: false
-            });
+            // Try the alternative extension
+            const altExtension = extension === '.mp3' ? '.wav' : '.mp3';
+            const altFilename = `${safeWord}_${sentenceHash}${altExtension}`;
+            const altFilepath = path.posix.join('voice', altFilename);
+            
+            if (fileSystem.existsSync(altFilepath)) {
+                res.json({
+                    success: true,
+                    audioUrl: `/voice/${altFilename}`,
+                    filename: altFilename,
+                    exists: true
+                });
+            } else {
+                res.json({
+                    success: false,
+                    error: 'Audio file not found',
+                    exists: false
+                });
+            }
         }
         
     } catch (error) {

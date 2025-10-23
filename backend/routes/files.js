@@ -86,7 +86,20 @@ router.get('/files/:filename', async (req, res) => {
     const filePath = `files/${filename}`;
     
     if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
-      // Google Drive: Stream file content
+      // Google Drive: Check fallback storage first, then try Drive
+      const fs = require('fs');
+      const fallbackPath = path.resolve(__dirname, '../fallback-storage', filePath);
+      
+      // Check if file exists in fallback storage
+      if (fs.existsSync(fallbackPath)) {
+        console.log(`[FILE_SERVE] Serving from fallback storage: ${fallbackPath}`);
+        res.setHeader('Content-Type', getContentType(filename));
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.sendFile(fallbackPath);
+        return;
+      }
+      
+      // Try to stream from Google Drive
       const stream = fileSystem.createReadStream(filePath);
       
       // Set appropriate headers
@@ -112,6 +125,60 @@ router.get('/files/:filename', async (req, res) => {
     }
   } catch (error) {
     console.error(`[FILE_SERVE] Error serving file ${req.params.filename}:`, error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Dynamic voice file serving route (for Google Drive files)
+router.get('/voice/:filename', async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const filePath = `voice/${filename}`;
+    
+    if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+      // Google Drive: Check fallback storage first, then try Drive
+      const fs = require('fs');
+      const fallbackPath = path.resolve(__dirname, '../fallback-storage', filePath);
+      
+      console.log(`[VOICE_SERVE] Checking fallback storage at: ${fallbackPath}`);
+      
+      // Check if file exists in fallback storage
+      if (fs.existsSync(fallbackPath)) {
+        console.log(`[VOICE_SERVE] Serving from fallback storage: ${fallbackPath}`);
+        res.setHeader('Content-Type', getContentType(filename));
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.sendFile(fallbackPath);
+        return;
+      }
+      
+      console.log(`[VOICE_SERVE] File not in fallback storage, trying Google Drive...`);
+      
+      // Try to stream from Google Drive
+      const stream = fileSystem.createReadStream(filePath);
+      
+      // Set appropriate headers
+      res.setHeader('Content-Type', getContentType(filename));
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      
+      // Pipe the stream to response
+      stream.on('error', (error) => {
+        console.error(`[VOICE_SERVE] Error streaming file ${filename}:`, error);
+        res.status(404).json({ error: 'Voice file not found' });
+      });
+      
+      stream.pipe(res);
+    } else {
+      // Local filesystem: Use static serving (fallback)
+      const filePath = path.join(__dirname, '../../voice', filename);
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error(`[VOICE_SERVE] Error serving local file ${filename}:`, err);
+          res.status(404).json({ error: 'Voice file not found' });
+        }
+      });
+    }
+  } catch (error) {
+    console.error(`[VOICE_SERVE] Error serving voice file ${req.params.filename}:`, error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
