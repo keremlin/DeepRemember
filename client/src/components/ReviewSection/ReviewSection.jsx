@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import ReviewButt from './ReviewButt'
 import Samples from './Samples'
 import SampleSentenceCircle from './SampleSentenceCircle'
+import { useAuth } from '../security/AuthContext'
 import './ReviewSection.css'
 
 const ReviewSection = ({ 
@@ -10,6 +11,7 @@ const ReviewSection = ({
   setShowAnswer, 
   answerCard 
 }) => {
+  const { getAuthHeaders } = useAuth()
   const [pressedKey, setPressedKey] = useState(null)
   const [isPlayingWord, setIsPlayingWord] = useState(false)
   const [isCreatingWordAudio, setIsCreatingWordAudio] = useState(false)
@@ -25,6 +27,7 @@ const ReviewSection = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders()
         },
         mode: 'cors',
         body: JSON.stringify({ 
@@ -66,7 +69,10 @@ const ReviewSection = ({
       const encodedWord = encodeURIComponent(currentCard.word.trim())
       const response = await fetch(`http://localhost:4004/deepRemember/get-audio/${currentCard.word.trim()}/${encodedWord}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         mode: 'cors'
       })
       

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import SampleSentenceCircle from './SampleSentenceCircle'
+import { useAuth } from '../security/AuthContext'
 import './SampleSentence.css'
 
 const SampleSentence = ({ 
@@ -8,6 +9,7 @@ const SampleSentence = ({
   word,
   showAnswer
 }) => {
+  const { getAuthHeaders } = useAuth()
   const [isPlaying, setIsPlaying] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
   const [audio, setAudio] = useState(null)
@@ -32,21 +34,29 @@ const SampleSentence = ({
     try {
       const encodedSentence = encodeURIComponent(sentence.trim())
       
+      console.log('Fetching audio URL for:', { word, sentence })
+      
       const response = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedSentence}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         mode: 'cors'
       })
       
       const data = await response.json()
+      console.log('get-audio response:', data)
       
       if (data.success && data.exists) {
         // Convert relative URL to absolute URL
         const baseUrl = 'http://localhost:4004'
         const fullUrl = `${baseUrl}${data.audioUrl}`
+        console.log('Found existing audio:', fullUrl)
         return fullUrl
       } else {
         // Audio doesn't exist, create it
+        console.log('Audio not found, creating new audio...')
         return await createAudio()
       }
     } catch (error) {
@@ -62,10 +72,13 @@ const SampleSentence = ({
     setIsCreatingAudio(true)
     
     try {
+      console.log('Creating audio for:', { text: sentence.trim(), word: word.trim() })
+      
       const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders()
         },
         mode: 'cors',
         body: JSON.stringify({ 
@@ -79,11 +92,13 @@ const SampleSentence = ({
       }
       
       const data = await response.json()
+      console.log('convert-to-speech response:', data)
       
       if (data.success && data.audioUrl) {
         // Convert relative URL to absolute URL
         const baseUrl = 'http://localhost:4004'
         const fullUrl = `${baseUrl}${data.audioUrl}`
+        console.log('Created audio:', fullUrl)
         return fullUrl
       } else {
         console.warn('Audio generation failed or TTS service unavailable')
@@ -105,18 +120,24 @@ const SampleSentence = ({
       setIsPlaying(true)
       
       // Get audio URL if not already cached
-      if (!audioUrl) {
+      let urlToPlay = audioUrl
+      if (!urlToPlay) {
         const url = await getAudioUrl()
         if (url) {
+          console.log('Audio URL:', url)
           setAudioUrl(url)
+          urlToPlay = url  // Use the returned URL directly
         } else {
+          console.warn('Failed to get audio URL')
           setIsPlaying(false)
           return
         }
       }
       
+      console.log('Attempting to play audio from:', urlToPlay)
+      
       // Create and play audio
-      const audioElement = new Audio(audioUrl)
+      const audioElement = new Audio(urlToPlay)
       setAudio(audioElement)
       
       audioElement.onended = () => {
@@ -126,6 +147,7 @@ const SampleSentence = ({
       
       audioElement.onerror = (e) => {
         console.error('Audio playback error:', e)
+        console.error('Audio element src:', audioElement.src)
         setIsPlaying(false)
         setAudio(null)
       }
