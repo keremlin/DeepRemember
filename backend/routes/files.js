@@ -6,6 +6,23 @@ const { filesDir } = require('../middleware/uploadConfig');
 
 const router = express.Router();
 
+// Helper function to get content type based on file extension
+function getContentType(filename) {
+  const ext = path.extname(filename).toLowerCase();
+  const contentTypes = {
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.m4a': 'audio/mp4',
+    '.srt': 'text/plain',
+    '.vtt': 'text/vtt',
+    '.txt': 'text/plain',
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.ogg': 'audio/ogg'
+  };
+  return contentTypes[ext] || 'application/octet-stream';
+}
+
 // List all uploaded files as playlist
 router.get('/files-list', (req, res) => {
   console.log('[FILES] Reading directory:', filesDir);
@@ -60,6 +77,43 @@ router.post('/delete-files', (req, res) => {
       res.json({ success: true, deleted });
     }
   });
+});
+
+// Dynamic file serving route (for Google Drive files)
+router.get('/files/:filename', async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const filePath = `files/${filename}`;
+    
+    if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+      // Google Drive: Stream file content
+      const stream = fileSystem.createReadStream(filePath);
+      
+      // Set appropriate headers
+      res.setHeader('Content-Type', getContentType(filename));
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      
+      // Pipe the stream to response
+      stream.on('error', (error) => {
+        console.error(`[FILE_SERVE] Error streaming file ${filename}:`, error);
+        res.status(404).json({ error: 'File not found' });
+      });
+      
+      stream.pipe(res);
+    } else {
+      // Local filesystem: Use static serving (fallback)
+      const filePath = path.join(__dirname, '../files', filename);
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error(`[FILE_SERVE] Error serving local file ${filename}:`, err);
+          res.status(404).json({ error: 'File not found' });
+        }
+      });
+    }
+  } catch (error) {
+    console.error(`[FILE_SERVE] Error serving file ${req.params.filename}:`, error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 module.exports = router;

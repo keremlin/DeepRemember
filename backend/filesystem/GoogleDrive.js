@@ -27,7 +27,8 @@ class GoogleDrive extends IFileSystem {
       // API settings
       scopes: config.scopes || [
         'https://www.googleapis.com/auth/drive.file',
-        'https://www.googleapis.com/auth/drive.metadata.readonly'
+        'https://www.googleapis.com/auth/drive.metadata.readonly',
+        'https://www.googleapis.com/auth/drive.readonly'
       ],
       
       // Compatibility settings
@@ -214,7 +215,7 @@ class GoogleDrive extends IFileSystem {
     const fullPath = path.posix.join(this.config.basePath, normalizedPath);
     const pathParts = fullPath.split('/').filter(part => part && part !== '.');
     
-    console.log(`[GOOGLE_DRIVE] Converting path: ${filePath} -> ${normalizedPath} -> ${fullPath} -> [${pathParts.join(', ')}]`);
+    // console.log(`[GOOGLE_DRIVE] Converting path: ${filePath} -> ${normalizedPath} -> ${fullPath} -> [${pathParts.join(', ')}]`);
     
     if (pathParts.length === 0) {
       return this.baseFolderId || this.config.rootFolderId;

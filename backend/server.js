@@ -40,8 +40,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 // Serve static files from frontend public directory
 app.use(express.static(path.join(__dirname, '../frontend/public')));
 
-// Serve files from the files directory (in root)
-app.use('/files', express.static(path.join(__dirname, '../files')));
+
 
 // Serve voice files (in root)
 app.use('/voice', express.static(path.join(__dirname, '../voice')));

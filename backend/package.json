@@ -8,7 +8,8 @@
     "build": "node build-production.js",
     "start": "node server.js",
     "setup-google-oauth": "node filesystem/setup-oauth.js",
-    "setup-google-oauth-alt": "node filesystem/setup-oauth-alternative.js"
+    "setup-google-oauth-alt": "node filesystem/setup-oauth-alternative.js",
+    "re-auth-google": "node filesystem/re-auth.cjs"
   },
   "keywords": [],
   "author": "Arash Yeganehrad",
