@@ -169,3 +169,4 @@ const EmailConfirmationModal = ({ isOpen, onClose, email }) => {
 };
 
 export default EmailConfirmationModal;
+

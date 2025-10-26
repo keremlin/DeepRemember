@@ -151,7 +151,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     if (currentUserId) {
       loadAllCards(false)
     }
-  }, [currentUserId])
+}, [currentUserId])
 
   if (!currentUserId) {
     return (

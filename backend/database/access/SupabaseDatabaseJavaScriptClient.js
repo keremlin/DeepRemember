@@ -260,8 +260,6 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       throw new Error('Database not initialized');
     }
 
-    
-
     try {
       // Check if this is a complex query that should use RPC
       if (this.isComplexQuery(sql)) {
@@ -271,7 +269,6 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
 
       // Convert SQL to Supabase JavaScript Client format
       const { tableName, operation, conditions, fields } = this.parseSQL(sql, params);
-      
       
       
       if (!tableName || tableName === 'unknown') {
@@ -307,7 +304,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       }
 
       // Apply conditions
-      if (conditions) {
+      if (conditions && conditions.length > 0) {
         for (const condition of conditions) {
           query = query[condition.operator](condition.column, condition.value);
         }
@@ -363,8 +360,13 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       return false; // Handle these in trySimpleQuery
     }
     
-    // Check for SQL functions
-    const sqlFunctions = ['count', 'sum', 'avg', 'min', 'max', 'distinct', 'group by', 'having', 'order by', 'limit', 'offset'];
+    // Simple SELECT with ORDER BY should NOT be complex
+    if (sqlLower.match(/^select\s+\*\s+from\s+\w+\s+where\s+\w+\s*=\s*\?\s+order\s+by\s+\w+\s+(asc|desc)$/)) {
+      return false; // This should be handled by the normal query path
+    }
+    
+    // Check for SQL functions (excluding simple ORDER BY on its own)
+    const sqlFunctions = ['count(', 'sum(', 'avg(', 'min(', 'max(', 'distinct', 'group by', 'having'];
     const hasFunction = sqlFunctions.some(func => sqlLower.includes(func));
     
     // Check for joins
@@ -384,6 +386,9 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     const hasComplexWhere = whereMatches && whereMatches.some(where => 
       where.includes(' and ') || where.includes(' or ') || where.includes(' in ')
     );
+    
+    // Check for LIMIT/OFFSET (can make a query complex if not in simple form)
+    const hasLimit = sqlLower.includes('limit') || sqlLower.includes('offset');
     
     return hasFunction || hasJoin || hasSubquery || hasCase || hasLikeWithParams || hasComplexWhere;
   }
@@ -493,15 +498,28 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           }
           
           // Handle WHERE conditions
-          const whereMatch = sql.match(/where\s+(.*)/i);
+          const whereMatch = sql.match(/where\s+(.*?)(?:\s+order\s+by|$)/i);
           if (whereMatch) {
             const whereClause = whereMatch[1];
-            const conditionMatch = whereClause.match(/(\w+)\s*=\s*\$(\d+)/i);
+            
+            // Try $1, $2 pattern first
+            let conditionMatch = whereClause.match(/(\w+)\s*=\s*\$(\d+)/i);
             if (conditionMatch) {
               const column = conditionMatch[1];
               const paramIndex = parseInt(conditionMatch[2]);
               const paramKey = `$${paramIndex}`;
               query = query.eq(column, params[paramKey]);
+            }
+            // Try ? pattern (used by DeepRememberRepository)
+            else {
+              const questionMatch = whereClause.match(/(\w+)\s*=\s*\?/i);
+              if (questionMatch) {
+                const column = questionMatch[1];
+                const paramValue = params[column] || Object.values(params)[0];
+                if (paramValue !== undefined) {
+                  query = query.eq(column, paramValue);
+                }
+              }
             }
           }
           
@@ -611,6 +629,28 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         }
       }
 
+      // Handle simple SELECT with WHERE and ORDER BY
+      if (sqlLower.startsWith('select') && sqlLower.includes('from cards') && sqlLower.includes('where user_id = ?') && sqlLower.includes('order by')) {
+        const userId = params.user_id || params.$1 || Object.values(params)[0];
+        
+        if (userId) {
+          let query = this.client.from('cards').select('*').eq('user_id', userId);
+          
+          // Extract ORDER BY
+          const orderMatch = sql.match(/order\s+by\s+(\w+)\s+(asc|desc)/i);
+          if (orderMatch) {
+            const column = orderMatch[1];
+            const direction = orderMatch[2].toLowerCase();
+            query = query.order(column, { ascending: direction === 'asc' });
+          }
+          
+          const { data, error } = await query;
+          if (error) throw error;
+          
+          return this.normalizeRowsForSelect('cards', Array.isArray(data) ? data : (data ? [data] : []));
+        }
+      }
+      
       // Handle COUNT stats on cards table (total, due, by state)
       if (sqlLower.startsWith('select') && sqlLower.includes('count') && sqlLower.includes('from cards')) {
         

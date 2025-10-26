@@ -5,7 +5,6 @@ import PlayerPage from './components/player/PlayerPage'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider } from './components/security/AuthContext'
 import AuthWrapper from './components/security/AuthWrapper'
-import EmailConfirmationRedirect from './components/security/EmailConfirmationRedirect'
 import './App.css'
 
 function App() {
@@ -22,10 +21,6 @@ function App() {
 
   const [currentView, setCurrentView] = useState(isAlreadyAuthenticated() ? 'welcome' : 'login')
 
-  // Check if this is an email confirmation redirect
-  const urlParams = new URLSearchParams(window.location.search);
-  const isEmailConfirmation = urlParams.get('type') === 'signup' && urlParams.get('token');
-
   const navigateToDeepRemember = () => {
     setCurrentView('deepremember')
   }
@@ -36,17 +31,6 @@ function App() {
 
   const navigateToPlayer = () => {
     setCurrentView('player')
-  }
-
-  // If this is an email confirmation redirect, show the confirmation component
-  if (isEmailConfirmation) {
-    return (
-      <ToastProvider>
-        <AuthProvider>
-          <EmailConfirmationRedirect />
-        </AuthProvider>
-      </ToastProvider>
-    );
   }
 
   return (

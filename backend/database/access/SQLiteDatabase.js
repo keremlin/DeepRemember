@@ -172,7 +172,18 @@ class SQLiteDatabase extends IDatabase {
 
     try {
       const stmt = this.db.prepare(sql);
-      const results = stmt.all(Object.values(params));
+      
+      // Count the number of placeholders in the SQL
+      const placeholderCount = (sql.match(/\?/g) || []).length;
+      
+      // If we have named parameters but the SQL uses positional placeholders,
+      // we need to extract the values in the right order
+      const paramValues = Object.values(params);
+      
+      // Only take as many values as there are placeholders
+      const finalParams = paramValues.slice(0, placeholderCount);
+      
+      const results = stmt.all(finalParams);
       return results;
     } catch (error) {
       console.error('[DB] Query error:', error);
@@ -190,7 +201,13 @@ class SQLiteDatabase extends IDatabase {
 
     try {
       const stmt = this.db.prepare(sql);
-      const result = stmt.get(Object.values(params));
+      
+      // Count the number of placeholders in the SQL
+      const placeholderCount = (sql.match(/\?/g) || []).length;
+      const paramValues = Object.values(params);
+      const finalParams = paramValues.slice(0, placeholderCount);
+      
+      const result = stmt.get(finalParams);
       return result || null;
     } catch (error) {
       console.error('[DB] QueryOne error:', error);
@@ -208,7 +225,13 @@ class SQLiteDatabase extends IDatabase {
 
     try {
       const stmt = this.db.prepare(sql);
-      const result = stmt.run(Object.values(params));
+      
+      // Count the number of placeholders in the SQL
+      const placeholderCount = (sql.match(/\?/g) || []).length;
+      const paramValues = Object.values(params);
+      const finalParams = paramValues.slice(0, placeholderCount);
+      
+      const result = stmt.run(finalParams);
       return {
         changes: result.changes,
         lastInsertRowid: result.lastInsertRowid
