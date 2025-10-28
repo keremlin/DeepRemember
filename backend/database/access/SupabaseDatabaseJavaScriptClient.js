@@ -958,22 +958,51 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
     
     const { values, conditions } = this.extractUpdateData(sql, params);
+    console.log('[SupabaseJS] Extracted update values keys:', Object.keys(values || {}));
+    console.log('[SupabaseJS] Extracted update conditions:', JSON.stringify(conditions || []));
+    console.log('[SupabaseJS] Params structure:', typeof params, 'isArray:', Array.isArray(params), 'keys:', Object.keys(params || {}));
     
     let updateQuery = query.update(values);
     
-    // Apply conditions
-    if (conditions) {
+    // Apply conditions with proper method calls
+    if (conditions && conditions.length > 0) {
       for (const condition of conditions) {
-        updateQuery = updateQuery[condition.operator](condition.column, condition.value);
+        console.log('[SupabaseJS] Applying update condition:', condition.operator, condition.column, condition.value);
+        
+        // Use proper method chaining with the Supabase query builder
+        if (condition.operator === 'eq') {
+          updateQuery = updateQuery.eq(condition.column, condition.value);
+        } else if (condition.operator === 'neq') {
+          updateQuery = updateQuery.neq(condition.column, condition.value);
+        } else if (condition.operator === 'gt') {
+          updateQuery = updateQuery.gt(condition.column, condition.value);
+        } else if (condition.operator === 'gte') {
+          updateQuery = updateQuery.gte(condition.column, condition.value);
+        } else if (condition.operator === 'lt') {
+          updateQuery = updateQuery.lt(condition.column, condition.value);
+        } else if (condition.operator === 'lte') {
+          updateQuery = updateQuery.lte(condition.column, condition.value);
+        } else if (condition.operator === 'like') {
+          updateQuery = updateQuery.like(condition.column, condition.value);
+        } else if (condition.operator === 'ilike') {
+          updateQuery = updateQuery.ilike(condition.column, condition.value);
+        } else {
+          // Fallback to eq for unknown operators
+          console.warn('[SupabaseJS] Unknown operator:', condition.operator, 'using eq');
+          updateQuery = updateQuery.eq(condition.column, condition.value);
+        }
       }
     }
 
+    console.log('[SupabaseJS] Executing update query...');
     const { data, error } = await updateQuery.select();
     
     if (error) {
+      console.error('[SupabaseJS] Update error:', error);
       throw error;
     }
 
+    console.log('[SupabaseJS] Update successful, rows affected:', data?.length || 0);
     return {
       changes: data ? data.length : 1,
       lastInsertRowId: null
@@ -990,6 +1019,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     
     const conditions = this.extractDeleteConditions(sql, params);
     console.log('[SupabaseJS] Extracted conditions:', JSON.stringify(conditions));
+    console.log('[SupabaseJS] Params structure:', typeof params, 'keys:', Object.keys(params || {}));
     
     // Start with .delete() to get the DELETE query builder
     let deleteQuery = query.delete();
@@ -1136,7 +1166,8 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    */
   extractConditions(sql, params) {
     const conditions = [];
-    const whereMatch = sql.match(/where\s+(.*)/i);
+    // Use [\s\S] to match any character including newlines
+    const whereMatch = sql.match(/where\s+([\s\S]*)/i);
     
     if (whereMatch) {
       const whereClause = whereMatch[1];
@@ -1374,15 +1405,40 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    * Extract UPDATE data
    */
   extractUpdateData(sql, params) {
-    const setMatch = sql.match(/set\s+(.*?)\s+where/i);
+    console.log('[SupabaseJS] extractUpdateData called');
+    // Use [\s\S] to match any character including newlines
+    const setMatch = sql.match(/set\s+([\s\S]*?)\s+where/i);
+    console.log('[SupabaseJS] SET match result:', !!setMatch);
+    
     if (setMatch) {
       const setClause = setMatch[1];
       const values = {};
       
-      // Simple parsing - can be enhanced
-      const setMatches = setClause.match(/(\w+)\s*=\s*\$(\d+)/g);
+      console.log('[SupabaseJS] Full SET clause:', setClause);
+      
+      // Handle ? placeholders - extract column names and map from params object
+      const setMatches = setClause.match(/(\w+)\s*=\s*\?/g);
+      console.log('[SupabaseJS] Found ? matches:', setMatches);
+      
       if (setMatches) {
         setMatches.forEach(match => {
+          const fieldMatch = match.match(/(\w+)\s*=\s*\?/);
+          if (fieldMatch) {
+            const column = fieldMatch[1];
+            console.log(`[SupabaseJS] Processing column: ${column}, exists in params: ${params && params[column] !== undefined}`);
+            // Skip CURRENT_TIMESTAMP and other functions that aren't in params
+            if (params && params[column] !== undefined) {
+              values[column] = params[column];
+              console.log(`[SupabaseJS] Mapped ${column} = ${params[column]}`);
+            }
+          }
+        });
+      }
+      
+      // Also handle $1, $2 format for compatibility
+      const dollarMatches = setClause.match(/(\w+)\s*=\s*\$(\d+)/g);
+      if (dollarMatches) {
+        dollarMatches.forEach(match => {
           const fieldMatch = match.match(/(\w+)\s*=\s*\$(\d+)/);
           if (fieldMatch) {
             const column = fieldMatch[1];
@@ -1393,12 +1449,16 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         });
       }
       
+      console.log('[SupabaseJS] Final extracted values keys:', Object.keys(values));
+      console.log('[SupabaseJS] Final values:', values);
+      
       return {
         values: values,
         conditions: this.extractConditions(sql, params)
       };
     }
     
+    console.log('[SupabaseJS] No SET clause found');
     return { values: {}, conditions: [] };
   }
 
