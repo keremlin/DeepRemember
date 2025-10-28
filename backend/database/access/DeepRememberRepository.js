@@ -249,12 +249,38 @@ class DeepRememberRepository {
    */
   async deleteCard(userId, cardId) {
     try {
-      const result = await this.db.execute(
-        'DELETE FROM cards WHERE user_id = ? AND card_id = ?',
-        { user_id: userId, card_id: cardId }
-      );
+      console.log(`[SRS-REPO] deleteCard called: userId=${userId}, cardId=${cardId}`);
+      console.log(`[SRS-REPO] Database instance:`, this.db.constructor.name);
+      
+      // Delete related card_labels first (CASCADE for Supabase PostgREST compatibility)
+      // When using Supabase JavaScript client with PostgREST, CASCADE might not work
+      // So we manually delete related records first
+      console.log('[SRS-REPO] Starting DELETE from card_labels...');
+      try {
+        const cardLabelsResult = await this.db.execute(
+          'DELETE FROM card_labels WHERE card_id = ? AND user_id = ?',
+          { card_id: cardId, user_id: userId }
+        );
+        console.log(`[SRS-REPO] card_labels deleted. Changes: ${cardLabelsResult.changes}`);
+      } catch (labelError) {
+        // Ignore if card_labels doesn't exist or already deleted
+        console.log('[SRS-REPO] Note: Could not delete card_labels:', labelError.message);
+        console.error('[SRS-REPO] card_labels error details:', labelError);
+      }
 
-      return result.changes > 0;
+      // Then delete the card itself
+      console.log('[SRS-REPO] Starting DELETE from cards...');
+      try {
+        const result = await this.db.execute(
+          'DELETE FROM cards WHERE user_id = ? AND card_id = ?',
+          { user_id: userId, card_id: cardId }
+        );
+        console.log(`[SRS-REPO] cards deleted. Changes: ${result.changes}`);
+        return result.changes > 0;
+      } catch (cardError) {
+        console.error('[SRS-REPO] cards error details:', cardError);
+        throw cardError;
+      }
     } catch (error) {
       console.error('[SRS-REPO] Delete card error:', error);
       throw error;

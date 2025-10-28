@@ -228,7 +228,9 @@ class SupabaseDatabase extends IDatabase {
     try {
       const { Client } = require('pg');
       const client = new Client({
-        connectionString: dbUrl
+        connectionString: dbUrl,
+        // Disable prepared statements for Transaction pooler compatibility
+        prepare: false
       });
 
       await client.connect();
@@ -602,18 +604,23 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
       throw new Error('Database not initialized');
     }
 
+    console.log('[DB] execute() called:', sql.substring(0, 50) + '...');
+
     try {
       const { processedSql, processedParams } = this.processQuery(sql, params);
+      console.log('[DB] processed SQL:', processedSql.substring(0, 50) + '...');
       
       // Use direct PostgreSQL connection for INSERT/UPDATE/DELETE
       const result = await this.executeDirectSQL(processedSql, processedParams);
+      console.log('[DB] executeDirectSQL returned with rowCount:', result?.rowCount);
       
       return {
         changes: result?.rowCount || 1,
         lastInsertRowId: result?.rows?.[0]?.id || null
       };
     } catch (error) {
-      console.error('[DB] Execute error:', error);
+      console.error('[DB] Execute error:', error.message);
+      console.error('[DB] Execute error stack:', error.stack);
       throw error;
     }
   }
@@ -627,17 +634,28 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
       throw new Error('SUPABASE_DB_URL not found for direct SQL execution');
     }
 
+    // Log the exact query being executed
+    const paramsArray = Array.isArray(params) ? params : Object.values(params || {});
+    console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    console.log('[DB-SQL] connecting to PostgreSQL...');
+
     const { Client } = require('pg');
     const client = new Client({
-      connectionString: dbUrl
+      connectionString: dbUrl,
+      // Disable prepared statements for Transaction pooler compatibility
+      // Transaction pooler doesn't support PREPARE statements
+      prepare: false
     });
 
     try {
       await client.connect();
+      console.log('[DB-SQL] connected. Executing query...');
       const result = await client.query(sql, params);
+      console.log('[DB-SQL] query executed. Rows affected:', result.rowCount);
       return result;
     } finally {
       await client.end();
+      console.log('[DB-SQL] connection closed');
     }
   }
 

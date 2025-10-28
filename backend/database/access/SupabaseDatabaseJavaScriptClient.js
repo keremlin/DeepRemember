@@ -261,6 +261,12 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     }
 
     try {
+      // Log SELECT queries
+      if (sql.trim().toLowerCase().startsWith('select')) {
+        const paramsArray = Object.values(params || {});
+        console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+      }
+
       // Check if this is a complex query that should use RPC
       if (this.isComplexQuery(sql)) {
         
@@ -354,6 +360,11 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    */
   isComplexQuery(sql) {
     const sqlLower = sql.toLowerCase().trim();
+    
+    // Simple DELETE, INSERT, UPDATE are NOT complex - handle them directly
+    if (sqlLower.match(/^(delete\s+from|insert\s+into|update)\s+\w+/i)) {
+      return false;
+    }
     
     // Simple COUNT queries should NOT be complex
     if (sqlLower.startsWith('select count(*) as count from cards where user_id = ?')) {
@@ -732,6 +743,104 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         rows.sort((a, b) => a.name.localeCompare(b.name));
         return rows;
       }
+
+      // Handle JOIN queries from labels with card_labels to get labels for a card
+      // Pattern: SELECT l.* FROM labels l JOIN card_labels cl ON l.id = cl.label_id WHERE cl.card_id = ? AND cl.user_id = ?
+      if (sqlLower.includes('from labels l') && sqlLower.includes('join card_labels cl') && sqlLower.includes('cl.card_id')) {
+        const cardId = params.card_id || params.$1;
+        const userId = params.user_id || params.$2;
+
+        if (cardId && userId) {
+          // First, get the label IDs for this card from the junction table
+          const { data: cardLabelData, error: cardLabelError } = await this.client
+            .from('card_labels')
+            .select('label_id')
+            .eq('card_id', cardId)
+            .eq('user_id', userId);
+
+          if (cardLabelError) throw cardLabelError;
+
+          if (!cardLabelData || cardLabelData.length === 0) {
+            return [];
+          }
+
+          // Extract label IDs
+          const labelIds = cardLabelData.map(cl => cl.label_id);
+
+          // Then, get the actual labels
+          const { data: labels, error: labelsError } = await this.client
+            .from('labels')
+            .select('*')
+            .in('id', labelIds);
+
+          if (labelsError) throw labelsError;
+
+          // Sort by type ASC, name ASC to match ORDER BY l.type ASC, l.name ASC
+          const sortedLabels = (labels || []).sort((a, b) => {
+            if (a.type !== b.type) {
+              return a.type.localeCompare(b.type);
+            }
+            return a.name.localeCompare(b.name);
+          });
+
+          return sortedLabels;
+        }
+      }
+
+      // Handle JOIN queries from cards with card_labels to get cards by label
+      // Pattern: SELECT c.* FROM cards c JOIN card_labels cl ON c.card_id = cl.card_id AND c.user_id = cl.user_id WHERE cl.user_id = ? AND cl.label_id = ?
+      if (sqlLower.includes('from cards c') && sqlLower.includes('join card_labels cl') && sqlLower.includes('cl.label_id')) {
+        const userId = params.user_id || params.$1;
+        const labelId = params.label_id || params.$2;
+        const dueTime = params.due || params.$3;
+
+        if (userId && labelId) {
+          // First, get the card IDs for this label from the junction table
+          const { data: cardLabelData, error: cardLabelError } = await this.client
+            .from('card_labels')
+            .select('card_id')
+            .eq('user_id', userId)
+            .eq('label_id', labelId);
+
+          if (cardLabelError) throw cardLabelError;
+
+          if (!cardLabelData || cardLabelData.length === 0) {
+            return [];
+          }
+
+          // Extract card IDs
+          const cardIds = cardLabelData.map(cl => cl.card_id);
+
+          // Then, get the actual cards
+          let query = this.client
+            .from('cards')
+            .select('*')
+            .eq('user_id', userId)
+            .in('card_id', cardIds);
+
+          // If there's a due filter, add it
+          if (dueTime) {
+            query = query.or(`due.lte.${dueTime},next_review.lte.${dueTime}`);
+          }
+
+          const { data: cards, error: cardsError } = await query;
+
+          if (cardsError) throw cardsError;
+
+          // Sort by appropriate field
+          const sortedCards = (cards || []).sort((a, b) => {
+            if (dueTime && a.due && b.due) {
+              return new Date(a.due) - new Date(b.due);
+            }
+            if (a.created_at && b.created_at) {
+              return new Date(a.created_at) - new Date(b.created_at);
+            }
+            return 0;
+          });
+
+          return this.normalizeRowsForSelect('cards', sortedCards);
+        }
+      }
       
       return null; // Let RPC handle it
     } catch (error) {
@@ -755,17 +864,22 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       throw new Error('Database not initialized');
     }
 
+    console.log('[SupabaseJS] execute() called with SQL:', sql.substring(0, 80));
+
     try {
       // Check if this is a complex query that should use RPC
       if (this.isComplexQuery(sql)) {
+        console.log('[SupabaseJS] Query is complex, using executeComplexQuery');
         await this.executeComplexQuery(sql, params);
         return { changes: 1, lastInsertRowId: null };
       }
 
       const { tableName, operation } = this.parseSQL(sql, params);
+      console.log('[SupabaseJS] Parsed SQL - tableName:', tableName, 'operation:', operation);
       
       if (!tableName || tableName === 'unknown') {
         // Fallback to RPC for unrecognized queries
+        console.log('[SupabaseJS] TableName unknown, using executeComplexQuery');
         await this.executeComplexQuery(sql, params);
         return { changes: 1, lastInsertRowId: null };
       }
@@ -776,16 +890,21 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       
       switch (operation.toLowerCase()) {
         case 'insert':
+          console.log('[SupabaseJS] Calling handleInsert');
           result = await this.handleInsert(query, sql, params);
           break;
         case 'update':
+          console.log('[SupabaseJS] Calling handleUpdate');
           result = await this.handleUpdate(query, sql, params);
           break;
         case 'delete':
+          console.log('[SupabaseJS] Calling handleDelete for table:', tableName);
           result = await this.handleDelete(query, sql, params);
+          console.log('[SupabaseJS] handleDelete returned:', result);
           break;
         default:
           // For complex queries, use RPC
+          console.log('[SupabaseJS] Default case, using executeComplexQuery');
           await this.executeComplexQuery(sql, params);
           result = { changes: 1, lastInsertRowId: null };
       }
@@ -794,9 +913,10 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       if (Array.isArray(result?.data)) {
         result.data = this.normalizeRowsForSelect(tableName, result.data);
       }
+      console.log('[SupabaseJS] execute() returning:', result);
       return result;
     } catch (error) {
-      
+      console.error('[SupabaseJS] execute() error:', error);
       throw error;
     }
   }
@@ -805,6 +925,10 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    * Handle INSERT operations
    */
   async handleInsert(query, sql, params) {
+    // Log the exact SQL query
+    const paramsArray = Object.values(params || {});
+    console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    
     const values = this.extractValues(sql, params);
     
     // Debug logging to see what values we're trying to insert
@@ -829,6 +953,10 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    * Handle UPDATE operations
    */
   async handleUpdate(query, sql, params) {
+    // Log the exact SQL query
+    const paramsArray = Object.values(params || {});
+    console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    
     const { values, conditions } = this.extractUpdateData(sql, params);
     
     let updateQuery = query.update(values);
@@ -856,23 +984,55 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    * Handle DELETE operations
    */
   async handleDelete(query, sql, params) {
+    // Log the exact SQL query
+    const paramsArray = Object.values(params || {});
+    console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    
     const conditions = this.extractDeleteConditions(sql, params);
+    console.log('[SupabaseJS] Extracted conditions:', JSON.stringify(conditions));
     
-    let deleteQuery = query;
+    // Start with .delete() to get the DELETE query builder
+    let deleteQuery = query.delete();
     
-    // Apply conditions
-    if (conditions) {
+    // Apply conditions to the DELETE query builder
+    if (conditions && conditions.length > 0) {
       for (const condition of conditions) {
-        deleteQuery = deleteQuery[condition.operator](condition.column, condition.value);
+        console.log('[SupabaseJS] Applying condition:', condition.operator, condition.column, condition.value);
+        
+        // Use proper method chaining with the Supabase query builder
+        if (condition.operator === 'eq') {
+          deleteQuery = deleteQuery.eq(condition.column, condition.value);
+        } else if (condition.operator === 'neq') {
+          deleteQuery = deleteQuery.neq(condition.column, condition.value);
+        } else if (condition.operator === 'gt') {
+          deleteQuery = deleteQuery.gt(condition.column, condition.value);
+        } else if (condition.operator === 'gte') {
+          deleteQuery = deleteQuery.gte(condition.column, condition.value);
+        } else if (condition.operator === 'lt') {
+          deleteQuery = deleteQuery.lt(condition.column, condition.value);
+        } else if (condition.operator === 'lte') {
+          deleteQuery = deleteQuery.lte(condition.column, condition.value);
+        } else if (condition.operator === 'like') {
+          deleteQuery = deleteQuery.like(condition.column, condition.value);
+        } else if (condition.operator === 'ilike') {
+          deleteQuery = deleteQuery.ilike(condition.column, condition.value);
+        } else {
+          // Fallback to eq for unknown operators
+          console.warn('[SupabaseJS] Unknown operator:', condition.operator, 'using eq');
+          deleteQuery = deleteQuery.eq(condition.column, condition.value);
+        }
       }
     }
 
-    const { data, error } = await deleteQuery.delete().select();
+    console.log('[SupabaseJS] Executing delete query...');
+    const { data, error } = await deleteQuery.select();
     
     if (error) {
+      console.error('[SupabaseJS] Delete error:', error);
       throw error;
     }
 
+    console.log('[SupabaseJS] Delete successful, rows deleted:', data?.length || 0);
     return {
       changes: data ? data.length : 1,
       lastInsertRowId: null

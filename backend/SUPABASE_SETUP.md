@@ -75,6 +75,16 @@ This guide provides complete instructions for setting up Supabase database for t
 
 ## Step 2: Get PostgreSQL Connection String
 
+### Option A: Transaction Pooler (Recommended)
+1. Go to your Supabase project dashboard
+2. Go to **Settings** → **Database** → **Connection string**
+3. Select:
+   - **Type:** `Node.js`
+   - **Method:** `Transaction pooler` (port 6543)
+4. Copy the connection string (looks like: `postgresql://postgres.iehfahiljhkpprgzejzo:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres`)
+5. ⚠️ **Important:** Transaction pooler doesn't support PREPARE statements. The code is already configured to handle this automatically.
+
+### Option B: Direct Connection
 1. Go to **Settings** → **Database**
 2. Scroll down to **Connection Info**
 3. Copy the **Connection string** (looks like: `postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres`)
@@ -92,7 +102,9 @@ DB_TYPE=supabase
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_ANON_KEY=your-anon-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
-SUPABASE_DB_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres
+
+# PostgreSQL Connection (Transaction pooler - recommended for DELETE operations)
+SUPABASE_DB_URL=postgresql://postgres.iehfahiljhkpprgzejzo:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
 
 # Migration Settings
 MIGRATION_AUTO_MIGRATE=true

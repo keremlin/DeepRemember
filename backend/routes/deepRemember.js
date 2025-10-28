@@ -970,19 +970,24 @@ router.get('/stats/:userId', async (req, res) => {
 router.delete('/delete-card/:userId/:cardId', async (req, res) => {
   try {
     const { userId, cardId } = req.params;
+    console.log(`[DeepRemember] DELETE request received: userId=${userId}, cardId=${cardId}`);
     
     if (useDatabase && deepRememberRepository) {
       // Use database
+      console.log('[DeepRemember] Using database to delete card');
       const success = await deepRememberRepository.deleteCard(userId, cardId);
       if (!success) {
+        console.log('[DeepRemember] Card not found or deletion failed');
         return res.status(404).json({ error: 'Card not found' });
       }
       
+      console.log('[DeepRemember] Card deleted successfully');
       res.json({
         success: true,
         message: 'Card deleted successfully from database'
       });
     } else {
+      console.log('[DeepRemember] Using memory storage to delete card');
       // Use memory storage
       if (!userCards.has(userId)) {
         return res.status(404).json({ error: 'User not found' });
