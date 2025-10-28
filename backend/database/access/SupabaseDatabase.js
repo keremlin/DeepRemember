@@ -1,5 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
 const IDatabase = require('./IDatabase');
+const config = require('../../config/app');
+
+// Conditional logging helper
+function dbLog(...args) {
+  if (config.DB_LOG) {
+    console.log(...args);
+  }
+}
 
 /**
  * Supabase Database Implementation using @supabase/supabase-js
@@ -39,7 +47,7 @@ class SupabaseDatabase extends IDatabase {
       await this.createTables();
       
       this.isInitialized = true;
-      console.log(`[DB] Supabase database initialized with URL: ${this.config.url}`);
+      dbLog(`[DB] Supabase database initialized with URL: ${this.config.url}`);
       
       // Always ensure admin user exists (after initialization)
       await this.createAdminUser();
@@ -142,23 +150,23 @@ class SupabaseDatabase extends IDatabase {
 
     try {
       // Check if tables exist by attempting a simple query
-      console.log('[DB] Checking if tables exist...');
+      dbLog('[DB] Checking if tables exist...');
       const { error } = await this.client.from('users').select('count').limit(1);
       
       if (error) {
         if (error.code === 'PGRST205' || error.message.includes('does not exist')) {
-          console.log('[DB] Tables not found. Creating tables...');
+          dbLog('[DB] Tables not found. Creating tables...');
           await this.createTablesViaSQL();
         } else {
           throw error;
         }
       } else {
-        console.log('[DB] Tables already exist, skipping creation.');
+        dbLog('[DB] Tables already exist, skipping creation.');
       }
       
     } catch (error) {
-      console.log('[DB] Table existence check failed, attempting to create tables...');
-      console.log('[DB] Error:', error.message);
+      dbLog('[DB] Table existence check failed, attempting to create tables...');
+      dbLog('[DB] Error:', error.message);
       
       // If we can't check table existence (e.g., network error), try to create tables anyway
       try {
@@ -174,7 +182,7 @@ class SupabaseDatabase extends IDatabase {
    * Create tables using Supabase SQL execution
    */
   async createTablesViaSQL() {
-    console.log('[DB] Creating Supabase tables automatically...');
+    dbLog('[DB] Creating Supabase tables automatically...');
     
     try {
       // Create tables directly using Supabase's SQL execution
@@ -185,26 +193,26 @@ class SupabaseDatabase extends IDatabase {
         try {
           await this.verifyTablesExist();
         } catch (verifyError) {
-          console.log('[DB] ⚠️  Table verification failed, but tables may have been created successfully');
+          dbLog('[DB] ⚠️  Table verification failed, but tables may have been created successfully');
         }
-        console.log('[DB] Supabase tables created successfully!');
+        dbLog('[DB] Supabase tables created successfully!');
       } else {
         throw new Error('Table creation returned false');
       }
       
     } catch (error) {
       console.error('[DB] Failed to create tables automatically:', error.message);
-      console.log('[DB] ⚠️  AUTOMATIC TABLE CREATION FAILED');
-      console.log('[DB] Possible causes:');
-      console.log('   - Missing SUPABASE_SERVICE_ROLE_KEY in .env file');
-      console.log('   - SQL Editor API not enabled in Supabase project settings');
-      console.log('   - Network connectivity issues');
-      console.log('');
-      console.log('📋 SOLUTIONS:');
-      console.log('1. Ensure SUPABASE_SERVICE_ROLE_KEY is set in your .env file');
-      console.log('2. Enable "SQL Editor API" in Project Settings → API → SQL editor');
-      console.log('3. Or use manual setup: Run SQL from MANUAL_SUPABASE_SETUP.md');
-      console.log('');
+      dbLog('[DB] ⚠️  AUTOMATIC TABLE CREATION FAILED');
+      dbLog('[DB] Possible causes:');
+      dbLog('   - Missing SUPABASE_SERVICE_ROLE_KEY in .env file');
+      dbLog('   - SQL Editor API not enabled in Supabase project settings');
+      dbLog('   - Network connectivity issues');
+      dbLog('');
+      dbLog('📋 SOLUTIONS:');
+      dbLog('1. Ensure SUPABASE_SERVICE_ROLE_KEY is set in your .env file');
+      dbLog('2. Enable "SQL Editor API" in Project Settings → API → SQL editor');
+      dbLog('3. Or use manual setup: Run SQL from MANUAL_SUPABASE_SETUP.md');
+      dbLog('');
       throw new Error('Automatic table creation failed. Check service role key and SQL Editor API settings.');
     }
   }
@@ -213,15 +221,15 @@ class SupabaseDatabase extends IDatabase {
    * Create tables directly using PostgreSQL connection
    */
   async createTablesDirectly() {
-    console.log('[DB] Creating tables using PostgreSQL connection...');
+    dbLog('[DB] Creating tables using PostgreSQL connection...');
     
     // Check if we have PostgreSQL connection string
     const dbUrl = process.env.SUPABASE_DB_URL;
     if (!dbUrl) {
-      console.log('[DB] ❌ SUPABASE_DB_URL not found');
-      console.log('[DB] 💡 Get your PostgreSQL connection string from:');
-      console.log('[DB]    Project Settings → Database → Connection Info');
-      console.log('[DB]    Format: postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres');
+      dbLog('[DB] ❌ SUPABASE_DB_URL not found');
+      dbLog('[DB] 💡 Get your PostgreSQL connection string from:');
+      dbLog('[DB]    Project Settings → Database → Connection Info');
+      dbLog('[DB]    Format: postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres');
       return false;
     }
 
@@ -234,7 +242,7 @@ class SupabaseDatabase extends IDatabase {
       });
 
       await client.connect();
-      console.log('[DB] ✅ Connected to PostgreSQL');
+      dbLog('[DB] ✅ Connected to PostgreSQL');
 
       const sqlStatements = [
         `CREATE TABLE IF NOT EXISTS users (
@@ -312,14 +320,14 @@ class SupabaseDatabase extends IDatabase {
         try {
           await client.query(sql);
           successCount++;
-          console.log(`[DB] ✅ Created: ${sql.split(' ')[2] || 'SQL statement'}`);
+          dbLog(`[DB] ✅ Created: ${sql.split(' ')[2] || 'SQL statement'}`);
         } catch (error) {
-          console.log(`[DB] ❌ Failed: ${sql.split(' ')[2] || 'SQL statement'} - ${error.message}`);
+          dbLog(`[DB] ❌ Failed: ${sql.split(' ')[2] || 'SQL statement'} - ${error.message}`);
         }
       }
 
       await client.end();
-      console.log(`[DB] Successfully executed ${successCount}/${sqlStatements.length} SQL statements`);
+      dbLog(`[DB] Successfully executed ${successCount}/${sqlStatements.length} SQL statements`);
       
       // Create admin user if tables were created successfully
       if (successCount > 0) {
@@ -329,7 +337,7 @@ class SupabaseDatabase extends IDatabase {
       return successCount > 0;
 
     } catch (error) {
-      console.log(`[DB] ❌ PostgreSQL connection failed: ${error.message}`);
+      dbLog(`[DB] ❌ PostgreSQL connection failed: ${error.message}`);
       return false;
     }
   }
@@ -339,7 +347,7 @@ class SupabaseDatabase extends IDatabase {
    */
   async createAdminUser() {
     try {
-      console.log('[DB] Creating admin user...');
+      dbLog('[DB] Creating admin user...');
       
       // Check if admin user already exists
       const existingUser = await this.queryOne(
@@ -348,7 +356,7 @@ class SupabaseDatabase extends IDatabase {
       );
 
       if (existingUser) {
-        console.log('[DB] ✅ Admin user already exists');
+        dbLog('[DB] ✅ Admin user already exists');
         return existingUser;
       }
 
@@ -358,11 +366,11 @@ class SupabaseDatabase extends IDatabase {
         { user_id: 'user123' }
       );
 
-      console.log('[DB] ✅ Admin user created successfully');
+      dbLog('[DB] ✅ Admin user created successfully');
       return { user_id: 'user123', id: result.lastInsertRowId };
       
     } catch (error) {
-      console.log(`[DB] ❌ Failed to create admin user: ${error.message}`);
+      dbLog(`[DB] ❌ Failed to create admin user: ${error.message}`);
       return null;
     }
   }
@@ -384,7 +392,7 @@ class SupabaseDatabase extends IDatabase {
         throw error;
       }
       
-      console.log(`[DB] ✅ Created: ${tableName}`);
+      dbLog(`[DB] ✅ Created: ${tableName}`);
       return true;
       
     } catch (error) {
@@ -404,7 +412,7 @@ class SupabaseDatabase extends IDatabase {
         });
 
         if (response.ok) {
-          console.log(`[DB] ✅ Created: ${tableName}`);
+          dbLog(`[DB] ✅ Created: ${tableName}`);
           return true;
         }
       } catch (fetchError) {
@@ -424,7 +432,7 @@ class SupabaseDatabase extends IDatabase {
         });
 
         if (response.ok) {
-          console.log(`[DB] ✅ Created: ${tableName}`);
+          dbLog(`[DB] ✅ Created: ${tableName}`);
           return true;
         }
       } catch (fetchError) {
@@ -450,18 +458,18 @@ class SupabaseDatabase extends IDatabase {
         if (error) {
           if (error.code === 'PGRST205') {
             // Table doesn't exist, but that's okay - we'll skip verification
-            console.log(`[DB] ⚠️  Table ${tableName} not found, but continuing...`);
+            dbLog(`[DB] ⚠️  Table ${tableName} not found, but continuing...`);
             continue;
           }
           throw new Error(`Table ${tableName} verification failed: ${error.message}`);
         }
       } catch (error) {
-        console.log(`[DB] ⚠️  Could not verify table ${tableName}, but continuing...`);
+        dbLog(`[DB] ⚠️  Could not verify table ${tableName}, but continuing...`);
         continue;
       }
     }
     
-    console.log('[DB] Table verification completed (some tables may not be immediately visible)');
+    dbLog('[DB] Table verification completed (some tables may not be immediately visible)');
   }
 
   /**
@@ -554,7 +562,7 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
       // Supabase client doesn't need explicit closing
       this.client = null;
       this.isInitialized = false;
-      console.log('[DB] Supabase database connection closed');
+      dbLog('[DB] Supabase database connection closed');
     }
   }
 
@@ -604,15 +612,15 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
       throw new Error('Database not initialized');
     }
 
-    console.log('[DB] execute() called:', sql.substring(0, 50) + '...');
+    dbLog('[DB] execute() called:', sql.substring(0, 50) + '...');
 
     try {
       const { processedSql, processedParams } = this.processQuery(sql, params);
-      console.log('[DB] processed SQL:', processedSql.substring(0, 50) + '...');
+      dbLog('[DB] processed SQL:', processedSql.substring(0, 50) + '...');
       
       // Use direct PostgreSQL connection for INSERT/UPDATE/DELETE
       const result = await this.executeDirectSQL(processedSql, processedParams);
-      console.log('[DB] executeDirectSQL returned with rowCount:', result?.rowCount);
+      dbLog('[DB] executeDirectSQL returned with rowCount:', result?.rowCount);
       
       return {
         changes: result?.rowCount || 1,
@@ -636,8 +644,8 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
 
     // Log the exact query being executed
     const paramsArray = Array.isArray(params) ? params : Object.values(params || {});
-    console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
-    console.log('[DB-SQL] connecting to PostgreSQL...');
+    dbLog('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    dbLog('[DB-SQL] connecting to PostgreSQL...');
 
     const { Client } = require('pg');
     const client = new Client({
@@ -649,13 +657,13 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
 
     try {
       await client.connect();
-      console.log('[DB-SQL] connected. Executing query...');
+      dbLog('[DB-SQL] connected. Executing query...');
       const result = await client.query(sql, params);
-      console.log('[DB-SQL] query executed. Rows affected:', result.rowCount);
+      dbLog('[DB-SQL] query executed. Rows affected:', result.rowCount);
       return result;
     } finally {
       await client.end();
-      console.log('[DB-SQL] connection closed');
+      dbLog('[DB-SQL] connection closed');
     }
   }
 
@@ -860,7 +868,7 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
     try {
       await this.execute(createExecuteSQLFunction);
       await this.execute(createGetLastInsertIdFunction);
-      console.log('[DB] Supabase RPC functions created successfully');
+      dbLog('[DB] Supabase RPC functions created successfully');
     } catch (error) {
       console.error('[DB] Failed to create RPC functions:', error);
       throw error;

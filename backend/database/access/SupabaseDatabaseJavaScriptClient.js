@@ -1,5 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
 const IDatabase = require('./IDatabase');
+const config = require('../../config/app');
+
+// Conditional logging helper
+function dbLog(...args) {
+  if (config.DB_LOG) {
+    console.log(...args);
+  }
+}
 
 /**
  * Supabase Database Implementation using ONLY Supabase JavaScript Client
@@ -264,7 +272,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       // Log SELECT queries
       if (sql.trim().toLowerCase().startsWith('select')) {
         const paramsArray = Object.values(params || {});
-        console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+        dbLog('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
       }
 
       // Check if this is a complex query that should use RPC
@@ -864,22 +872,22 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       throw new Error('Database not initialized');
     }
 
-    console.log('[SupabaseJS] execute() called with SQL:', sql.substring(0, 80));
+    dbLog('[SupabaseJS] execute() called with SQL:', sql.substring(0, 80));
 
     try {
       // Check if this is a complex query that should use RPC
       if (this.isComplexQuery(sql)) {
-        console.log('[SupabaseJS] Query is complex, using executeComplexQuery');
+        dbLog('[SupabaseJS] Query is complex, using executeComplexQuery');
         await this.executeComplexQuery(sql, params);
         return { changes: 1, lastInsertRowId: null };
       }
 
       const { tableName, operation } = this.parseSQL(sql, params);
-      console.log('[SupabaseJS] Parsed SQL - tableName:', tableName, 'operation:', operation);
+      dbLog('[SupabaseJS] Parsed SQL - tableName:', tableName, 'operation:', operation);
       
       if (!tableName || tableName === 'unknown') {
         // Fallback to RPC for unrecognized queries
-        console.log('[SupabaseJS] TableName unknown, using executeComplexQuery');
+        dbLog('[SupabaseJS] TableName unknown, using executeComplexQuery');
         await this.executeComplexQuery(sql, params);
         return { changes: 1, lastInsertRowId: null };
       }
@@ -890,21 +898,21 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       
       switch (operation.toLowerCase()) {
         case 'insert':
-          console.log('[SupabaseJS] Calling handleInsert');
+          dbLog('[SupabaseJS] Calling handleInsert');
           result = await this.handleInsert(query, sql, params);
           break;
         case 'update':
-          console.log('[SupabaseJS] Calling handleUpdate');
+          dbLog('[SupabaseJS] Calling handleUpdate');
           result = await this.handleUpdate(query, sql, params);
           break;
         case 'delete':
-          console.log('[SupabaseJS] Calling handleDelete for table:', tableName);
+          dbLog('[SupabaseJS] Calling handleDelete for table:', tableName);
           result = await this.handleDelete(query, sql, params);
-          console.log('[SupabaseJS] handleDelete returned:', result);
+          dbLog('[SupabaseJS] handleDelete returned:', result);
           break;
         default:
           // For complex queries, use RPC
-          console.log('[SupabaseJS] Default case, using executeComplexQuery');
+          dbLog('[SupabaseJS] Default case, using executeComplexQuery');
           await this.executeComplexQuery(sql, params);
           result = { changes: 1, lastInsertRowId: null };
       }
@@ -913,7 +921,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       if (Array.isArray(result?.data)) {
         result.data = this.normalizeRowsForSelect(tableName, result.data);
       }
-      console.log('[SupabaseJS] execute() returning:', result);
+      dbLog('[SupabaseJS] execute() returning:', result);
       return result;
     } catch (error) {
       console.error('[SupabaseJS] execute() error:', error);
@@ -927,7 +935,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
   async handleInsert(query, sql, params) {
     // Log the exact SQL query
     const paramsArray = Object.values(params || {});
-    console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    dbLog('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
     
     const values = this.extractValues(sql, params);
     
@@ -955,19 +963,19 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
   async handleUpdate(query, sql, params) {
     // Log the exact SQL query
     const paramsArray = Object.values(params || {});
-    console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    dbLog('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
     
     const { values, conditions } = this.extractUpdateData(sql, params);
-    console.log('[SupabaseJS] Extracted update values keys:', Object.keys(values || {}));
-    console.log('[SupabaseJS] Extracted update conditions:', JSON.stringify(conditions || []));
-    console.log('[SupabaseJS] Params structure:', typeof params, 'isArray:', Array.isArray(params), 'keys:', Object.keys(params || {}));
+    dbLog('[SupabaseJS] Extracted update values keys:', Object.keys(values || {}));
+    dbLog('[SupabaseJS] Extracted update conditions:', JSON.stringify(conditions || []));
+    dbLog('[SupabaseJS] Params structure:', typeof params, 'isArray:', Array.isArray(params), 'keys:', Object.keys(params || {}));
     
     let updateQuery = query.update(values);
     
     // Apply conditions with proper method calls
     if (conditions && conditions.length > 0) {
       for (const condition of conditions) {
-        console.log('[SupabaseJS] Applying update condition:', condition.operator, condition.column, condition.value);
+        dbLog('[SupabaseJS] Applying update condition:', condition.operator, condition.column, condition.value);
         
         // Use proper method chaining with the Supabase query builder
         if (condition.operator === 'eq') {
@@ -994,7 +1002,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       }
     }
 
-    console.log('[SupabaseJS] Executing update query...');
+    dbLog('[SupabaseJS] Executing update query...');
     const { data, error } = await updateQuery.select();
     
     if (error) {
@@ -1002,7 +1010,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       throw error;
     }
 
-    console.log('[SupabaseJS] Update successful, rows affected:', data?.length || 0);
+    dbLog('[SupabaseJS] Update successful, rows affected:', data?.length || 0);
     return {
       changes: data ? data.length : 1,
       lastInsertRowId: null
@@ -1015,11 +1023,11 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
   async handleDelete(query, sql, params) {
     // Log the exact SQL query
     const paramsArray = Object.values(params || {});
-    console.log('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    dbLog('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
     
     const conditions = this.extractDeleteConditions(sql, params);
-    console.log('[SupabaseJS] Extracted conditions:', JSON.stringify(conditions));
-    console.log('[SupabaseJS] Params structure:', typeof params, 'keys:', Object.keys(params || {}));
+    dbLog('[SupabaseJS] Extracted conditions:', JSON.stringify(conditions));
+    dbLog('[SupabaseJS] Params structure:', typeof params, 'keys:', Object.keys(params || {}));
     
     // Start with .delete() to get the DELETE query builder
     let deleteQuery = query.delete();
@@ -1027,7 +1035,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     // Apply conditions to the DELETE query builder
     if (conditions && conditions.length > 0) {
       for (const condition of conditions) {
-        console.log('[SupabaseJS] Applying condition:', condition.operator, condition.column, condition.value);
+        dbLog('[SupabaseJS] Applying condition:', condition.operator, condition.column, condition.value);
         
         // Use proper method chaining with the Supabase query builder
         if (condition.operator === 'eq') {
@@ -1054,7 +1062,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       }
     }
 
-    console.log('[SupabaseJS] Executing delete query...');
+    dbLog('[SupabaseJS] Executing delete query...');
     const { data, error } = await deleteQuery.select();
     
     if (error) {
@@ -1062,7 +1070,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       throw error;
     }
 
-    console.log('[SupabaseJS] Delete successful, rows deleted:', data?.length || 0);
+    dbLog('[SupabaseJS] Delete successful, rows deleted:', data?.length || 0);
     return {
       changes: data ? data.length : 1,
       lastInsertRowId: null
@@ -1405,31 +1413,31 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    * Extract UPDATE data
    */
   extractUpdateData(sql, params) {
-    console.log('[SupabaseJS] extractUpdateData called');
+    dbLog('[SupabaseJS] extractUpdateData called');
     // Use [\s\S] to match any character including newlines
     const setMatch = sql.match(/set\s+([\s\S]*?)\s+where/i);
-    console.log('[SupabaseJS] SET match result:', !!setMatch);
+    dbLog('[SupabaseJS] SET match result:', !!setMatch);
     
     if (setMatch) {
       const setClause = setMatch[1];
       const values = {};
       
-      console.log('[SupabaseJS] Full SET clause:', setClause);
+      dbLog('[SupabaseJS] Full SET clause:', setClause);
       
       // Handle ? placeholders - extract column names and map from params object
       const setMatches = setClause.match(/(\w+)\s*=\s*\?/g);
-      console.log('[SupabaseJS] Found ? matches:', setMatches);
+      dbLog('[SupabaseJS] Found ? matches:', setMatches);
       
       if (setMatches) {
         setMatches.forEach(match => {
           const fieldMatch = match.match(/(\w+)\s*=\s*\?/);
           if (fieldMatch) {
             const column = fieldMatch[1];
-            console.log(`[SupabaseJS] Processing column: ${column}, exists in params: ${params && params[column] !== undefined}`);
+            dbLog(`[SupabaseJS] Processing column: ${column}, exists in params: ${params && params[column] !== undefined}`);
             // Skip CURRENT_TIMESTAMP and other functions that aren't in params
             if (params && params[column] !== undefined) {
               values[column] = params[column];
-              console.log(`[SupabaseJS] Mapped ${column} = ${params[column]}`);
+              dbLog(`[SupabaseJS] Mapped ${column} = ${params[column]}`);
             }
           }
         });
@@ -1449,8 +1457,8 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         });
       }
       
-      console.log('[SupabaseJS] Final extracted values keys:', Object.keys(values));
-      console.log('[SupabaseJS] Final values:', values);
+      dbLog('[SupabaseJS] Final extracted values keys:', Object.keys(values));
+      dbLog('[SupabaseJS] Final values:', values);
       
       return {
         values: values,
@@ -1458,7 +1466,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       };
     }
     
-    console.log('[SupabaseJS] No SET clause found');
+    dbLog('[SupabaseJS] No SET clause found');
     return { values: {}, conditions: [] };
   }
 

@@ -25,6 +25,7 @@ module.exports = {
   GOOGLE_TTS_AUDIO_ENCODING: process.env.GOOGLE_TTS_AUDIO_ENCODING || 'MP3', // Audio encoding (MP3, LINEAR16, OGG_OPUS)
   
   // Logging
-  LOG_LEVEL: process.env.LOG_LEVEL || 'info'
+  LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+  DB_LOG: process.env.DB_LOG === 'true' || process.env.DB_LOG === '1'
 };
 

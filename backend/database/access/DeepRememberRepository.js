@@ -1,3 +1,12 @@
+const config = require('../../config/app');
+
+// Conditional logging helper
+function dbLog(...args) {
+  if (config.DB_LOG) {
+    console.log(...args);
+  }
+}
+
 /**
  * DeepRemember Repository - Handles all DeepRemember-specific database operations
  */
@@ -249,33 +258,33 @@ class DeepRememberRepository {
    */
   async deleteCard(userId, cardId) {
     try {
-      console.log(`[SRS-REPO] deleteCard called: userId=${userId}, cardId=${cardId}`);
-      console.log(`[SRS-REPO] Database instance:`, this.db.constructor.name);
+      dbLog(`[SRS-REPO] deleteCard called: userId=${userId}, cardId=${cardId}`);
+      dbLog(`[SRS-REPO] Database instance:`, this.db.constructor.name);
       
       // Delete related card_labels first (CASCADE for Supabase PostgREST compatibility)
       // When using Supabase JavaScript client with PostgREST, CASCADE might not work
       // So we manually delete related records first
-      console.log('[SRS-REPO] Starting DELETE from card_labels...');
+      dbLog('[SRS-REPO] Starting DELETE from card_labels...');
       try {
         const cardLabelsResult = await this.db.execute(
           'DELETE FROM card_labels WHERE card_id = ? AND user_id = ?',
           { card_id: cardId, user_id: userId }
         );
-        console.log(`[SRS-REPO] card_labels deleted. Changes: ${cardLabelsResult.changes}`);
+        dbLog(`[SRS-REPO] card_labels deleted. Changes: ${cardLabelsResult.changes}`);
       } catch (labelError) {
         // Ignore if card_labels doesn't exist or already deleted
-        console.log('[SRS-REPO] Note: Could not delete card_labels:', labelError.message);
+        dbLog('[SRS-REPO] Note: Could not delete card_labels:', labelError.message);
         console.error('[SRS-REPO] card_labels error details:', labelError);
       }
 
       // Then delete the card itself
-      console.log('[SRS-REPO] Starting DELETE from cards...');
+      dbLog('[SRS-REPO] Starting DELETE from cards...');
       try {
         const result = await this.db.execute(
           'DELETE FROM cards WHERE user_id = ? AND card_id = ?',
           { user_id: userId, card_id: cardId }
         );
-        console.log(`[SRS-REPO] cards deleted. Changes: ${result.changes}`);
+        dbLog(`[SRS-REPO] cards deleted. Changes: ${result.changes}`);
         return result.changes > 0;
       } catch (cardError) {
         console.error('[SRS-REPO] cards error details:', cardError);
@@ -395,7 +404,7 @@ class DeepRememberRepository {
    */
   async migrateFromMemory(userCards) {
     try {
-      console.log('[SRS-REPO] Starting migration from memory to database...');
+      dbLog('[SRS-REPO] Starting migration from memory to database...');
       
       for (const [userId, cards] of userCards.entries()) {
         // Create user
@@ -406,10 +415,10 @@ class DeepRememberRepository {
           await this.createCard(userId, card);
         }
         
-        console.log(`[SRS-REPO] Migrated ${cards.length} cards for user ${userId}`);
+        dbLog(`[SRS-REPO] Migrated ${cards.length} cards for user ${userId}`);
       }
       
-      console.log('[SRS-REPO] Migration completed successfully');
+      dbLog('[SRS-REPO] Migration completed successfully');
     } catch (error) {
       console.error('[SRS-REPO] Migration error:', error);
       throw error;
@@ -750,7 +759,7 @@ class DeepRememberRepository {
       const status = await this.checkSystemLabelsExist();
       
       if (status.allExist) {
-        console.log('[SRS-REPO] All system labels already exist');
+        dbLog('[SRS-REPO] All system labels already exist');
         return;
       }
 
@@ -769,9 +778,9 @@ class DeepRememberRepository {
 
           if (!existingLabel) {
             await this.createLabel(null, { ...labelData, type: 'system' });
-            console.log(`[SRS-REPO] Created system label: ${labelData.name}`);
+            dbLog(`[SRS-REPO] Created system label: ${labelData.name}`);
           } else {
-            console.log(`[SRS-REPO] System label '${labelData.name}' already exists`);
+            dbLog(`[SRS-REPO] System label '${labelData.name}' already exists`);
           }
         } catch (error) {
           console.error(`[SRS-REPO] Error creating system label '${labelData.name}':`, error);
@@ -781,7 +790,7 @@ class DeepRememberRepository {
       // Verify final status
       const finalStatus = await this.checkSystemLabelsExist();
       if (finalStatus.allExist) {
-        console.log('[SRS-REPO] System labels initialization completed successfully');
+        dbLog('[SRS-REPO] System labels initialization completed successfully');
       } else {
         console.warn('[SRS-REPO] System labels initialization completed with some issues');
       }

@@ -108,6 +108,11 @@ SUPABASE_DB_URL=postgresql://postgres.iehfahiljhkpprgzejzo:[YOUR-PASSWORD]@aws-0
 
 # Migration Settings
 MIGRATION_AUTO_MIGRATE=true
+
+# Database Logging (optional - for debugging)
+# Set to 'true' or '1' to enable detailed database query logging
+# Set to 'false' or leave empty to disable logging (default)
+DB_LOG=false
 ```
 
 ## Step 4: Install Dependencies
