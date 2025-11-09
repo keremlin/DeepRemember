@@ -4,7 +4,8 @@ import './StatsSection.css'
 const StatsSection = ({ 
   stats, 
   setShowHelp, 
-  setShowCreateCard 
+  setShowCreateCard,
+  onShowManageCards 
 }) => {
   return (
     <div className="stats-section">
@@ -58,6 +59,11 @@ const StatsSection = ({
         <button className="btn-create-card" onClick={() => setShowCreateCard(true)}>
           ➕ Create New Card
         </button>
+        {onShowManageCards && (
+          <button className="btn-manage-cards" onClick={onShowManageCards}>
+            📚 Manage Cards
+          </button>
+        )}
       </div>
     </div>
   )

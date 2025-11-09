@@ -20,12 +20,6 @@ const Header = ({
         </div>
         <div className="header-right">
           <UserInfo onUserSetup={onUserSetup} />
-          <button className="btn-manage-cards" onClick={onToggleCardsView}>
-            {isCardsView ? '📊 Back to Dashboard' : '📚 Manage Cards'}
-          </button>
-          <button className="btn btn-secondary" onClick={onNavigateToWelcome || (() => window.location.href = '/')}>
-            🎵 Back to AI-title
-          </button>
         </div>
       </div>
       <TopMenu 

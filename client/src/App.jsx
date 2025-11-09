@@ -20,8 +20,10 @@ function App() {
   };
 
   const [currentView, setCurrentView] = useState(isAlreadyAuthenticated() ? 'welcome' : 'login')
+  const [showCardsOnMount, setShowCardsOnMount] = useState(false)
 
-  const navigateToDeepRemember = () => {
+  const navigateToDeepRemember = (showCards = false) => {
+    setShowCardsOnMount(showCards)
     setCurrentView('deepremember')
   }
 
@@ -52,9 +54,14 @@ function App() {
               <DeepRemember 
                 onNavigateToWelcome={navigateToWelcome}
                 onNavigateToPlayer={navigateToPlayer}
+                showCardsOnMount={showCardsOnMount}
               />
             ) : (
-              <PlayerPage onNavigateToWelcome={navigateToWelcome} />
+              <PlayerPage 
+                onNavigateToWelcome={navigateToWelcome}
+                onNavigateToPlayer={navigateToPlayer}
+                onNavigateToDeepRemember={navigateToDeepRemember}
+              />
             )}
           </div>
         </AuthWrapper>

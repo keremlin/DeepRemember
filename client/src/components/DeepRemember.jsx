@@ -10,7 +10,7 @@ import { useAuth } from './security/AuthContext'
 import { getApiUrl } from '../config/api'
 import './DeepRemember.css'
 
-const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer }) => {
+const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMount = false }) => {
   const { showSuccess, showError, showInfo } = useToast()
   const { user, getAuthHeaders } = useAuth()
   
@@ -235,7 +235,11 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer }) => {
     if (!isLoadingRef.current) {
       loadUserData()
     }
-  }, []) // Empty dependency array ensures this only runs once
+    // Show review cards view if requested (DashboardView, not ManageCards)
+    if (showCardsOnMount) {
+      setIsCardsView(false)
+    }
+  }, [showCardsOnMount]) // Include showCardsOnMount in dependencies
 
   // Get current card
   const currentCard = currentCards[currentCardIndex]
@@ -248,7 +252,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer }) => {
         onToggleCardsView={() => setIsCardsView(!isCardsView)}
         onNavigateToWelcome={onNavigateToWelcome}
         onNavigateToPlayer={onNavigateToPlayer}
-        onShowCards={() => setIsCardsView(true)}
+        onShowCards={() => setIsCardsView(false)}
       />
 
       <div className="content">
@@ -263,6 +267,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer }) => {
               stats={stats}
               setShowHelp={setShowHelp}
               setShowCreateCard={setShowCreateCard}
+              onShowManageCards={() => setIsCardsView(true)}
             />
           ) : (
             // Cards Management View

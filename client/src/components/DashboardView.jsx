@@ -11,7 +11,8 @@ const DashboardView = ({
   answerCard, 
   stats, 
   setShowHelp, 
-  setShowCreateCard 
+  setShowCreateCard,
+  onShowManageCards 
 }) => {
   return (
     <div className="dashboard-view">
@@ -30,6 +31,7 @@ const DashboardView = ({
         stats={stats}
         setShowHelp={setShowHelp}
         setShowCreateCard={setShowCreateCard}
+        onShowManageCards={onShowManageCards}
       />
     </div>
   )
