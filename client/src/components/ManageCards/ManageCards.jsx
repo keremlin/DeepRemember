@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useToast } from '../ToastProvider'
 import { useAuth } from '../security/AuthContext'
+import { getApiUrl } from '../../config/api'
 import EditCard from './EditCard'
 import AddList from './AddList'
 import './ManageCards.css'
@@ -38,7 +39,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     
     setIsLoading(true)
     try {
-      const response = await fetch(`/deepRemember/all-cards/${currentUserId}`, {
+      const response = await fetch(getApiUrl(`/deepRemember/all-cards/${currentUserId}`), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
@@ -76,7 +77,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     if (!confirm('Are you sure you want to delete this card?')) return
     
     try {
-      const response = await fetch(`/deepRemember/delete-card/${currentUserId}/${cardId}`, {
+      const response = await fetch(getApiUrl(`/deepRemember/delete-card/${currentUserId}/${cardId}`), {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',

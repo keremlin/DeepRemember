@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useToast } from '../ToastProvider'
+import { getApiUrl } from '../../config/api'
 import './EditCard.css'
 
 const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
@@ -47,7 +48,7 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
 
     setIsLoading(true)
     try {
-      const response = await fetch(`http://localhost:4004/deepRemember/update-card/${currentUserId}/${card.id}`, {
+      const response = await fetch(getApiUrl(`/deepRemember/update-card/${currentUserId}/${card.id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         mode: 'cors',

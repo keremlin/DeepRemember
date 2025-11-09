@@ -7,6 +7,7 @@ import Header from './header/Header'
 import UserManage from './header/user/UserManage'
 import { useToast } from './ToastProvider'
 import { useAuth } from './security/AuthContext'
+import { getApiUrl } from '../config/api'
 import './DeepRemember.css'
 
 const DeepRemember = ({ onNavigateToWelcome }) => {
@@ -89,7 +90,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     isLoadingRef.current = true
     
     try {
-      const response = await fetch(`/deepRemember/stats/${currentUserId}`, {
+      const response = await fetch(getApiUrl(`/deepRemember/stats/${currentUserId}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +128,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
 
   const loadReviewCards = async (showAlert = true) => {
     try {
-      const response = await fetch(`/deepRemember/review-cards/${currentUserId}`, {
+      const response = await fetch(getApiUrl(`/deepRemember/review-cards/${currentUserId}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +176,7 @@ const DeepRemember = ({ onNavigateToWelcome }) => {
     const card = currentCards[currentCardIndex]
     
     try {
-      const response = await fetch('/deepRemember/answer-card', {
+      const response = await fetch(getApiUrl('/deepRemember/answer-card'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import SampleSentenceCircle from './SampleSentenceCircle'
 import { useAuth } from '../security/AuthContext'
+import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import './SampleSentence.css'
 
 const SampleSentence = ({ 
@@ -36,7 +37,7 @@ const SampleSentence = ({
       
       console.log('Fetching audio URL for:', { word, sentence })
       
-      const response = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedSentence}`, {
+      const response = await fetch(getApiUrl(`/deepRemember/get-audio/${word.trim()}/${encodedSentence}`), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
@@ -50,8 +51,8 @@ const SampleSentence = ({
       
       if (data.success && data.exists) {
         // Convert relative URL to absolute URL
-        const baseUrl = 'http://localhost:4004'
-        const fullUrl = `${baseUrl}${data.audioUrl}`
+        const baseUrl = getApiBaseUrl()
+        const fullUrl = baseUrl ? `${baseUrl}${data.audioUrl}` : data.audioUrl
         console.log('Found existing audio:', fullUrl)
         return fullUrl
       } else {
@@ -74,7 +75,7 @@ const SampleSentence = ({
     try {
       console.log('Creating audio for:', { text: sentence.trim(), word: word.trim() })
       
-      const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+      const response = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,8 +97,8 @@ const SampleSentence = ({
       
       if (data.success && data.audioUrl) {
         // Convert relative URL to absolute URL
-        const baseUrl = 'http://localhost:4004'
-        const fullUrl = `${baseUrl}${data.audioUrl}`
+        const baseUrl = getApiBaseUrl()
+        const fullUrl = baseUrl ? `${baseUrl}${data.audioUrl}` : data.audioUrl
         console.log('Created audio:', fullUrl)
         return fullUrl
       } else {

@@ -3,6 +3,7 @@ import ReviewButt from './ReviewButt'
 import Samples from './Samples'
 import SampleSentenceCircle from './SampleSentenceCircle'
 import { useAuth } from '../security/AuthContext'
+import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import './ReviewSection.css'
 
 const ReviewSection = ({ 
@@ -23,7 +24,7 @@ const ReviewSection = ({
     setIsCreatingWordAudio(true)
     
     try {
-      const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+      const response = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,8 +45,8 @@ const ReviewSection = ({
       
       if (data.success && data.audioUrl) {
         // Convert relative URL to absolute URL
-        const baseUrl = 'http://localhost:4004'
-        const fullUrl = `${baseUrl}${data.audioUrl}`
+        const baseUrl = getApiBaseUrl()
+        const fullUrl = baseUrl ? `${baseUrl}${data.audioUrl}` : data.audioUrl
         return fullUrl
       } else {
         console.warn('Word audio generation failed or TTS service unavailable')
@@ -67,7 +68,7 @@ const ReviewSection = ({
     
     try {
       const encodedWord = encodeURIComponent(currentCard.word.trim())
-      const response = await fetch(`http://localhost:4004/deepRemember/get-audio/${currentCard.word.trim()}/${encodedWord}`, {
+      const response = await fetch(getApiUrl(`/deepRemember/get-audio/${currentCard.word.trim()}/${encodedWord}`), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
@@ -81,8 +82,8 @@ const ReviewSection = ({
       
       if (data.success && data.exists && data.audioUrl) {
         // Convert relative URL to absolute URL
-        const baseUrl = 'http://localhost:4004'
-        audioUrl = `${baseUrl}${data.audioUrl}`
+        const baseUrl = getApiBaseUrl()
+        audioUrl = baseUrl ? `${baseUrl}${data.audioUrl}` : data.audioUrl
       } else {
         // Audio doesn't exist, create it
         audioUrl = await createWordAudio()

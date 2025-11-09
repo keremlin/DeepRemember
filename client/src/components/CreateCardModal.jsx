@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import CloseButton from './CloseButton'
 import { useToast } from './ToastProvider'
 import { useAuth } from './security/AuthContext'
+import { getApiUrl, getApiBaseUrl } from '../config/api'
 import './CreateCardModal.css'
 
 const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefillData }) => {
@@ -61,7 +62,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
     
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`/deepRemember/search-similar/${currentUserId}/${encodeURIComponent(query)}`, {
+        const response = await fetch(getApiUrl(`/deepRemember/search-similar/${currentUserId}/${encodeURIComponent(query)}`), {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -115,7 +116,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
         sampleSentence: 'Please wait while we get the translation from AI'
       })
       
-      const response = await fetch('/deepRemember/translate-word', {
+      const response = await fetch(getApiUrl('/deepRemember/translate-word'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -199,7 +200,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
             }
             
             // Generate new audio if it doesn't exist
-            const response = await fetch('/deepRemember/convert-to-speech', {
+            const response = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -240,7 +241,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
     try {
       // Check if audio already exists first
       const encodedTranslation = encodeURIComponent(translation.trim())
-      const checkResponse = await fetch(`http://localhost:4004/deepRemember/get-audio/${word.trim()}/${encodedTranslation}`, {
+      const checkResponse = await fetch(getApiUrl(`/deepRemember/get-audio/${word.trim()}/${encodedTranslation}`), {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         mode: 'cors'
@@ -253,7 +254,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
       }
       
       // Generate new audio if it doesn't exist
-      const response = await fetch('http://localhost:4004/deepRemember/convert-to-speech', {
+      const response = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -290,7 +291,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
     
     try {
       // First create the card
-      const response = await fetch('/deepRemember/create-card', {
+      const response = await fetch(getApiUrl('/deepRemember/create-card'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

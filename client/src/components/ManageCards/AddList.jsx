@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import CloseButton from '../CloseButton'
 import { useToast } from '../ToastProvider'
+import { getApiUrl } from '../../config/api'
 import './AddList.css'
 
 const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
@@ -72,7 +73,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
     setProcessedItems(updatedItems)
 
     try {
-      const response = await fetch('http://localhost:4004/deepRemember/translate-word', {
+      const response = await fetch(getApiUrl('/deepRemember/translate-word'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -150,7 +151,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
     try {
       for (const item of validItems) {
         try {
-          const response = await fetch('http://localhost:4004/deepRemember/create-card', {
+          const response = await fetch(getApiUrl('/deepRemember/create-card'), {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -240,7 +241,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
     setProcessedItems(updatedItems)
 
     try {
-      const response = await fetch('http://localhost:4004/deepRemember/translate-word', {
+      const response = await fetch(getApiUrl('/deepRemember/translate-word'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

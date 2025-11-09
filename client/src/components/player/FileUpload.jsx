@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react'
+import { getApiUrl } from '../../config/api'
 import './FileUpload.css'
 
 const FileUpload = ({ onUploadSuccess, onUploadError }) => {
@@ -87,7 +88,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
         })
       }, 200)
 
-      const response = await fetch('http://localhost:4004/upload-files', {
+      const response = await fetch(getApiUrl('/upload-files'), {
         method: 'POST',
         body: formData
       })

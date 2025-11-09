@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { useAuth } from '../security/AuthContext'
 import { useToast } from '../ToastProvider'
+import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import Translator from './Translator'
 import './AudioPlayer.css'
 
@@ -42,8 +43,9 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123' }, ref) => {
   const loadTracks = async () => {
     try {
       setIsLoading(true)
-      console.log('🔍 Loading tracks from:', 'http://localhost:4004/files-list')
-      const response = await fetch('http://localhost:4004/files-list')
+      const apiUrl = getApiUrl('/files-list')
+      console.log('🔍 Loading tracks from:', apiUrl)
+      const response = await fetch(apiUrl)
       console.log('📡 Response status:', response.status)
       
       if (response.ok) {
@@ -69,7 +71,7 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123' }, ref) => {
   const loadSubtitle = async (trackName) => {
     try {
       const subtitleName = trackName.replace(/\.(mp3|wav|m4a)$/, '.srt')
-      const response = await fetch(`http://localhost:4004/files/${subtitleName}`)
+      const response = await fetch(getApiUrl(`/files/${subtitleName}`))
       if (response.ok) {
         const subtitleData = await response.text()
         const parsedSubtitles = parseSRT(subtitleData)
@@ -138,7 +140,7 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123' }, ref) => {
     setSubtitleText('')
     
     if (audioRef.current) {
-      audioRef.current.src = `http://localhost:4004/files/${track}`
+      audioRef.current.src = getApiUrl(`/files/${track}`)
       await loadSubtitle(track)
     }
   }
@@ -196,7 +198,7 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123' }, ref) => {
         ? `answer in this format {"translation":"string", "word":"realWord"} , what is the translation of the word "${text}"`
         : `answer in this format {"translation":"string", "sentence":"realSentence"} , what is the translation of "${text}"`
       
-      const response = await fetch('http://localhost:4004/deepRemember/translate', {
+      const response = await fetch(getApiUrl('/deepRemember/translate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ text, type })

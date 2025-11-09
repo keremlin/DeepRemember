@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from '../ToastProvider';
+import { getApiUrl } from '../../config/api';
 import './AuthModal.css';
 
 const EmailConfirmationModal = ({ isOpen, onClose, email }) => {
@@ -52,7 +53,7 @@ const EmailConfirmationModal = ({ isOpen, onClose, email }) => {
 
     setIsResending(true);
     try {
-      const response = await fetch('/api/auth/resend-confirmation', {
+      const response = await fetch(getApiUrl('/api/auth/resend-confirmation'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

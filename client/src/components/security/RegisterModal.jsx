@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CloseButton from '../CloseButton';
 import { useToast } from '../ToastProvider';
+import { getApiUrl } from '../../config/api';
 import './AuthModal.css';
 
 const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLogin }) => {
@@ -61,7 +62,7 @@ const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLogin }) 
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(getApiUrl('/api/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -9,27 +9,27 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:4004',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:4004',
         changeOrigin: true,
         secure: false
       },
       '/deepRemember': {
-        target: 'http://localhost:4004',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:4004',
         changeOrigin: true,
         secure: false
       },
       '/upload-files': {
-        target: 'http://localhost:4004',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:4004',
         changeOrigin: true,
         secure: false
       },
       '/files-list': {
-        target: 'http://localhost:4004',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:4004',
         changeOrigin: true,
         secure: false
       },
       '/files': {
-        target: 'http://localhost:4004',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:4004',
         changeOrigin: true,
         secure: false
       }
