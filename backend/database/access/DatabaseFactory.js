@@ -134,6 +134,21 @@ class DatabaseFactory {
   }
 
   /**
+   * Check database health
+   */
+  async checkHealth() {
+    if (!this.database) {
+      return {
+        status: 'unhealthy',
+        connected: false,
+        error: 'Database not initialized',
+        database: this.databaseType || 'unknown'
+      };
+    }
+    return await this.database.checkHealth();
+  }
+
+  /**
    * Switch database type (reinitialize with new type)
    */
   async switchDatabase(type, config = {}) {

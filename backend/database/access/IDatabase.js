@@ -86,6 +86,14 @@ class IDatabase {
   async isConnected() {
     throw new Error('isConnected() method must be implemented');
   }
+
+  /**
+   * Check database health - performs comprehensive health check
+   * @returns {Promise<Object>} - Health check results
+   */
+  async checkHealth() {
+    throw new Error('checkHealth() method must be implemented');
+  }
 }
 
 module.exports = IDatabase;

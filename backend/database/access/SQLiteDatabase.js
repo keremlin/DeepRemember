@@ -320,6 +320,85 @@ class SQLiteDatabase extends IDatabase {
   }
 
   /**
+   * Check database health - performs comprehensive health check
+   * @returns {Promise<Object>} - Health check results
+   */
+  async checkHealth() {
+    const startTime = Date.now();
+    const health = {
+      status: 'unknown',
+      connected: false,
+      responseTime: 0,
+      database: 'SQLite',
+      path: this.dbPath,
+      initialized: this.isInitialized,
+      tests: {
+        connection: false,
+        query: false,
+        tables: false
+      },
+      stats: {},
+      error: null
+    };
+
+    try {
+      // Test 1: Check if initialized and connected
+      health.connected = this.isInitialized && this.db !== null;
+      health.tests.connection = health.connected;
+
+      if (!health.connected) {
+        health.status = 'unhealthy';
+        health.error = 'Database not initialized or connection lost';
+        health.responseTime = Date.now() - startTime;
+        return health;
+      }
+
+      // Test 2: Simple query test
+      try {
+        const testQuery = this.db.prepare('SELECT 1 as test').get();
+        health.tests.query = testQuery && testQuery.test === 1;
+      } catch (queryError) {
+        health.tests.query = false;
+        health.error = `Query test failed: ${queryError.message}`;
+      }
+
+      // Test 3: Check if tables exist and get stats
+      try {
+        const userCount = this.db.prepare('SELECT COUNT(*) as count FROM users').get();
+        const cardCount = this.db.prepare('SELECT COUNT(*) as count FROM cards').get();
+        let labelCount = { count: 0 };
+        try {
+          labelCount = this.db.prepare('SELECT COUNT(*) as count FROM labels').get();
+        } catch (e) {
+          // Labels table might not exist, that's okay
+        }
+        
+        health.stats = {
+          users: userCount.count,
+          cards: cardCount.count,
+          labels: labelCount.count || 0
+        };
+        health.tests.tables = true;
+      } catch (tableError) {
+        health.tests.tables = false;
+        health.error = `Table check failed: ${tableError.message}`;
+      }
+
+      // Determine overall status
+      const allTestsPassed = health.tests.connection && health.tests.query && health.tests.tables;
+      health.status = allTestsPassed ? 'healthy' : 'degraded';
+
+      health.responseTime = Date.now() - startTime;
+      return health;
+    } catch (error) {
+      health.status = 'unhealthy';
+      health.error = error.message;
+      health.responseTime = Date.now() - startTime;
+      return health;
+    }
+  }
+
+  /**
    * Get database statistics
    */
   async getStats() {

@@ -770,6 +770,95 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
   }
 
   /**
+   * Check database health - performs comprehensive health check
+   * @returns {Promise<Object>} - Health check results
+   */
+  async checkHealth() {
+    const startTime = Date.now();
+    const health = {
+      status: 'unknown',
+      connected: false,
+      responseTime: 0,
+      database: 'Supabase',
+      url: this.config.url,
+      schema: this.config.schema,
+      initialized: this.isInitialized,
+      tests: {
+        connection: false,
+        query: false,
+        tables: false
+      },
+      stats: {},
+      error: null
+    };
+
+    try {
+      // Test 1: Check if initialized and connected
+      health.connected = this.isInitialized && this.client !== null;
+      health.tests.connection = health.connected;
+
+      if (!health.connected) {
+        health.status = 'unhealthy';
+        health.error = 'Database not initialized or connection lost';
+        health.responseTime = Date.now() - startTime;
+        return health;
+      }
+
+      // Test 2: Simple query test
+      try {
+        const { data, error } = await this.client.from('users').select('id').limit(1);
+        health.tests.query = !error;
+        if (error) {
+          health.error = `Query test failed: ${error.message}`;
+        }
+      } catch (queryError) {
+        health.tests.query = false;
+        health.error = `Query test failed: ${queryError.message}`;
+      }
+
+      // Test 3: Check if tables exist and get stats
+      try {
+        const [userResult, cardResult, labelResult] = await Promise.allSettled([
+          this.client.from('users').select('*', { count: 'exact', head: true }),
+          this.client.from('cards').select('*', { count: 'exact', head: true }),
+          this.client.from('labels').select('*', { count: 'exact', head: true }).catch(() => ({ count: 0, error: null }))
+        ]);
+
+        const userCount = userResult.status === 'fulfilled' && !userResult.value.error 
+          ? (userResult.value.count || 0) : 0;
+        const cardCount = cardResult.status === 'fulfilled' && !cardResult.value.error 
+          ? (cardResult.value.count || 0) : 0;
+        let labelCount = 0;
+        if (labelResult.status === 'fulfilled' && !labelResult.value.error) {
+          labelCount = labelResult.value.count || 0;
+        }
+
+        health.stats = {
+          users: userCount,
+          cards: cardCount,
+          labels: labelCount
+        };
+        health.tests.tables = userResult.status === 'fulfilled' && cardResult.status === 'fulfilled';
+      } catch (tableError) {
+        health.tests.tables = false;
+        health.error = `Table check failed: ${tableError.message}`;
+      }
+
+      // Determine overall status
+      const allTestsPassed = health.tests.connection && health.tests.query && health.tests.tables;
+      health.status = allTestsPassed ? 'healthy' : 'degraded';
+
+      health.responseTime = Date.now() - startTime;
+      return health;
+    } catch (error) {
+      health.status = 'unhealthy';
+      health.error = error.message;
+      health.responseTime = Date.now() - startTime;
+      return health;
+    }
+  }
+
+  /**
    * Process SQL query and parameters for Supabase compatibility
    */
   processQuery(sql, params) {
