@@ -65,7 +65,32 @@ class GoogleTts extends ITts {
                     access_token: this.config.accessToken,
                     refresh_token: this.config.refreshToken
                 });
+            } else if (this.config.refreshToken) {
+                // If we only have refresh token, set it and let it refresh
+                this.oauth2Client.setCredentials({
+                    refresh_token: this.config.refreshToken
+                });
             }
+
+            // Listen for token refresh events to capture new access tokens
+            this.oauth2Client.on('tokens', (tokens) => {
+                if (tokens.access_token) {
+                    // Update the stored access token
+                    this.config.accessToken = tokens.access_token;
+                    // Optionally update environment variable (if running in Node.js)
+                    if (process.env.GOOGLE_ACCESS_TOKEN !== undefined) {
+                        process.env.GOOGLE_ACCESS_TOKEN = tokens.access_token;
+                    }
+                    console.log('[Google TTS] Access token refreshed automatically');
+                }
+                if (tokens.refresh_token) {
+                    // Update refresh token if provided (rare, but possible)
+                    this.config.refreshToken = tokens.refresh_token;
+                    if (process.env.GOOGLE_REFRESH_TOKEN !== undefined) {
+                        process.env.GOOGLE_REFRESH_TOKEN = tokens.refresh_token;
+                    }
+                }
+            });
 
             // Create TTS client with the OAuth2 client
             this.ttsClient = new textToSpeech.TextToSpeechClient({
@@ -73,7 +98,7 @@ class GoogleTts extends ITts {
             });
 
             this.isInitialized = true;
-            console.log('[Google TTS] Initialized successfully');
+            console.log('[Google TTS] Initialized successfully with automatic token refresh');
         } catch (error) {
             console.error('[Google TTS] Initialization failed:', error);
             throw error;
@@ -159,6 +184,42 @@ class GoogleTts extends ITts {
             return audioBuffer;
         } catch (error) {
             console.error(`[Google TTS] Conversion failed:`, error.message);
+            
+            // Handle token expiration - try to refresh and retry once
+            if ((error.message.includes('credentials') || error.message.includes('UNAUTHENTICATED') || error.message.includes('invalid_grant')) 
+                && this.config.refreshToken && this.oauth2Client) {
+                try {
+                    console.log('[Google TTS] Access token expired, attempting to refresh...');
+                    const { credentials } = await this.oauth2Client.refreshAccessToken();
+                    this.oauth2Client.setCredentials(credentials);
+                    
+                    // Update stored tokens
+                    if (credentials.access_token) {
+                        this.config.accessToken = credentials.access_token;
+                        if (process.env.GOOGLE_ACCESS_TOKEN !== undefined) {
+                            process.env.GOOGLE_ACCESS_TOKEN = credentials.access_token;
+                        }
+                    }
+                    
+                    console.log('[Google TTS] Token refreshed successfully, retrying request...');
+                    
+                    // Retry the request with refreshed token
+                    const [response] = await this.ttsClient.synthesizeSpeech(request);
+                    
+                    if (!response.audioContent) {
+                        throw new Error('No audio content returned from Google TTS');
+                    }
+
+                    const audioBuffer = Buffer.from(response.audioContent, 'base64');
+                    console.log(`[Google TTS] Successfully converted text to speech after token refresh (${audioBuffer.byteLength} bytes)`);
+                    
+                    return audioBuffer;
+                } catch (refreshError) {
+                    console.error('[Google TTS] Token refresh failed:', refreshError.message);
+                    const authUrl = this.getAuthUrl();
+                    throw new Error(`Google TTS authentication failed. Refresh token may be invalid. Please re-authenticate: ${authUrl}`);
+                }
+            }
             
             // Handle specific Google Cloud API errors
             if (error.message.includes('credentials') || error.message.includes('UNAUTHENTICATED')) {
@@ -248,6 +309,40 @@ class GoogleTts extends ITts {
         } catch (error) {
             console.error(`[Google TTS] Failed to get available voices:`, error.message);
             return [];
+        }
+    }
+
+    /**
+     * Manually refresh the access token using the refresh token
+     * @returns {Promise<Object>} - New credentials with access token
+     */
+    async refreshAccessToken() {
+        if (!this.oauth2Client) {
+            await this.initialize();
+        }
+
+        if (!this.config.refreshToken) {
+            throw new Error('No refresh token available. Please re-authenticate using getAuthUrl()');
+        }
+
+        try {
+            const { credentials } = await this.oauth2Client.refreshAccessToken();
+            this.oauth2Client.setCredentials(credentials);
+            
+            // Update stored tokens
+            if (credentials.access_token) {
+                this.config.accessToken = credentials.access_token;
+                if (process.env.GOOGLE_ACCESS_TOKEN !== undefined) {
+                    process.env.GOOGLE_ACCESS_TOKEN = credentials.access_token;
+                }
+            }
+            
+            console.log('[Google TTS] Access token refreshed manually');
+            return credentials;
+        } catch (error) {
+            console.error('[Google TTS] Failed to refresh access token:', error.message);
+            const authUrl = this.getAuthUrl();
+            throw new Error(`Token refresh failed. Please re-authenticate: ${authUrl}`);
         }
     }
 }

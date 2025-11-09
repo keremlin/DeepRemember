@@ -44,7 +44,11 @@ const oauth2Client = new google.auth.OAuth2(
 
 console.log('🚀 Google Cloud TTS OAuth Setup');
 console.log('=============================\n');
-console.log('This will generate new OAuth tokens with both Drive and TTS scopes.\n');
+console.log('This will generate new OAuth tokens with both Drive and TTS scopes.');
+console.log('');
+console.log('⚠️  IMPORTANT: This setup uses access_type=offline and prompt=consent');
+console.log('   to ensure you receive a refresh token for automatic token renewal.');
+console.log('   Without a refresh token, you\'ll need to re-authenticate every hour.\n');
 
 const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -71,8 +75,20 @@ rl.question('Enter the authorization code: ', async (code) => {
         console.log('\n📄 Add these to your .env file:');
         console.log('================================');
         console.log(`GOOGLE_ACCESS_TOKEN=${tokens.access_token}`);
-        console.log(`GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`);
-        console.log('================================\n');
+        
+        if (tokens.refresh_token) {
+            console.log(`GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`);
+            console.log('================================\n');
+            console.log('✅ Refresh token received! Your access token will be automatically');
+            console.log('   refreshed when it expires (every ~1 hour).');
+        } else {
+            console.log('GOOGLE_REFRESH_TOKEN=<NOT_PROVIDED>');
+            console.log('================================\n');
+            console.log('⚠️  WARNING: No refresh token was provided!');
+            console.log('   This usually happens if you\'ve already authorized this app before.');
+            console.log('   You may need to revoke access and re-run this setup, or the');
+            console.log('   access token will expire after ~1 hour and require re-authentication.\n');
+        }
         
         console.log('These tokens now have permissions for both:');
         console.log('- Google Drive API');

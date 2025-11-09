@@ -242,6 +242,16 @@ Returns all available TTS service types.
    
    Google Cloud TTS requires the `cloud-platform` scope, which is different from Google Drive scopes. Your existing Google Drive OAuth token will NOT work for TTS!
    
+   **✅ Automatic Token Refresh**
+   
+   The Google TTS implementation automatically handles token refresh using refresh tokens. When your access token expires (after ~1 hour), it will automatically refresh using the refresh token, so you don't need to manually re-authenticate.
+   
+   **To get a refresh token, the OAuth setup MUST include:**
+   - `access_type=offline` - This ensures Google provides a refresh token
+   - `prompt=consent` - This forces Google to show the consent screen and provide a refresh token
+   
+   The setup script (`setup-google-tts-oauth.js`) is already configured with these parameters.
+   
    You have two options:
    
    **Option A: Re-authenticate with combined scopes (Recommended)**
@@ -252,7 +262,7 @@ Returns all available TTS service types.
    node tts/setup-google-tts-oauth.js
    ```
    
-   This will generate new tokens that work for both Google Drive and Google Cloud TTS.
+   This will generate new tokens that work for both Google Drive and Google Cloud TTS. The setup script ensures you get a refresh token for automatic token renewal.
    
    **Option B: Use separate credentials**
    
@@ -281,6 +291,10 @@ Returns all available TTS service types.
 6. **Troubleshooting**: 
    
    - **UNAUTHENTICATED errors**: Your OAuth token doesn't have the Cloud Platform scope. Run the setup script from step 3 to get new tokens with the correct scopes.
+   
+   - **Token expiration errors**: If you see "invalid_grant" or token expiration errors, make sure you have a refresh token set in `GOOGLE_REFRESH_TOKEN`. The system will automatically refresh access tokens, but it needs a valid refresh token. If you don't have one, re-run the setup script with `access_type=offline` and `prompt=consent`.
+   
+   - **No refresh token received**: If the setup script doesn't provide a refresh token, you may have already authorized the app. Revoke access in your Google Account settings and re-run the setup script.
    
    - **Voice errors**: If you get "Voice does not exist" errors, make sure you're using Google Cloud TTS voice names (like `de-DE-Neural2-F`), not ElevenLabs voice IDs. Set `GOOGLE_TTS_VOICE` in your `.env` file.
    
