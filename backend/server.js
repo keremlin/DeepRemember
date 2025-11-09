@@ -29,6 +29,8 @@ const baseOrigins = ['http://localhost:9000', 'http://localhost:3000', 'http://l
 const productionOrigins = [
   'http://deepremember.onrender.com',
   'https://deepremember.onrender.com',
+  'http://deeprememberapp.onrender.com',
+  'https://deeprememberapp.onrender.com',
   ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
 ];
 
