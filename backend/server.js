@@ -23,14 +23,18 @@ const { initializeAppFolders } = require('./filesystem/initializeFolders');
 const app = express();
 
 // Enable CORS for all routes
-// In production, allow Render.com domain; in development, allow localhost
+// In production, allow Render.com domain and localhost for local development
+// In development, allow localhost
+const baseOrigins = ['http://localhost:9000', 'http://localhost:3000', 'http://localhost:4004'];
+const productionOrigins = [
+  'http://deepremember.onrender.com',
+  'https://deepremember.onrender.com',
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
+];
+
 const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [
-      'http://deepremember.onrender.com',
-      'https://deepremember.onrender.com',
-      ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
-    ]
-  : ['http://localhost:9000', 'http://localhost:3000', 'http://localhost:4004'];
+  ? [...baseOrigins, ...productionOrigins]
+  : baseOrigins;
 
 app.use(cors({
   origin: (origin, callback) => {
