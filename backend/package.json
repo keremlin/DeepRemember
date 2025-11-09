@@ -1,7 +1,7 @@
 {
-  "name": "aitrainer-backend",
+  "name": "DeepRemember-Backend",
   "version": "0.0.1",
-  "description": "Backend for AI Trainer - Express.js server with subtitle processing and learning system",
+  "description": "DeepRemember-Backend a express.js server for the DeepRemember-App",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,7 +11,7 @@
     "setup-google-oauth-alt": "node filesystem/setup-oauth-alternative.js",
     "re-auth-google": "node filesystem/re-auth.cjs"
   },
-  "keywords": [],
+  "keywords": ["express", "server", "DeepRemember", "App"],
   "author": "Arash Yeganehrad",
   "license": "MIT",
   "dependencies": {

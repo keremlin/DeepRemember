@@ -1,7 +1,7 @@
 {
-  "name": "client",
+  "name": "DeepRemember-Client",
   "version": "1.0.0",
-  "description": "A modern React.js client application with beautiful styling",
+  "description": "DeepRemember-Client a react.js application for the DeepRemember-App",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
@@ -9,9 +9,9 @@
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["react", "vite", "DeepRemember", "App"],
+  "author": "Arash Yeganehrad",
+  "license": "MIT",
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

@@ -1,7 +1,7 @@
 {
-  "name": "aitrainer",
+  "name": "DeepRemember-App",
   "version": "0.0.1",
-  "description": "AI Trainer - Complete application with separated frontend and backend",
+  "description": "DeepRemember-App a complete application with separated frontend and backend",
   "main": "backend/server.js",
   "scripts": {
     "start": "cd backend && npm start",
@@ -10,7 +10,7 @@
     "build": "cd backend && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["ai", "subtitle", "learning", "express", "frontend", "backend"],
+  "keywords": ["DeepRemember", "App", "express", "frontend", "backend"],
   "author": "Arash Yeganehrad",
   "license": "MIT",
   "workspaces": [
