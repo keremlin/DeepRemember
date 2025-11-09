@@ -2,8 +2,8 @@
  * API Configuration
  * Centralized configuration for backend API URL
  * 
- * In development: Uses relative paths (works with Vite proxy)
- * In production: Uses VITE_API_BASE_URL environment variable
+ * Production: Uses VITE_API_BASE_URL from .env file if set
+ * Development: Uses http://localhost:4004 if VITE_API_BASE_URL is not set
  * 
  * Usage:
  *   import { getApiBaseUrl } from '../config/api'
@@ -12,20 +12,19 @@
 
 /**
  * Get the base URL for API requests
- * @returns {string} Base URL for API requests (empty string for relative paths in dev)
+ * @returns {string} Base URL for API requests
  */
 export const getApiBaseUrl = () => {
-  // In production, use environment variable
-  if (import.meta.env.PROD) {
-    // If VITE_API_BASE_URL is set, use it (remove trailing slash if present)
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || ''
+  // Check if VITE_API_BASE_URL is set (production mode with .env file)
+  const apiUrl = import.meta.env.VITE_API_BASE_URL
+  
+  if (apiUrl) {
+    // Remove trailing slash if present
     return apiUrl.replace(/\/$/, '')
   }
   
-  // In development, return empty string to use relative paths (Vite proxy handles it)
-  // OR return full URL if you need to bypass proxy for some reason
-  // For now, we'll use empty string to leverage Vite proxy
-  return ''
+  // Development mode: use localhost backend
+  return 'http://localhost:4004'
 }
 
 /**
