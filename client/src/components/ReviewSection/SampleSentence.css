@@ -1,19 +1,20 @@
-/* Sample Sentence Component Styles */
+/* Sample Sentence Component Styles - Dark Theme */
 
 .context-line {
   margin-bottom: 8px;
   padding: 8px 12px;
-  background: white;
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 6px;
-  border-left: 3px solid #007bff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 3px solid rgba(102, 126, 234, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
 
 .context-line:hover {
   transform: translateX(2px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  border-left-color: #0056b3;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border-left-color: rgba(102, 126, 234, 0.8);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .context-line:last-child {
@@ -32,7 +33,7 @@
   flex: 1;
   font-size: 0.95rem;
   line-height: 1.5;
-  color: #333;
+  color: #fff;
 }
 
 /* Audio controls container */

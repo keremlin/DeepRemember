@@ -49,7 +49,10 @@ function App() {
                 onNavigateToPlayer={navigateToPlayer}
               />
             ) : currentView === 'deepremember' ? (
-              <DeepRemember onNavigateToWelcome={navigateToWelcome} />
+              <DeepRemember 
+                onNavigateToWelcome={navigateToWelcome}
+                onNavigateToPlayer={navigateToPlayer}
+              />
             ) : (
               <PlayerPage onNavigateToWelcome={navigateToWelcome} />
             )}

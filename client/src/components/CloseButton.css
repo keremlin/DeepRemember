@@ -13,7 +13,7 @@
 }
 
 .close-button:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   transform: scale(1.1);
 }
 
@@ -22,7 +22,7 @@
 }
 
 .close-button:focus {
-  outline: 2px solid #007bff;
+  outline: 2px solid rgba(102, 126, 234, 0.5);
   outline-offset: 2px;
 }
 
@@ -47,12 +47,12 @@
 
 /* Style variants */
 .close-button-default {
-  color: #6c757d;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .close-button-default:hover {
-  color: #495057;
-  background: rgba(108, 117, 125, 0.1);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .close-button-danger {
@@ -65,12 +65,12 @@
 }
 
 .close-button-light {
-  color: #f8f9fa;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .close-button-light:hover {
   color: #ffffff;
-  background: rgba(248, 249, 250, 0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Icon styling */

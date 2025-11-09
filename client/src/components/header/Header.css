@@ -1,4 +1,4 @@
-/* Header Component Styles */
+/* Header Component Styles - Dark Theme */
 
 /* Header styles */
 .header {
@@ -6,14 +6,32 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #2a2a2a;
   color: white;
-  border-radius: 10px;
-  margin-bottom: 30px;
+  border-bottom: 1px solid #333;
+  margin-bottom: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .header-left {
   flex: 1;
+}
+
+.header-left h1 {
+  margin: 0 0 5px 0;
+  font-size: 1.8rem;
+  font-weight: 300;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-left p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #b0b0b0;
+  font-weight: 300;
 }
 
 .header-right {
@@ -22,14 +40,13 @@
   gap: 15px;
 }
 
-
 /* Manage Cards button styling */
 .btn-manage-cards {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  padding: 8px 16px;
-  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 14px;
@@ -37,9 +54,28 @@
 }
 
 .btn-manage-cards:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Back button styling */
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 /* Responsive Design */
@@ -51,14 +87,43 @@
     padding: 15px;
   }
   
+  .header-left h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header-left p {
+    font-size: 0.85rem;
+  }
+  
   .header-right {
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
   }
   
+  .btn-manage-cards,
+  .btn-secondary {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 10px;
+    gap: 10px;
+  }
   
-  .btn-manage-cards {
+  .header-left h1 {
+    font-size: 1.3rem;
+  }
+  
+  .header-left p {
+    font-size: 0.8rem;
+  }
+  
+  .btn-manage-cards,
+  .btn-secondary {
     padding: 6px 12px;
     font-size: 12px;
   }
