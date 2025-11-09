@@ -14,6 +14,9 @@ const { checkGoogleApiHealth } = require('./googleApiHealthCheck');
  * @access Public (but only when TEST_API=true)
  */
 router.get('/local112358', async (req, res) => {
+  // Log test API request
+  console.log('[TEST-API] Test API endpoint requested from', req.ip || req.connection.remoteAddress);
+  
   // Check if TEST_API is enabled
   if (process.env.TEST_API !== 'true') {
     return res.status(403).json({
