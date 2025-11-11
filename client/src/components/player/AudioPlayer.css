@@ -199,9 +199,17 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.playlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
 .playlist-panel h4,
 .subtitle-panel h4 {
-  margin: 0 0 15px 0;
+  margin: 0;
   font-size: 1.1rem;
   font-weight: 500;
   color: #fff;

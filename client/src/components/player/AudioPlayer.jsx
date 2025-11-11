@@ -3,9 +3,10 @@ import { useAuth } from '../security/AuthContext'
 import { useToast } from '../ToastProvider'
 import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import Translator from './Translator'
+import UploadFileButt from './UploadFileButt'
 import './AudioPlayer.css'
 
-const AudioPlayer = forwardRef(({ currentUserId = 'user123' }, ref) => {
+const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, ref) => {
   const { showSuccess, showError } = useToast()
   const [currentTrack, setCurrentTrack] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -404,7 +405,12 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123' }, ref) => {
 
       {showPlaylist && (
         <div className="playlist-panel">
-          <h4>📁 Playlist</h4>
+          <div className="playlist-header">
+            <h4>📁 Playlist</h4>
+            {onUploadClick && (
+              <UploadFileButt onClick={onUploadClick} />
+            )}
+          </div>
           <div className="playlist-list">
             {isLoading ? (
               <p>Loading tracks...</p>
