@@ -29,6 +29,7 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
+  const subtitleListRef = useRef(null)
   const isSeekingRef = useRef(false)
   const wasPlayingBeforeSeekRef = useRef(false)
   const targetSeekTimeRef = useRef(null)
@@ -431,6 +432,54 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
     setCurrentSubtitleIndex(-1)
   }
 
+  // Auto-scroll subtitle list to keep active subtitle centered
+  useEffect(() => {
+    if (currentSubtitleIndex !== -1 && subtitleListRef.current) {
+      // Small delay to ensure DOM has updated with active class
+      const timeoutId = setTimeout(() => {
+        const container = subtitleListRef.current
+        if (!container) return
+        
+        // Find the active subtitle element using data attribute (most reliable)
+        const activeElement = container.querySelector(
+          `[data-subtitle-index="${currentSubtitleIndex}"]`
+        )
+        
+        if (activeElement) {
+          // Use getBoundingClientRect for accurate position calculation
+          const containerRect = container.getBoundingClientRect()
+          const elementRect = activeElement.getBoundingClientRect()
+          
+          // Calculate the element's position relative to the container's scrollable content
+          // elementRect.top is relative to viewport, containerRect.top is also relative to viewport
+          // So elementRect.top - containerRect.top gives position relative to container's visible area
+          // We need to add the current scrollTop to get position relative to scrollable content
+          const elementTopRelativeToVisible = elementRect.top - containerRect.top
+          const elementTopRelativeToContent = container.scrollTop + elementTopRelativeToVisible
+          
+          const containerHeight = container.clientHeight
+          const elementHeight = elementRect.height
+          
+          // Calculate target scroll position to center the element
+          const targetScrollTop = elementTopRelativeToContent - (containerHeight / 2) + (elementHeight / 2)
+          
+          // Get current scroll position
+          const currentScrollTop = container.scrollTop
+          
+          // Only scroll if we need to move (with a small threshold to avoid jitter)
+          if (Math.abs(targetScrollTop - currentScrollTop) > 10) {
+            container.scrollTo({
+              top: Math.max(0, targetScrollTop),
+              behavior: 'smooth'
+            })
+          }
+        }
+      }, 100) // Delay to ensure DOM update and active class is applied
+      
+      return () => clearTimeout(timeoutId)
+    }
+  }, [currentSubtitleIndex])
+
 
   return (
     <div className="audio-player">
@@ -557,11 +606,12 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
       {showSubtitleList && (
         <div className="subtitle-panel">
           <h4>📝 Subtitles</h4>
-          <div className="subtitle-list">
+          <div className="subtitle-list" ref={subtitleListRef}>
             {subtitleTracks.length > 0 ? (
               subtitleTracks.map((subtitle, index) => (
                 <div
                   key={index}
+                  data-subtitle-index={subtitle.index}
                   className={`subtitle-item ${currentSubtitleIndex === subtitle.index ? 'active' : ''}`}
                   onClick={() => handleSubtitleClick(subtitle)}
                 >
