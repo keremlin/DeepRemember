@@ -103,8 +103,6 @@
 
 .top-menu-item.active .top-menu-label {
   color: white;
-  text-decoration: underline;
-  text-underline-offset: 2px;
 }
 
 .top-menu-item:hover .top-menu-label {

@@ -15,6 +15,8 @@ const TopMenu = ({ onNavigateToPlayer, onShowCards }) => {
       label: 'Cards',
       onClick: onShowCards
     },
+    { icon: 'school', label: 'Courses' },
+    { icon: 'description', label: 'Grammar' },
     { icon: 'settings', label: 'Manage' },
     { icon: 'person', label: 'User' },
     { icon: 'chat', label: 'Chat' },
