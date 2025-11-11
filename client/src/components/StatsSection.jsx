@@ -61,7 +61,7 @@ const StatsSection = ({
           variant="primary"
           size="medium"
           onClick={() => setShowCreateCard(true)}
-          className="btn-create-card"
+          className="btn-upload-modal"
           title="Create new card"
           iconName="add_circle"
           iconPosition="left"
@@ -73,7 +73,7 @@ const StatsSection = ({
             variant="primary"
             size="medium"
             onClick={onShowManageCards}
-            className="btn-manage-cards"
+            className="btn-upload-modal"
             title="Manage cards"
             iconName="menu_book"
             iconPosition="left"

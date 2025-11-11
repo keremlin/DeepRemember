@@ -112,61 +112,19 @@
   flex-wrap: wrap;
 }
 
-.btn-create-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 200px;
-  justify-content: center;
+/* Upload modal button styles - same as UploadFileButt */
+.btn-upload-modal {
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3) !important;
 }
 
-.btn-create-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4c93 100%);
+.btn-upload-modal:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4) !important;
 }
 
-.btn-create-card:active {
-  transform: translateY(-1px);
-}
-
-.btn-manage-cards {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 15px 30px;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 200px;
-  justify-content: center;
-}
-
-.btn-manage-cards:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(102, 126, 234, 0.5);
-}
-
-.btn-manage-cards:active {
-  transform: translateY(-1px);
+.btn-upload-modal:active:not(:disabled) {
+  transform: translateY(0) !important;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3) !important;
 }
 
 /* Label Statistics Section */
@@ -268,7 +226,7 @@
     font-size: 1.5rem;
   }
   
-  .btn-create-card {
+  .btn-upload-modal {
     width: 100%;
     max-width: 300px;
   }
@@ -312,16 +270,6 @@
   color: #666;
 }
 
-.light-mode .btn-manage-cards {
-  background: rgba(0, 0, 0, 0.1);
-  color: #333;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-}
-
-.light-mode .btn-manage-cards:hover {
-  background: rgba(0, 0, 0, 0.15);
-  border-color: rgba(102, 126, 234, 0.5);
-}
 
 .light-mode .label-stats-section {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
