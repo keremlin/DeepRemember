@@ -285,3 +285,62 @@
     text-align: center;
   }
 }
+
+/* Light Mode Styles */
+.light-mode .stats-section .srs-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .stats-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .stat-item {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .stat-item:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .stat-label {
+  color: #666;
+}
+
+.light-mode .btn-manage-cards {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.light-mode .btn-manage-cards:hover {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+.light-mode .label-stats-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .label-stats-section h4 {
+  color: #333;
+}
+
+.light-mode .label-stat-item {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .label-stat-item:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .label-name {
+  color: #333;
+}

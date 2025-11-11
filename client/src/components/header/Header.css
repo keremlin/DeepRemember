@@ -128,3 +128,27 @@
     font-size: 12px;
   }
 }
+
+/* Light Mode Styles */
+.light-mode .header {
+  background: #f5f5f5;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+}
+
+.light-mode .header-left p {
+  color: #666;
+}
+
+.light-mode .btn-manage-cards,
+.light-mode .btn-secondary {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.light-mode .btn-manage-cards:hover,
+.light-mode .btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.3);
+}

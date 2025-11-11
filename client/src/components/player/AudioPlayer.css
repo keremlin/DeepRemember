@@ -457,3 +457,129 @@
 .subtitle-list::-webkit-scrollbar-thumb:hover {
   background: rgba(102, 126, 234, 0.7);
 }
+
+/* Light Mode Styles */
+.light-mode .audio-player {
+  background: #ffffff;
+  color: #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .track-info h3 {
+  color: #333;
+}
+
+.light-mode .track-info p {
+  color: #666;
+}
+
+.light-mode .subtitle-display {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .current-subtitle {
+  color: #333;
+}
+
+.light-mode .current-subtitle:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.light-mode .progress-bar {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .progress-bar:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .speed-select {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: #333;
+}
+
+.light-mode .speed-select option {
+  background: #ffffff;
+  color: #333;
+}
+
+.light-mode .playlist-panel,
+.light-mode .subtitle-panel {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .playlist-panel h4,
+.light-mode .subtitle-panel h4 {
+  color: #333;
+}
+
+.light-mode .playlist-item:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.light-mode .playlist-item.active {
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .track-number {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .track-name {
+  color: #333;
+}
+
+.light-mode .subtitle-item:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-left-color: rgba(102, 126, 234, 0.5);
+}
+
+.light-mode .subtitle-item.active {
+  background: rgba(102, 126, 234, 0.15);
+  border-left-color: #667eea;
+}
+
+.light-mode .subtitle-time {
+  color: #666;
+}
+
+.light-mode .subtitle-text {
+  color: #333;
+}
+
+.light-mode .subtitle-text:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.light-mode .translation-display {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .translation-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .translation-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.light-mode .translation-text {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.light-mode .volume-slider {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .playlist-list::-webkit-scrollbar-track,
+.light-mode .subtitle-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}

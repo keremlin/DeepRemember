@@ -14,6 +14,11 @@ body {
   padding: 20px;
 }
 
+/* Light Mode Styles */
+.light-mode body {
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+}
+
 #root {
   width: 100%;
   max-width: 1200px;

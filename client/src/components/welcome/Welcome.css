@@ -124,3 +124,17 @@
     font-size: 0.9rem;
   }
 }
+
+/* Light Mode Styles */
+.light-mode .welcome-page {
+  background: #ffffff;
+  color: #333;
+}
+
+.light-mode .welcome-subtitle {
+  color: #666;
+}
+
+.light-mode .welcome-footer p {
+  color: #999;
+}

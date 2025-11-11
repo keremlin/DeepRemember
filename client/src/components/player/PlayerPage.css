@@ -205,3 +205,33 @@
     font-size: 1rem;
   }
 }
+
+/* Light Mode Styles */
+.light-mode .player-header {
+  background: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+.light-mode .btn-back {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.light-mode .btn-back:hover {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.light-mode .modal {
+  background: #ffffff;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.light-mode .modal-header {
+  border-bottom: 1px solid #ddd;
+}
+
+.light-mode .modal-header h3 {
+  color: #333;
+}

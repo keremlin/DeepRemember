@@ -293,3 +293,45 @@
     height: 280px;
   }
 }
+
+/* Light Mode Styles */
+.light-mode .radial-menu-container {
+  background: #ffffff;
+}
+
+.light-mode .center-button {
+  background: #e0e0e0;
+  border: 2px solid #ccc;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .center-button:hover {
+  background: #d0d0d0;
+  border-color: #bbb;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .menu-button {
+  background: #e0e0e0;
+  border: 2px solid #ccc;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .menu-button::before {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.light-mode .menu-button:hover {
+  background: #d0d0d0;
+  border-color: #bbb;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .menu-label {
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

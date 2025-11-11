@@ -706,3 +706,134 @@
     flex-direction: column;
   }
 }
+
+/* Light Mode Styles */
+.light-mode .deep-remember-container {
+  background: #ffffff;
+  color: #333;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .content {
+  background: #ffffff;
+}
+
+.light-mode .srs-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .word-display {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .word-display strong {
+  color: #333;
+  text-shadow: none;
+}
+
+.light-mode .translation-section,
+.light-mode .context-section {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .translation-section h4,
+.light-mode .context-section h4 {
+  color: #333;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .translation-text,
+.light-mode .context-text {
+  color: #666;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .stat-item {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .stat-label {
+  color: #666;
+}
+
+.light-mode .card-item {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .card-item:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .card-word {
+  color: #333;
+}
+
+.light-mode .card-translation {
+  color: #667eea;
+}
+
+.light-mode .card-context {
+  color: #666;
+}
+
+.light-mode .card-due {
+  color: #666;
+}
+
+.light-mode .modal {
+  background: #ffffff;
+}
+
+.light-mode .modal-header h3 {
+  color: #333;
+}
+
+.light-mode .translation-result {
+  background: #f8f9fa;
+  border-left: 4px solid #007bff;
+}
+
+.light-mode .translation-result:hover {
+  background: #e9ecef;
+}
+
+.light-mode .translation-result h4 {
+  color: #333;
+}
+
+.light-mode .translation-result .translation-text {
+  color: #007bff;
+}
+
+.light-mode .sample-sentences {
+  color: #28a745;
+}
+
+.light-mode .translation-hint {
+  color: #666;
+}
+
+.light-mode .similar-words-section h4 {
+  color: #666;
+}
+
+.light-mode .similar-words-table {
+  border: 1px solid #ddd;
+}
+
+.light-mode .similar-words-table th {
+  background: #f8f9fa;
+}
+
+.light-mode .similar-words-table td {
+  border-bottom: 1px solid #eee;
+}

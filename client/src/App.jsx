@@ -4,6 +4,7 @@ import DeepRemember from './components/DeepRemember'
 import PlayerPage from './components/player/PlayerPage'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider } from './components/security/AuthContext'
+import { ThemeProvider } from './components/ThemeContext'
 import AuthWrapper from './components/security/AuthWrapper'
 import './App.css'
 
@@ -36,37 +37,39 @@ function App() {
   }
 
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <AuthWrapper onNavigateToWelcome={navigateToWelcome}>
-          <div className="App">
-            {currentView === 'login' ? (
-              <div style={{padding: '20px', textAlign: 'center'}}>
-                <h2>Please log in to continue</h2>
-                <p>The login modal should appear above this message.</p>
-              </div>
-            ) : currentView === 'welcome' ? (
-              <Welcome 
-                onNavigateToDeepRemember={navigateToDeepRemember}
-                onNavigateToPlayer={navigateToPlayer}
-              />
-            ) : currentView === 'deepremember' ? (
-              <DeepRemember 
-                onNavigateToWelcome={navigateToWelcome}
-                onNavigateToPlayer={navigateToPlayer}
-                showCardsOnMount={showCardsOnMount}
-              />
-            ) : (
-              <PlayerPage 
-                onNavigateToWelcome={navigateToWelcome}
-                onNavigateToPlayer={navigateToPlayer}
-                onNavigateToDeepRemember={navigateToDeepRemember}
-              />
-            )}
-          </div>
-        </AuthWrapper>
-      </AuthProvider>
-    </ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <AuthWrapper onNavigateToWelcome={navigateToWelcome}>
+            <div className="App">
+              {currentView === 'login' ? (
+                <div style={{padding: '20px', textAlign: 'center'}}>
+                  <h2>Please log in to continue</h2>
+                  <p>The login modal should appear above this message.</p>
+                </div>
+              ) : currentView === 'welcome' ? (
+                <Welcome 
+                  onNavigateToDeepRemember={navigateToDeepRemember}
+                  onNavigateToPlayer={navigateToPlayer}
+                />
+              ) : currentView === 'deepremember' ? (
+                <DeepRemember 
+                  onNavigateToWelcome={navigateToWelcome}
+                  onNavigateToPlayer={navigateToPlayer}
+                  showCardsOnMount={showCardsOnMount}
+                />
+              ) : (
+                <PlayerPage 
+                  onNavigateToWelcome={navigateToWelcome}
+                  onNavigateToPlayer={navigateToPlayer}
+                  onNavigateToDeepRemember={navigateToDeepRemember}
+                />
+              )}
+            </div>
+          </AuthWrapper>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   )
 }
 

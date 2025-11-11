@@ -204,3 +204,44 @@
   }
   
 }
+
+/* Light Mode Styles */
+.light-mode .current-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .word-display {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .word-display strong {
+  color: #333;
+}
+
+.light-mode .answer-content {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .translation-section h4 {
+  color: #333;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .translation-text {
+  color: #666;
+}
+
+.light-mode .translation-section.disabled .translation-text {
+  color: #999;
+}
+
+.light-mode .shortcut-item {
+  background: rgba(0, 0, 0, 0.1);
+}

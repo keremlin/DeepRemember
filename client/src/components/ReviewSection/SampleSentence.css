@@ -62,3 +62,20 @@
     gap: 6px;
   }
 }
+
+/* Light Mode Styles */
+.light-mode .context-line {
+  background: rgba(0, 0, 0, 0.05);
+  border-left: 3px solid rgba(102, 126, 234, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .context-line:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-left-color: rgba(102, 126, 234, 0.8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .sentence-text {
+  color: #333;
+}
