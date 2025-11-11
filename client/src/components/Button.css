@@ -1,0 +1,220 @@
+/* Button Component Base Styles */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-decoration: none;
+  outline: none;
+  user-select: none;
+}
+
+.button:focus {
+  outline: 2px solid rgba(102, 126, 234, 0.5);
+  outline-offset: 2px;
+}
+
+.button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button-disabled,
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.button-full-width {
+  width: 100%;
+}
+
+/* Size Variants */
+.button-small {
+  padding: 6px 12px;
+  font-size: 14px;
+  min-height: 32px;
+}
+
+.button-medium {
+  padding: 10px 20px;
+  font-size: 16px;
+  min-height: 40px;
+}
+
+.button-large {
+  padding: 14px 28px;
+  font-size: 18px;
+  min-height: 48px;
+}
+
+/* Variant Styles */
+.button-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+.button-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%);
+}
+
+.button-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.button-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.button-outline {
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.button-outline:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.1);
+  color: #5568d3;
+  border-color: #5568d3;
+}
+
+.button-ghost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: none;
+}
+
+.button-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.button-danger {
+  background: #dc3545;
+  color: #ffffff;
+}
+
+.button-danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.button-success {
+  background: #28a745;
+  color: #ffffff;
+}
+
+.button-success:hover:not(:disabled) {
+  background: #218838;
+}
+
+.button-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.button-warning:hover:not(:disabled) {
+  background: #e0a800;
+}
+
+/* Icon Styling */
+.button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.button-icon-left {
+  margin-right: -4px;
+}
+
+.button-icon-right {
+  margin-left: -4px;
+}
+
+.button-content {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Material Icon Styling */
+.button-icon .material-symbols-outlined {
+  font-size: 18px;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  line-height: 1;
+}
+
+/* Light Mode Support */
+.light-mode .button-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+.light-mode .button-secondary {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333333;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .button-secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.light-mode .button-outline {
+  color: #667eea;
+  border-color: #667eea;
+}
+
+.light-mode .button-ghost {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.light-mode .button-ghost:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .button-small {
+    padding: 5px 10px;
+    font-size: 13px;
+    min-height: 30px;
+  }
+
+  .button-medium {
+    padding: 8px 16px;
+    font-size: 15px;
+    min-height: 38px;
+  }
+
+  .button-large {
+    padding: 12px 24px;
+    font-size: 16px;
+    min-height: 44px;
+  }
+}
+

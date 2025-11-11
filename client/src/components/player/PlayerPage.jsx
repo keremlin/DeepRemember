@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import AudioPlayer from './AudioPlayer'
 import FileUpload from './FileUpload'
 import CloseButton from '../CloseButton'
+import UploadFileButt from './UploadFileButt'
 import Page from '../Page'
 import UserManage from '../header/user/UserManage'
 import { useToast } from '../ToastProvider'
@@ -42,13 +43,9 @@ const PlayerPage = ({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepR
     >
       <div className="player-content">
         <div className="player-header">
-          <button 
-            className="btn-upload-modal"
+          <UploadFileButt 
             onClick={() => setShowUploadModal(true)}
-            title="Upload new files"
-          >
-            📁 Upload Files
-          </button>
+          />
         </div>
         <AudioPlayer ref={audioPlayerRef} />
       </div>

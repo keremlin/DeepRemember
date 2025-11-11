@@ -1,0 +1,16 @@
+/* Upload File Button Styles - Extends Button component */
+
+.btn-upload-modal {
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3) !important;
+}
+
+.btn-upload-modal:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4) !important;
+}
+
+.btn-upload-modal:active:not(:disabled) {
+  transform: translateY(0) !important;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3) !important;
+}
+
