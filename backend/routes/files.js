@@ -134,13 +134,10 @@ router.get('/files/:filename', async (req, res) => {
       
       // Handle range requests (required for seeking in audio/video)
       if (range) {
-        console.log(`[FILE_SERVE] Range request for ${filename}: ${range}`);
         const parts = range.replace(/bytes=/, "").split("-");
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
         const chunksize = (end - start) + 1;
-        
-        console.log(`[FILE_SERVE] Serving range: ${start}-${end} (${chunksize} bytes) of ${fileSize}`);
         
         const file = fs.createReadStream(filePath, { start, end });
         
@@ -158,9 +155,6 @@ router.get('/files/:filename', async (req, res) => {
         file.pipe(res);
       } else {
         // No range request - send entire file
-        // But still send Accept-Ranges header so browser knows range requests are supported
-        console.log(`[FILE_SERVE] Full file request for ${filename} (no range header)`);
-        
         // Use createReadStream instead of sendFile to ensure headers are preserved
         const file = fs.createReadStream(filePath);
         
