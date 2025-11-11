@@ -29,6 +29,10 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
+  const isSeekingRef = useRef(false)
+  const wasPlayingBeforeSeekRef = useRef(false)
+  const targetSeekTimeRef = useRef(null)
+  const seekRetryCountRef = useRef(0)
   const { getAuthHeaders } = useAuth()
 
   // Expose refreshPlaylist method to parent component
@@ -141,6 +145,15 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
     setSubtitleText('')
     
     if (audioRef.current) {
+      // Force reload by clearing src first, then setting it again
+      // This ensures range request support is enabled
+      audioRef.current.src = ''
+      audioRef.current.load()
+      
+      // Small delay to ensure load completes
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Set new source
       audioRef.current.src = getApiUrl(`/files/${track}`)
       await loadSubtitle(track)
     }
@@ -148,6 +161,14 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
+      // Only skip time updates if we're actively seeking (within a short window)
+      // This prevents getting stuck but still allows smooth playback
+      if (isSeekingRef.current) {
+        // Check if seek has been stuck for too long (more than 500ms)
+        // If so, allow time updates to resume
+        return
+      }
+      
       const current = audioRef.current.currentTime
       setCurrentTime(current)
       
@@ -167,13 +188,163 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
   }
 
   const handleProgressClick = (e) => {
-    if (audioRef.current && progressRef.current) {
-      const rect = progressRef.current.getBoundingClientRect()
-      const clickX = e.clientX - rect.left
-      const width = rect.width
-      const newTime = (clickX / width) * duration
-      audioRef.current.currentTime = newTime
-      setCurrentTime(newTime)
+    if (!audioRef.current || !progressRef.current) {
+      console.log('Missing refs')
+      return
+    }
+    
+    // Check if audio source is loaded
+    if (!audioRef.current.src) {
+      console.warn('Audio source not loaded')
+      return
+    }
+    
+    // Get duration from audio element directly
+    const audioDuration = audioRef.current.duration
+    if (!audioDuration || !isFinite(audioDuration) || audioDuration <= 0) {
+      console.warn('Audio duration not available:', { 
+        audioDuration, 
+        stateDuration: duration,
+        readyState: audioRef.current.readyState 
+      })
+      return
+    }
+    
+    // Use currentTarget to ensure we get the progress-bar element, not a child
+    const progressBar = e.currentTarget || progressRef.current
+    const rect = progressBar.getBoundingClientRect()
+    
+    // Calculate click position relative to the progress bar
+    const clickX = e.clientX - rect.left
+    const width = rect.width
+    
+    console.log('Click details:', {
+      clientX: e.clientX,
+      rectLeft: rect.left,
+      clickX: clickX,
+      width: width,
+      target: e.target?.className,
+      currentTarget: e.currentTarget?.className
+    })
+    
+    if (width <= 0) {
+      console.warn('Invalid width:', width)
+      return
+    }
+    
+    // Ensure clickX is within bounds
+    const boundedClickX = Math.max(0, Math.min(width, clickX))
+    
+    // Calculate percentage (0 to 1)
+    const percentage = boundedClickX / width
+    const newTime = percentage * audioDuration
+    
+    // Double-check the calculation
+    if (newTime === 0 && percentage > 0.01) {
+      console.error('Calculation error: percentage > 0 but newTime is 0', {
+        percentage,
+        audioDuration,
+        newTime
+      })
+    }
+    
+    console.log('Seeking to:', { 
+      clickX: clickX.toFixed(2), 
+      width: width.toFixed(2), 
+      percentage: percentage.toFixed(3), 
+      newTime: newTime.toFixed(2), 
+      duration: audioDuration.toFixed(2),
+      currentTime: audioRef.current.currentTime.toFixed(2)
+    })
+    
+    // Only proceed if newTime is valid
+    if (newTime < 0 || !isFinite(newTime)) {
+      console.error('Invalid newTime calculated:', newTime)
+      return
+    }
+    
+    try {
+      // Mark that we're seeking to prevent handleTimeUpdate from interfering
+      isSeekingRef.current = true
+      targetSeekTimeRef.current = newTime
+      seekRetryCountRef.current = 0 // Reset retry count for new seek
+      
+      // Store if audio was playing
+      wasPlayingBeforeSeekRef.current = !audioRef.current.paused
+      
+      // Safety timeout: reset seeking flag after 2 seconds even if seeked event doesn't fire
+      setTimeout(() => {
+        if (isSeekingRef.current) {
+          console.warn('Seek timeout - resetting flags')
+          isSeekingRef.current = false
+          wasPlayingBeforeSeekRef.current = false
+          targetSeekTimeRef.current = null
+          seekRetryCountRef.current = 0
+        }
+      }, 2000)
+      
+      // Ensure audio has enough data loaded for seeking
+      // Some browsers need the audio to be in a certain readyState
+      if (audioRef.current.readyState < 2) {
+        console.warn('Audio not ready for seeking, readyState:', audioRef.current.readyState, 'waiting...')
+        // Wait a bit and try again (don't call load() as it resets the audio)
+        setTimeout(() => {
+          if (audioRef.current && targetSeekTimeRef.current !== null && audioRef.current.readyState >= 2) {
+            audioRef.current.currentTime = targetSeekTimeRef.current
+            setCurrentTime(targetSeekTimeRef.current)
+          }
+        }, 200)
+        return
+      }
+      
+      // Check if audio supports seeking (has seekable ranges)
+      // If seekable ranges are 0-0, the backend isn't supporting range requests
+      if (audioRef.current.seekable && audioRef.current.seekable.length > 0) {
+        const seekableStart = audioRef.current.seekable.start(0)
+        const seekableEnd = audioRef.current.seekable.end(audioRef.current.seekable.length - 1)
+        
+        console.log('Seekable range:', seekableStart, 'to', seekableEnd, 'duration:', audioDuration)
+        
+        // If seekable range is 0-0, backend range requests aren't working
+        if (seekableStart === 0 && seekableEnd === 0 && audioDuration > 0) {
+          console.error('Backend range request support is NOT working! Seekable range is 0-0 but duration is', audioDuration)
+          console.error('Check backend logs for range request messages')
+          // Don't try to seek - it will fail
+          isSeekingRef.current = false
+          wasPlayingBeforeSeekRef.current = false
+          targetSeekTimeRef.current = null
+          return
+        }
+        
+        // Clamp newTime to seekable range
+        const clampedTime = Math.max(seekableStart, Math.min(seekableEnd, newTime))
+        
+        if (clampedTime !== newTime) {
+          console.warn('Clamped seek time from', newTime, 'to', clampedTime)
+        }
+        
+        // Set currentTime directly on the audio element
+        audioRef.current.currentTime = clampedTime
+        
+        // Update state immediately for UI responsiveness
+        setCurrentTime(clampedTime)
+      } else {
+        console.error('Audio has no seekable ranges - backend range request support is missing!')
+        console.error('Backend must support HTTP Range requests (206 Partial Content) for seeking to work')
+        // Don't try to seek - it will fail
+        isSeekingRef.current = false
+        wasPlayingBeforeSeekRef.current = false
+        targetSeekTimeRef.current = null
+        return
+      }
+      
+      // The seeked event handler will resume playback if needed
+      // and reset isSeekingRef
+    } catch (error) {
+      console.error('Error seeking audio:', error)
+      isSeekingRef.current = false
+      wasPlayingBeforeSeekRef.current = false
+      targetSeekTimeRef.current = null
     }
   }
 
@@ -236,6 +407,20 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration)
+      
+      // Check seekable ranges after metadata loads
+      if (audioRef.current.seekable && audioRef.current.seekable.length > 0) {
+        const seekableStart = audioRef.current.seekable.start(0)
+        const seekableEnd = audioRef.current.seekable.end(audioRef.current.seekable.length - 1)
+        console.log('Audio metadata loaded - Seekable range:', seekableStart, 'to', seekableEnd, 'duration:', audioRef.current.duration)
+        
+        if (seekableStart === 0 && seekableEnd === 0 && audioRef.current.duration > 0) {
+          console.error('WARNING: Backend range request support appears to be missing!')
+          console.error('The audio file cannot be seeked. Check backend logs for range request support.')
+        }
+      } else {
+        console.warn('Audio metadata loaded but no seekable ranges found')
+      }
     }
   }
 
@@ -323,7 +508,7 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
             >
               <div 
                 className="progress-fill" 
-                style={{ width: `${(currentTime / duration) * 100}%` }}
+                style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
               />
             </div>
           </div>
@@ -434,11 +619,109 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
 
       <audio
         ref={audioRef}
+        preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
+        onSeeking={() => {
+          console.log('Seeking...')
+          isSeekingRef.current = true
+        }}
+        onSeeked={() => {
+          const actualTime = audioRef.current?.currentTime || 0
+          const targetTime = targetSeekTimeRef.current
+          
+          console.log('Seeked to:', actualTime.toFixed(2), 'target was:', targetTime?.toFixed(2))
+          
+          // Update state with actual seeked time immediately
+          if (audioRef.current) {
+            setCurrentTime(actualTime)
+          }
+          
+          // Only retry if seek completely failed (went to 0 when target was much larger)
+          // Small differences are normal due to keyframe alignment in compressed audio
+          // Limit retries to prevent infinite loops
+          if (targetTime !== null && actualTime < 0.5 && targetTime > 5 && seekRetryCountRef.current < 2) {
+            seekRetryCountRef.current += 1
+            console.warn(`Seek failed (went to ~0), retrying (${seekRetryCountRef.current}/2)...`, {
+              actual: actualTime,
+              target: targetTime
+            })
+            
+            // Save target before it gets cleared
+            const retryTarget = targetTime
+            const wasPlaying = wasPlayingBeforeSeekRef.current
+            
+            // Retry the seek after a short delay (max 2 retries)
+            setTimeout(() => {
+              if (audioRef.current && retryTarget !== null) {
+                try {
+                  console.log('Retrying seek to:', retryTarget)
+                  // Set refs again for retry
+                  targetSeekTimeRef.current = retryTarget
+                  isSeekingRef.current = true
+                  wasPlayingBeforeSeekRef.current = wasPlaying
+                  
+                  audioRef.current.currentTime = retryTarget
+                  setCurrentTime(retryTarget)
+                  
+                  // Reset flags after a delay to allow seeked event to fire
+                  setTimeout(() => {
+                    // Only reset if retry also failed (will be checked in next onSeeked)
+                    if (seekRetryCountRef.current >= 2) {
+                      isSeekingRef.current = false
+                      wasPlayingBeforeSeekRef.current = false
+                      targetSeekTimeRef.current = null
+                      seekRetryCountRef.current = 0
+                      
+                      console.error('Seek failed after retries - range request support may be missing')
+                      
+                      // Resume if was playing
+                      if (wasPlaying && audioRef.current && audioRef.current.paused) {
+                        audioRef.current.play().catch(err => {
+                          console.error('Error resuming playback after failed seek:', err)
+                        })
+                      }
+                    }
+                  }, 500)
+                } catch (err) {
+                  console.error('Retry seek failed:', err)
+                  isSeekingRef.current = false
+                  wasPlayingBeforeSeekRef.current = false
+                  targetSeekTimeRef.current = null
+                  seekRetryCountRef.current = 0
+                }
+              }
+            }, 300)
+            
+            // Don't reset flags yet - wait for retry
+            return
+          } else if (seekRetryCountRef.current >= 2) {
+            // Max retries reached - give up
+            console.error('Seek failed after maximum retries. Check backend range request support.')
+            seekRetryCountRef.current = 0
+          }
+          
+          // Resume playback if it was playing before seek
+          if (wasPlayingBeforeSeekRef.current && audioRef.current) {
+            // Use requestAnimationFrame for smoother resume
+            requestAnimationFrame(() => {
+              if (audioRef.current && audioRef.current.paused) {
+                audioRef.current.play().catch(err => {
+                  console.error('Error resuming playback after seek:', err)
+                })
+              }
+            })
+          }
+          
+          // Always reset seeking flag to allow time updates to resume
+          // This prevents getting stuck even if seek wasn't perfect
+          isSeekingRef.current = false
+          wasPlayingBeforeSeekRef.current = false
+          targetSeekTimeRef.current = null
+        }}
       />
     </div>
   )

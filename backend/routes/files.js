@@ -114,14 +114,68 @@ router.get('/files/:filename', async (req, res) => {
       
       stream.pipe(res);
     } else {
-      // Local filesystem: Use static serving (fallback)
+      // Local filesystem: Use static serving with range request support
+      const fs = require('fs');
       const filePath = path.join(__dirname, '../files', filename);
-      res.sendFile(filePath, (err) => {
-        if (err) {
-          console.error(`[FILE_SERVE] Error serving local file ${filename}:`, err);
-          res.status(404).json({ error: 'File not found' });
-        }
-      });
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      const stat = fs.statSync(filePath);
+      const fileSize = stat.size;
+      const range = req.headers.range;
+      
+      // Set headers
+      res.setHeader('Content-Type', getContentType(filename));
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      
+      // Handle range requests (required for seeking in audio/video)
+      if (range) {
+        console.log(`[FILE_SERVE] Range request for ${filename}: ${range}`);
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const chunksize = (end - start) + 1;
+        
+        console.log(`[FILE_SERVE] Serving range: ${start}-${end} (${chunksize} bytes) of ${fileSize}`);
+        
+        const file = fs.createReadStream(filePath, { start, end });
+        
+        res.status(206); // Partial Content
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+        res.setHeader('Content-Length', chunksize);
+        
+        file.on('error', (err) => {
+          console.error(`[FILE_SERVE] Error reading range for ${filename}:`, err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Error reading file range' });
+          }
+        });
+        
+        file.pipe(res);
+      } else {
+        // No range request - send entire file
+        // But still send Accept-Ranges header so browser knows range requests are supported
+        console.log(`[FILE_SERVE] Full file request for ${filename} (no range header)`);
+        
+        // Use createReadStream instead of sendFile to ensure headers are preserved
+        const file = fs.createReadStream(filePath);
+        
+        res.setHeader('Content-Length', fileSize);
+        res.status(200);
+        
+        file.on('error', (err) => {
+          console.error(`[FILE_SERVE] Error reading file ${filename}:`, err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Error reading file' });
+          }
+        });
+        
+        file.pipe(res);
+      }
     }
   } catch (error) {
     console.error(`[FILE_SERVE] Error serving file ${req.params.filename}:`, error);

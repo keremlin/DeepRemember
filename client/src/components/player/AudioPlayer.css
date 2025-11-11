@@ -95,6 +95,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 4px;
   transition: width 0.1s ease;
+  pointer-events: none;
 }
 
 .progress-bar:hover {
