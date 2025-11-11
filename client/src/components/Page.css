@@ -12,7 +12,8 @@
 .page-body {
   flex: 1;
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1000px;
+  min-width: 1000px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
@@ -24,16 +25,20 @@
   color: #333;
 }
 
-/* Responsive Design */
+/* Responsive Design - Mobile */
 @media (max-width: 768px) {
   .page-body {
     padding: 15px;
+    max-width: 100%;
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
   .page-body {
     padding: 10px;
+    max-width: 100%;
+    width: 100%;
   }
 }
 
