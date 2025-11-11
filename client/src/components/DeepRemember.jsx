@@ -3,7 +3,7 @@ import CreateCardModal from './CreateCardModal'
 import DashboardView from './DashboardView'
 import ManageCards from './ManageCards/ManageCards'
 import HelpDeepRememberModal from './HelpDeepRememberModal'
-import Header from './header/Header'
+import Page from './Page'
 import UserManage from './header/user/UserManage'
 import { useToast } from './ToastProvider'
 import { useAuth } from './security/AuthContext'
@@ -245,37 +245,37 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
   const currentCard = currentCards[currentCardIndex]
 
   return (
-    <div className="deep-remember-container">
-      <Header
-        isCardsView={isCardsView}
-        onUserSetup={() => setShowUserSetup(true)}
-        onToggleCardsView={() => setIsCardsView(!isCardsView)}
-        onNavigateToWelcome={onNavigateToWelcome}
-        onNavigateToPlayer={onNavigateToPlayer}
-        onShowCards={() => setIsCardsView(false)}
-      />
-
-      <div className="content">
-        <div className="srs-container">
-          {!isCardsView ? (
-            <DashboardView
-              currentCards={currentCards}
-              currentCard={currentCard}
-              showAnswer={showAnswer}
-              setShowAnswer={setShowAnswer}
-              answerCard={answerCard}
-              stats={stats}
-              setShowHelp={setShowHelp}
-              setShowCreateCard={setShowCreateCard}
-              onShowManageCards={() => setIsCardsView(true)}
-            />
-          ) : (
-            // Cards Management View
-            <ManageCards 
-              currentUserId={currentUserId}
-              onCardDeleted={loadUserData}
-            />
-          )}
+    <Page
+      isCardsView={isCardsView}
+      onUserSetup={() => setShowUserSetup(true)}
+      onToggleCardsView={() => setIsCardsView(!isCardsView)}
+      onNavigateToWelcome={onNavigateToWelcome}
+      onNavigateToPlayer={onNavigateToPlayer}
+      onShowCards={() => setIsCardsView(false)}
+    >
+      <div className="deep-remember-container">
+        <div className="content">
+          <div className="srs-container">
+            {!isCardsView ? (
+              <DashboardView
+                currentCards={currentCards}
+                currentCard={currentCard}
+                showAnswer={showAnswer}
+                setShowAnswer={setShowAnswer}
+                answerCard={answerCard}
+                stats={stats}
+                setShowHelp={setShowHelp}
+                setShowCreateCard={setShowCreateCard}
+                onShowManageCards={() => setIsCardsView(true)}
+              />
+            ) : (
+              // Cards Management View
+              <ManageCards 
+                currentUserId={currentUserId}
+                onCardDeleted={loadUserData}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -301,7 +301,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
         isOpen={showHelp}
         onClose={() => setShowHelp(false)}
       />
-    </div>
+    </Page>
   )
 }
 

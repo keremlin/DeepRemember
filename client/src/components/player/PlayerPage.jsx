@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react'
 import AudioPlayer from './AudioPlayer'
 import FileUpload from './FileUpload'
 import CloseButton from '../CloseButton'
-import Header from '../header/Header'
+import Page from '../Page'
 import UserManage from '../header/user/UserManage'
 import { useToast } from '../ToastProvider'
 import { useAuth } from '../security/AuthContext'
@@ -32,16 +32,14 @@ const PlayerPage = ({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepR
   }
 
   return (
-    <div className="player-page">
-      <Header
-        isCardsView={false}
-        onUserSetup={() => setShowUserSetup(true)}
-        onToggleCardsView={() => {}}
-        onNavigateToWelcome={onNavigateToWelcome}
-        onNavigateToPlayer={onNavigateToPlayer}
-        onShowCards={() => onNavigateToDeepRemember(true)}
-      />
-      
+    <Page
+      isCardsView={false}
+      onUserSetup={() => setShowUserSetup(true)}
+      onToggleCardsView={() => {}}
+      onNavigateToWelcome={onNavigateToWelcome}
+      onNavigateToPlayer={onNavigateToPlayer}
+      onShowCards={() => onNavigateToDeepRemember(true)}
+    >
       <div className="player-content">
         <div className="player-header">
           <button 
@@ -81,7 +79,7 @@ const PlayerPage = ({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepR
           </div>
         </div>
       )}
-    </div>
+    </Page>
   )
 }
 

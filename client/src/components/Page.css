@@ -1,0 +1,33 @@
+/* Page Template Styles - Dark Theme */
+
+.page-container {
+  min-height: 100vh;
+  background: #1a1a1a;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-body {
+  flex: 1;
+  padding: 20px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .page-body {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-body {
+    padding: 10px;
+  }
+}
+

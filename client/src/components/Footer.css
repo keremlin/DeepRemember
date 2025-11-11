@@ -1,0 +1,56 @@
+/* Footer Component Styles - Dark Theme */
+
+.page-footer {
+  background: #2a2a2a;
+  color: white;
+  border-top: 1px solid #333;
+  padding: 20px;
+  margin-top: auto;
+  text-align: center;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-content p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+  color: #b0b0b0;
+}
+
+.footer-subtitle {
+  font-size: 0.8rem !important;
+  color: #888 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .page-footer {
+    padding: 15px;
+  }
+  
+  .footer-content p {
+    font-size: 0.85rem;
+  }
+  
+  .footer-subtitle {
+    font-size: 0.75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-footer {
+    padding: 12px;
+  }
+  
+  .footer-content p {
+    font-size: 0.8rem;
+  }
+  
+  .footer-subtitle {
+    font-size: 0.7rem !important;
+  }
+}
+
