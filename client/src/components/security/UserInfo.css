@@ -1,65 +1,92 @@
-/* UserInfo Component - Dark Theme */
+/* UserInfo Component - Matching TopMenuButton Style */
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 15px;
 }
 
-.username-display {
+.user-info-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
-  color: white;
-  max-width: 200px;
+  min-width: fit-content;
+  height: 60px;
+  padding: 0 8px;
+  transition: all 0.3s ease;
+  position: relative;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  border-radius: 8px;
 }
 
-.username-display:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+.user-info-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
 }
 
-.username-display span {
-  font-weight: 500;
+.user-info-item:hover::before {
+  left: 100%;
 }
 
-.logout-btn {
+.user-info-item:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.user-info-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.user-info-icon .material-symbols-outlined {
+  font-size: 24px;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.user-info-item:hover .user-info-icon .material-symbols-outlined {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+}
+
+.user-info-label {
+  font-size: 12px;
+  color: #b0b0b0;
+  font-weight: 300;
+  white-space: nowrap;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-info-item:hover .user-info-label {
   color: white;
-}
-
-.logout-btn svg {
-  width: 20px;
-  height: 20px;
-  stroke: currentColor;
-  fill: none;
-}
-
-.logout-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.logout-btn:active {
-  transform: scale(0.95);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }

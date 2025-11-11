@@ -17,18 +17,35 @@ const UserInfo = ({ onUserSetup }) => {
     }
   }
 
+  const getDisplayText = () => {
+    if (!user?.email) return 'Not logged in'
+    const email = user.email
+    // Show first part of email or truncate if too long
+    return email.length > 15 ? email.substring(0, 12) + '...' : email
+  }
+
   return (
     <div className="user-info">
-      <div className="username-display" onClick={handleUserSetup} title={user?.email || 'Not logged in'}>
-        👤 <span>{user?.email || 'Not logged in'}</span>
+      <div 
+        className="user-info-item" 
+        onClick={handleUserSetup} 
+        title={user?.email || 'Not logged in'}
+      >
+        <div className="user-info-icon">
+          <span className="material-symbols-outlined">person</span>
+        </div>
+        <div className="user-info-label">{getDisplayText()}</div>
       </div>
-      <button className="logout-btn" onClick={handleLogout} title="Logout">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-      </button>
+      <div 
+        className="user-info-item logout-item" 
+        onClick={handleLogout} 
+        title="Logout"
+      >
+        <div className="user-info-icon">
+          <span className="material-symbols-outlined">logout</span>
+        </div>
+        <div className="user-info-label">Logout</div>
+      </div>
     </div>
   )
 }
