@@ -24,6 +24,15 @@ router.post('/upload-files', (req, res, next) => {
   const subtitleFile = req.files.subtitleFile ? req.files.subtitleFile[0] : null;
   const generateSubtitle = req.body.generateSubtitle === 'true';
 
+  // Log file information for debugging
+  console.log('[UPLOAD] Media file info:', {
+    originalname: mediaFile.originalname,
+    path: mediaFile.path,
+    size: mediaFile.size,
+    mimetype: mediaFile.mimetype,
+    exists: fs.existsSync(mediaFile.path)
+  });
+
   try {
     if (subtitleFile) {
       // Both files provided
