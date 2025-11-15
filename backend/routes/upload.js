@@ -32,6 +32,14 @@ router.post('/upload-files', (req, res, next) => {
       if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
         // Google Drive flow: Upload both files to Drive
         try {
+          // Verify files exist before reading
+          if (!fs.existsSync(mediaFile.path)) {
+            throw new Error(`Media file not found at ${mediaFile.path}. Upload may have failed.`);
+          }
+          if (!fs.existsSync(subtitleFile.path)) {
+            throw new Error(`Subtitle file not found at ${subtitleFile.path}. Upload may have failed.`);
+          }
+          
           const mediaData = await fs.promises.readFile(mediaFile.path);
           const subData = await fs.promises.readFile(subtitleFile.path);
           const cloudMediaPath = path.posix.join('files', mediaFile.originalname);
@@ -64,6 +72,11 @@ router.post('/upload-files', (req, res, next) => {
         if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
           // Google Drive flow: Upload to Drive first, then process locally
           console.log('[UPLOAD] Google Drive mode: Uploading to Drive first');
+          
+          // Verify file exists before reading
+          if (!fs.existsSync(mediaFile.path)) {
+            throw new Error(`Media file not found at ${mediaFile.path}. Upload may have failed.`);
+          }
           
           // Upload media file to Google Drive
           const mediaData = await fs.promises.readFile(mediaFile.path);
@@ -137,6 +150,11 @@ router.post('/upload-files', (req, res, next) => {
       if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
         // Google Drive flow: Upload media file to Drive
         try {
+          // Verify file exists before reading
+          if (!fs.existsSync(mediaFile.path)) {
+            throw new Error(`Media file not found at ${mediaFile.path}. Upload may have failed.`);
+          }
+          
           const mediaData = await fs.promises.readFile(mediaFile.path);
           const cloudMediaPath = path.posix.join('files', mediaFile.originalname);
           await fileSystem.writeFile(cloudMediaPath, mediaData);
