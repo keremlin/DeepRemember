@@ -6,7 +6,7 @@ import Translator from './Translator'
 import UploadFileButt from './UploadFileButt'
 import './AudioPlayer.css'
 
-const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, ref) => {
+function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref) {
   const { showSuccess, showError } = useToast()
   const [currentTrack, setCurrentTrack] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -673,6 +673,11 @@ const AudioPlayer = forwardRef(({ currentUserId = 'user123', onUploadClick }, re
       />
     </div>
   )
-})
+}
+
+AudioPlayerComponent.displayName = 'AudioPlayer'
+
+const AudioPlayer = forwardRef(AudioPlayerComponent)
+AudioPlayer.displayName = 'AudioPlayer'
 
 export default AudioPlayer

@@ -2,7 +2,7 @@ import React from 'react'
 import Button from '../Button'
 import './UploadFileButt.css'
 
-const UploadFileButt = ({ onClick, disabled = false, ...props }) => {
+function UploadFileButt({ onClick, disabled = false, ...props }) {
   const handleClick = (e) => {
     if (onClick) {
       onClick(e)

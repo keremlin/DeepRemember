@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react'
 import { getApiUrl } from '../../config/api'
 import './FileUpload.css'
 
-const FileUpload = ({ onUploadSuccess, onUploadError }) => {
+function FileUpload({ onUploadSuccess, onUploadError }) {
   const [mediaFile, setMediaFile] = useState(null)
   const [subtitleFile, setSubtitleFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)

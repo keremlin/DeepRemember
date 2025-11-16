@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import CreateCardModal from '../CreateCardModal'
 
-const Translator = ({ 
+function Translator({ 
   showTranslation, 
   setShowTranslation, 
   translationText, 
@@ -9,7 +9,7 @@ const Translator = ({
   isTranslating,
   originalText,
   currentUserId 
-}) => {
+}) {
   const [showCreateCardModal, setShowCreateCardModal] = useState(false)
   
   if (!showTranslation) return null

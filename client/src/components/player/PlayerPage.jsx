@@ -8,7 +8,7 @@ import { useToast } from '../ToastProvider'
 import { useAuth } from '../security/AuthContext'
 import './PlayerPage.css'
 
-const PlayerPage = ({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepRemember, onNavigateToUserManagement }) => {
+function PlayerPage({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepRemember, onNavigateToUserManagement }) {
   const { showSuccess, showError } = useToast()
   const { user } = useAuth()
   const [showUploadModal, setShowUploadModal] = useState(false)

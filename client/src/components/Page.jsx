@@ -3,7 +3,7 @@ import Header from './header/Header'
 import Footer from './Footer'
 import './Page.css'
 
-const Page = ({ 
+function Page({ 
   children,
   // Header props
   isCardsView, 
@@ -14,7 +14,7 @@ const Page = ({
   onShowCards,
   onNavigateToUserManagement,
   isReviewMode
-}) => {
+}) {
   return (
     <div className={`page-container ${isReviewMode ? 'review-mode' : ''}`}>
       <Header
