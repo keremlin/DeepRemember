@@ -112,10 +112,7 @@
   }
   
   .header-right {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
+    display: none; /* Hide UserInfo in header on mobile */
   }
   
   .btn-manage-cards,
@@ -141,7 +138,7 @@
   }
   
   .header-right {
-    gap: 8px;
+    display: none; /* Hide UserInfo in header on mobile */
   }
   
   .btn-manage-cards,
