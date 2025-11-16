@@ -18,7 +18,8 @@ function Translator({
     <div className="translation-display">
       <div className="translation-header">
         <span>
-          🤖 {translationType === 'word' ? 'Word Translation' : 'Sentence Translation'}
+          <span className="material-symbols-outlined">translate</span>
+          {translationType === 'word' ? 'Word Translation' : 'Sentence Translation'}
         </span>
         <div className="translation-actions">
           <button 
@@ -26,7 +27,7 @@ function Translator({
             onClick={() => setShowCreateCardModal(true)}
             title="Add to cards"
           >
-            ➕
+            <span className="material-symbols-outlined">add</span>
           </button>
           <button 
             className="translation-close"

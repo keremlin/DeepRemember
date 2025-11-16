@@ -530,11 +530,13 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
               onClick={handlePlayPause}
               disabled={!currentTrack}
             >
-              {isPlaying ? '⏸️' : '▶️'}
+              <span className="material-symbols-outlined">
+                {isPlaying ? 'pause' : 'play_arrow'}
+              </span>
             </button>
             
             <div className="volume-control">
-              <span>🔊</span>
+              <span className="material-symbols-outlined">volume_up</span>
               <input
                 type="range"
                 min="0"
@@ -547,7 +549,7 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
             </div>
             
             <div className="speed-control">
-              <span>⚡</span>
+              <span className="material-symbols-outlined">speed</span>
               <select 
                 value={playbackRate} 
                 onChange={handlePlaybackRateChange}
@@ -567,7 +569,10 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
 
       {showSubtitleList && (
         <div className="subtitle-panel">
-          <h4>📝 Subtitles</h4>
+          <h4>
+            <span className="material-symbols-outlined">subtitles</span>
+            Subtitles
+          </h4>
           <div className="subtitle-list" ref={subtitleListRef}>
             {subtitleTracks.length > 0 ? (
               subtitleTracks.map((subtitle, index) => (
@@ -603,7 +608,10 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
       {showPlaylist && (
         <div className="playlist-panel">
           <div className="playlist-header">
-            <h4>📁 Playlist</h4>
+            <h4>
+              <span className="material-symbols-outlined">queue_music</span>
+              Playlist
+            </h4>
             {onUploadClick && (
               <UploadFileButt onClick={onUploadClick} />
             )}
