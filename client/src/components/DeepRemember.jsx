@@ -10,7 +10,7 @@ import { useAuth } from './security/AuthContext'
 import { getApiUrl } from '../config/api'
 import './DeepRemember.css'
 
-const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMount = false }) => {
+const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMount = false, onNavigateToUserManagement }) => {
   const { showSuccess, showError, showInfo } = useToast()
   const { user, getAuthHeaders } = useAuth()
   
@@ -252,6 +252,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
       onNavigateToWelcome={onNavigateToWelcome}
       onNavigateToPlayer={onNavigateToPlayer}
       onShowCards={() => setIsCardsView(false)}
+      onNavigateToUserManagement={onNavigateToUserManagement}
     >
       <div className="deep-remember-container">
         <div className="content">

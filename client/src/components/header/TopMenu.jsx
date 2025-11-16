@@ -2,7 +2,7 @@ import React from 'react'
 import TopMenuButton from './TopMenuButton'
 import './TopMenu.css'
 
-const TopMenu = ({ onNavigateToPlayer, onShowCards }) => {
+const TopMenu = ({ onNavigateToPlayer, onShowCards, onNavigateToUserManagement }) => {
   const menuItems = [
     { 
       icon: 'play_circle', 
@@ -18,7 +18,11 @@ const TopMenu = ({ onNavigateToPlayer, onShowCards }) => {
     { icon: 'school', label: 'Courses' },
     { icon: 'description', label: 'Grammar' },
     { icon: 'settings', label: 'Manage' },
-    { icon: 'person', label: 'User' },
+    { 
+      icon: 'person', 
+      label: 'User',
+      onClick: onNavigateToUserManagement
+    },
     { icon: 'chat', label: 'Chat' },
   ]
 

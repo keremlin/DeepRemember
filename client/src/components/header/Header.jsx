@@ -9,7 +9,8 @@ const Header = ({
   onToggleCardsView, 
   onNavigateToWelcome,
   onNavigateToPlayer,
-  onShowCards 
+  onShowCards,
+  onNavigateToUserManagement
 }) => {
   return (
     <>
@@ -25,6 +26,7 @@ const Header = ({
       <TopMenu 
         onNavigateToPlayer={onNavigateToPlayer}
         onShowCards={onShowCards}
+        onNavigateToUserManagement={onNavigateToUserManagement}
       />
     </>
   )

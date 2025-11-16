@@ -11,7 +11,8 @@ const Page = ({
   onToggleCardsView, 
   onNavigateToWelcome,
   onNavigateToPlayer,
-  onShowCards 
+  onShowCards,
+  onNavigateToUserManagement
 }) => {
   return (
     <div className="page-container">
@@ -22,6 +23,7 @@ const Page = ({
         onNavigateToWelcome={onNavigateToWelcome}
         onNavigateToPlayer={onNavigateToPlayer}
         onShowCards={onShowCards}
+        onNavigateToUserManagement={onNavigateToUserManagement}
       />
       
       <main className="page-body">

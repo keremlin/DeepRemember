@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import Welcome from './components/welcome/Welcome'
 import DeepRemember from './components/DeepRemember'
 import PlayerPage from './components/player/PlayerPage'
+import UserManagement from './components/users/UserManagement'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
@@ -36,6 +37,10 @@ function App() {
     setCurrentView('player')
   }
 
+  const navigateToUserManagement = () => {
+    setCurrentView('usermanagement')
+  }
+
   return (
     <ThemeProvider>
       <ToastProvider>
@@ -57,12 +62,22 @@ function App() {
                   onNavigateToWelcome={navigateToWelcome}
                   onNavigateToPlayer={navigateToPlayer}
                   showCardsOnMount={showCardsOnMount}
+                  onNavigateToUserManagement={navigateToUserManagement}
+                />
+              ) : currentView === 'usermanagement' ? (
+                <UserManagement 
+                  onUserSetup={() => {}}
+                  onNavigateToWelcome={navigateToWelcome}
+                  onNavigateToPlayer={navigateToPlayer}
+                  onShowCards={() => navigateToDeepRemember(true)}
+                  onNavigateToUserManagement={navigateToUserManagement}
                 />
               ) : (
                 <PlayerPage 
                   onNavigateToWelcome={navigateToWelcome}
                   onNavigateToPlayer={navigateToPlayer}
                   onNavigateToDeepRemember={navigateToDeepRemember}
+                  onNavigateToUserManagement={navigateToUserManagement}
                 />
               )}
             </div>
