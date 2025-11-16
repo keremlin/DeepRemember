@@ -13,14 +13,14 @@
 
 /* Content and SRS Container */
 .content {
-  padding: 30px;
+  padding: 10px;
   background: #1a1a1a;
 }
 
 .srs-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 7px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -30,27 +30,27 @@
   background: #1a1a1a;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 15px;
-  padding: 30px;
-  margin: 20px 0;
+  padding: 10px;
+  margin: 7px 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   color: white;
 }
 
 /* Review section */
 .review-section {
-  margin-bottom: 30px;
+  margin-bottom: 10px;
 }
 
 .current-card {
   margin: 0;
-  padding: 20px;
+  padding: 7px;
 }
 
 /* Word display styling */
 .word-display {
   text-align: center;
-  margin: 20px 0;
-  padding: 15px;
+  margin: 7px 0;
+  padding: 5px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -61,7 +61,7 @@
   color: #fff;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
   display: block;
-  margin-bottom: 15px;
+  margin-bottom: 5px;
 }
 
 /* Answer button styling */
@@ -69,7 +69,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 12px 30px;
+  padding: 4px 10px;
   border-radius: 25px;
   font-size: 14px;
   font-weight: 600;
@@ -79,7 +79,7 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   width: 100%;
-  margin-top: 10px;
+  margin-top: 3px;
   position: relative;
   display: flex;
   align-items: center;
@@ -123,7 +123,7 @@
 
 /* Answer content styling */
 .answer-content {
-  margin-top: 20px;
+  margin-top: 7px;
   animation: fadeInUp 0.5s ease-out;
 }
 
@@ -142,8 +142,8 @@
 .context-section {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  padding: 20px;
-  margin: 15px 0;
+  padding: 7px;
+  margin: 5px 0;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -152,11 +152,11 @@
 .context-section h4 {
   text-align: center;
   color: #fff;
-  margin: 0 0 10px 0;
+  margin: 0 0 3px 0;
   font-size: 18px;
   font-weight: 500;
   border-bottom: 1px solid rgba(102, 126, 234, 0.3);
-  padding-bottom: 8px;
+  padding-bottom: 3px;
 }
 
 .translation-text {
@@ -167,7 +167,7 @@
   min-height: 4.2em;
   height: 4.2em;
   overflow-y: auto;
-  padding: 8px;
+  padding: 3px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -181,7 +181,7 @@
   line-height: 1.4;
   height: 7em !important;
   overflow-y: auto;
-  padding: 8px;
+  padding: 3px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -200,13 +200,13 @@
 /* Rating buttons */
 .rating-buttons {
   display: flex;
-  gap: 10px;
+  gap: 3px;
   justify-content: center;
-  margin: 20px 0;
+  margin: 7px 0;
 }
 
 .rating-btn {
-  padding: 15px 25px;
+  padding: 5px 8px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -262,14 +262,14 @@
 
 /* Stats section */
 .stats-section {
-  margin-bottom: 30px;
+  margin-bottom: 10px;
 }
 
 .stats-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 3px;
+  margin-bottom: 5px;
 }
 
 .stats-header h3 {
@@ -301,13 +301,13 @@
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin: 20px 0;
+  gap: 5px;
+  margin: 7px 0;
 }
 
 .stat-item {
   background: rgba(255, 255, 255, 0.05);
-  padding: 15px;
+  padding: 5px;
   border-radius: 10px;
   text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -325,12 +325,12 @@
 .stat-label {
   font-size: 0.9rem;
   color: #aaa;
-  margin-top: 5px;
+  margin-top: 2px;
 }
 
 /* Create card button */
 .create-card-button {
-  margin-top: 20px;
+  margin-top: 7px;
   text-align: center;
 }
 
@@ -365,9 +365,9 @@
 .card-item {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 15px;
-  margin-bottom: 10px;
+  gap: 5px;
+  padding: 5px;
+  margin-bottom: 3px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -665,15 +665,15 @@
 /* Responsive design - Tablet */
 @media (max-width: 1024px) {
   .content {
-    padding: 25px;
+    padding: 8px;
   }
   
   .srs-container {
-    padding: 18px;
+    padding: 6px;
   }
   
   .srs-card {
-    padding: 25px;
+    padding: 8px;
   }
 }
 
@@ -684,38 +684,38 @@
   }
   
   .content {
-    padding: 20px 15px;
+    padding: 7px 5px;
   }
   
   .srs-container {
-    padding: 15px;
+    padding: 5px;
   }
   
   .srs-card {
-    padding: 20px;
-    margin: 15px 0;
+    padding: 7px;
+    margin: 5px 0;
   }
   
   .word-display {
-    padding: 12px;
-    margin: 15px 0;
+    padding: 4px;
+    margin: 5px 0;
   }
   
   .word-display strong {
     font-size: 20px;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
   }
   
   .translation-section,
   .context-section {
-    padding: 15px;
-    margin: 12px 0;
+    padding: 5px;
+    margin: 4px 0;
   }
   
   .translation-section h4,
   .context-section h4 {
     font-size: 16px;
-    padding-bottom: 6px;
+    padding-bottom: 2px;
   }
   
   .translation-text {
@@ -732,23 +732,23 @@
   .rating-buttons {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
-    margin: 15px 0;
+    gap: 3px;
+    margin: 5px 0;
   }
   
   .rating-btn {
     width: 100%;
     max-width: none;
-    padding: 12px 20px;
+    padding: 4px 7px;
   }
   
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 4px;
   }
   
   .stat-item {
-    padding: 12px;
+    padding: 4px;
   }
   
   .stat-number {
@@ -762,66 +762,66 @@
   .card-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 3px;
   }
   
   .card-actions {
     align-self: flex-end;
-    margin-top: 5px;
+    margin-top: 2px;
   }
   
   .card-meta {
     flex-direction: column;
-    gap: 8px;
+    gap: 3px;
     align-items: flex-start;
   }
   
   .modal {
     width: 95%;
-    padding: 20px;
+    padding: 7px;
     max-width: 500px;
   }
   
   .answer-btn {
-    padding: 10px 20px;
+    padding: 3px 7px;
     font-size: 13px;
   }
 }
 
 @media (max-width: 480px) {
   .content {
-    padding: 15px 10px;
+    padding: 5px 3px;
   }
   
   .srs-container {
-    padding: 10px;
+    padding: 3px;
   }
   
   .srs-card {
-    padding: 15px;
-    margin: 10px 0;
+    padding: 5px;
+    margin: 3px 0;
   }
   
   .word-display {
-    padding: 10px;
-    margin: 10px 0;
+    padding: 3px;
+    margin: 3px 0;
   }
   
   .word-display strong {
     font-size: 18px;
-    margin-bottom: 10px;
+    margin-bottom: 3px;
   }
   
   .translation-section,
   .context-section {
-    padding: 12px;
-    margin: 10px 0;
+    padding: 4px;
+    margin: 3px 0;
   }
   
   .translation-section h4,
   .context-section h4 {
     font-size: 15px;
-    padding-bottom: 5px;
+    padding-bottom: 2px;
   }
   
   .translation-text {
@@ -837,11 +837,11 @@
   
   .stats-grid {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 3px;
   }
   
   .stat-item {
-    padding: 15px;
+    padding: 5px;
   }
   
   .stat-number {
@@ -850,13 +850,13 @@
   
   .modal {
     width: 98%;
-    padding: 15px;
+    padding: 5px;
     max-width: none;
   }
   
   .modal-buttons {
     flex-direction: column;
-    gap: 8px;
+    gap: 3px;
   }
   
   .btn-modal {
@@ -864,12 +864,12 @@
   }
   
   .answer-btn {
-    padding: 8px 16px;
+    padding: 3px 5px;
     font-size: 12px;
   }
   
   .rating-btn {
-    padding: 10px 15px;
+    padding: 3px 5px;
     min-width: auto;
   }
 }
