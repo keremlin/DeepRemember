@@ -303,7 +303,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
     <div className="modal-overlay" onClick={handleClose}>
       <div className="add-list-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>📝 Add Multiple Cards</h3>
+          <h3><span className="material-symbols-outlined">note_add</span> Add Multiple Cards</h3>
           <CloseButton 
             onClick={handleClose} 
             size="medium" 
@@ -331,7 +331,15 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
                 onClick={processInputText}
                 disabled={!inputText.trim() || isProcessing || isSaving}
               >
-                {isProcessing ? '🔄 Processing...' : '🔍 Process & Translate'}
+                {isProcessing ? (
+                  <>
+                    <span className="material-symbols-outlined">refresh</span> Processing...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">translate</span> Process & Translate
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -354,7 +362,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
           {/* Preview Section */}
           {processedItems.length > 0 && (
             <div className="preview-section">
-              <h4>📋 Preview ({processedItems.length} items)</h4>
+              <h4><span className="material-symbols-outlined">preview</span> Preview ({processedItems.length} items)</h4>
               <div className="preview-items">
                 {processedItems.map((item, index) => (
                   <div key={item.id} className={`preview-item ${item.hasError ? 'error' : ''}`}>
@@ -367,7 +375,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
                           disabled={isSaving || item.isProcessing}
                           title="Refresh translation"
                         >
-                          {item.isProcessing ? '🔄' : '↻'}
+                          <span className="material-symbols-outlined">refresh</span>
                         </button>
                         <button 
                           className="btn-remove-item"
@@ -414,13 +422,13 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
                       
                       {item.isProcessing && (
                         <div className="item-processing">
-                          🔄 Processing...
+                          <span className="material-symbols-outlined">refresh</span> Processing...
                         </div>
                       )}
                       
                       {item.hasError && (
                         <div className="item-error">
-                          ❌ {item.errorMessage}
+                          <span className="material-symbols-outlined">error</span> {item.errorMessage}
                         </div>
                       )}
                     </div>
@@ -444,7 +452,13 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
               onClick={saveAllCards} 
               disabled={processedItems.length === 0 || isSaving || isProcessing}
             >
-              {isSaving ? '💾 Saving...' : `Save ${processedItems.filter(item => !item.hasError).length} Cards`}
+              {isSaving ? (
+                <>
+                  <span className="material-symbols-outlined">save</span> Saving...
+                </>
+              ) : (
+                `Save ${processedItems.filter(item => !item.hasError).length} Cards`
+              )}
             </button>
           </div>
         </div>
