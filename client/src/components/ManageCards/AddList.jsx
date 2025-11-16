@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react'
 import CloseButton from '../CloseButton'
 import { useToast } from '../ToastProvider'
+import { useAuth } from '../security/AuthContext'
 import { getApiUrl } from '../../config/api'
 import './AddList.css'
 
 const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
   const { showSuccess, showError, showWarning, showInfo } = useToast()
+  const { getAuthHeaders } = useAuth()
   
   // Form states
   const [inputText, setInputText] = useState('')
@@ -77,6 +79,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({ word: item.word })
@@ -155,10 +158,10 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
+              ...getAuthHeaders(),
             },
             mode: 'cors',
             body: JSON.stringify({
-              userId: currentUserId,
               word: item.word,
               translation: item.translation,
               context: item.sampleSentence,
@@ -245,6 +248,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({ word: item.word })
