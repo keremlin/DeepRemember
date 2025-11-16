@@ -45,6 +45,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
       word: line,
       translation: '',
       sampleSentence: '',
+      isWord: true, // Default to word
       isProcessing: false,
       hasError: false,
       errorMessage: ''
@@ -97,6 +98,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
           ...item,
           translation: data.translation || 'No translation found',
           sampleSentence: data.sampleSentence || '',
+          isWord: data.isWord !== undefined ? data.isWord : true, // Use isWord from response, default to true
           isProcessing: false,
           hasError: false
         }
@@ -165,7 +167,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
               word: item.word,
               translation: item.translation,
               context: item.sampleSentence,
-              type: 'word' // Default to word type
+              type: item.isWord ? 'word' : 'sentence' // Use isWord to determine type
             })
           })
           
@@ -266,6 +268,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
           ...item,
           translation: data.translation || 'No translation found',
           sampleSentence: data.sampleSentence || '',
+          isWord: data.isWord !== undefined ? data.isWord : true, // Use isWord from response, default to true
           isProcessing: false,
           hasError: false,
           errorMessage: ''
@@ -367,7 +370,15 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
                 {processedItems.map((item, index) => (
                   <div key={item.id} className={`preview-item ${item.hasError ? 'error' : ''}`}>
                     <div className="item-header">
-                      <span className="item-number">#{index + 1}</span>
+                      <div className="item-header-left">
+                        <span className="item-number">#{index + 1}</span>
+                        <span className={`item-tag ${item.isWord ? 'tag-word' : 'tag-sentence'}`}>
+                          <span className="material-symbols-outlined">
+                            {item.isWord ? 'text_fields' : 'article'}
+                          </span>
+                          {item.isWord ? 'Word' : 'Sentence'}
+                        </span>
+                      </div>
                       <div className="item-actions">
                         <button 
                           className="btn-refresh-item"

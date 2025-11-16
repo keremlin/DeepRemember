@@ -33,6 +33,15 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     }
   }
 
+  // Check if card is a word or sentence based on labels
+  const getCardType = (card) => {
+    if (!card.labels || !Array.isArray(card.labels)) {
+      return 'word' // Default to word if no labels
+    }
+    const hasSentenceLabel = card.labels.some(label => label.name === 'sentence')
+    return hasSentenceLabel ? 'sentence' : 'word'
+  }
+
   // Load all cards
   const loadAllCards = async (showAlert = true) => {
     if (!currentUserId) return
@@ -204,7 +213,15 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
             {allCards.map((card, index) => (
               <div key={card.id || index} className="card-item">
                 <div className="card-info">
-                  <div className="card-word">{card.word}</div>
+                  <div className="card-header-top">
+                    <div className="card-word">{card.word}</div>
+                    <span className={`card-tag ${getCardType(card) === 'word' ? 'tag-word' : 'tag-sentence'}`}>
+                      <span className="material-symbols-outlined">
+                        {getCardType(card) === 'word' ? 'text_fields' : 'article'}
+                      </span>
+                      {getCardType(card) === 'word' ? 'Word' : 'Sentence'}
+                    </span>
+                  </div>
                   <div className="card-translation">{card.translation}</div>
                   <div className="card-context">{formatContext(card.context)}</div>
                   <div className="card-meta">

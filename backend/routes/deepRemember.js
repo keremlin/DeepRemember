@@ -396,7 +396,7 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
             return res.status(400).json({ error: 'word is required' });
         }
 
-        const prompt = `answer in this format {"translation":"string", "phrase":"phrase", "sampleSentecesOfThisWord":["stringSentence01","stringSentence02","StringSentence03"]} , what is the translation of "${word}" and make some simple sentences in German with this word. Also `;
+        const prompt = `answer in this format {"translation":"string", "phrase":"phrase", "isWord":"boolean", "sampleSentecesOfThisWord":["stringSentence01","stringSentence02","StringSentence03"]} , what is the translation of "${word}" and make some simple sentences in German with this word. Also `;
         
         console.log('[DeepRemember] Sending prompt to Ollama:', prompt);
         
@@ -405,6 +405,7 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
         
         let translation = 'No translation found.';
         let sampleSentence = '';
+        let isWord = true; // Default to word if not specified
         
         if (data.response) {
             try {
@@ -420,7 +421,16 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
                         // Fallback for single sentence or old format
                         sampleSentence = parsed.sampleSenteceOfThisWord || parsed.sampleSentenceOfThisWord || '';
                     }
+                    // Parse isWord field - handle both string 'true'/'false' and boolean
+                    if (parsed.isWord !== undefined) {
+                        if (typeof parsed.isWord === 'string') {
+                            isWord = parsed.isWord.toLowerCase() === 'true';
+                        } else {
+                            isWord = Boolean(parsed.isWord);
+                        }
+                    }
                     console.log('[DeepRemember] Extracted sample sentence:', sampleSentence);
+                    console.log('[DeepRemember] Extracted isWord:', isWord);
                 }
             } catch (e) {
                 console.error('[DeepRemember] JSON parse error:', e);
@@ -431,7 +441,8 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
             success: true, 
             translation: translation,
             phrase: word,
-            sampleSentence: sampleSentence
+            sampleSentence: sampleSentence,
+            isWord: isWord
         };
         
         console.log('[DeepRemember] Sending result to frontend:', result);
