@@ -54,6 +54,40 @@
   font-size: 0.9rem;
 }
 
+.time-display-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.time-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  width: 80px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.2);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+.time-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 /* Subtitle Display */
 .subtitle-display {
   min-height: 80px;
@@ -122,24 +156,52 @@
 
 .progress-bar {
   width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  transition: background 0.2s ease;
+}
+
+.progress-bar:hover {
+  background: rgba(255, 255, 255, 0.2);
+  height: 8px;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 4px;
-  transition: width 0.1s ease;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  transition: width 0.1s linear;
   pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
-.progress-bar:hover {
-  background: rgba(255, 255, 255, 0.15);
+.progress-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 3px solid #667eea;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.progress-bar:hover .progress-handle {
+  opacity: 1;
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.5);
 }
 
 /* Control Buttons */
@@ -458,6 +520,16 @@
     font-size: 0.85rem;
   }
   
+  .time-display-container {
+    gap: 8px;
+  }
+  
+  .time-input {
+    width: 70px;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+  }
+  
   .subtitle-display {
     min-height: 60px;
     height: auto;
@@ -473,6 +545,24 @@
   
   .progress-container {
     margin-bottom: 15px;
+  }
+  
+  .progress-bar {
+    height: 5px;
+  }
+  
+  .progress-bar:hover {
+    height: 6px;
+  }
+  
+  .progress-handle {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .progress-bar:hover .progress-handle {
+    width: 16px;
+    height: 16px;
   }
   
   .control-buttons {
@@ -560,6 +650,17 @@
     font-size: 0.8rem;
   }
   
+  .time-display-container {
+    gap: 6px;
+    flex-direction: column;
+  }
+  
+  .time-input {
+    width: 65px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+  
   .subtitle-display {
     min-height: 60px;
     height: auto;
@@ -571,6 +672,28 @@
     font-size: 0.85rem;
     padding: 6px;
     line-height: 1.4;
+  }
+  
+  .progress-container {
+    margin-bottom: 12px;
+  }
+  
+  .progress-bar {
+    height: 4px;
+  }
+  
+  .progress-bar:hover {
+    height: 5px;
+  }
+  
+  .progress-handle {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .progress-bar:hover .progress-handle {
+    width: 14px;
+    height: 14px;
   }
   
   .control-buttons {
@@ -674,6 +797,22 @@
   color: #666;
 }
 
+.light-mode .time-input {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: #333;
+}
+
+.light-mode .time-input:focus {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.15);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.light-mode .time-input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
 .light-mode .subtitle-display {
   background: rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -689,11 +828,21 @@
 }
 
 .light-mode .progress-bar {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .light-mode .progress-bar:hover {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.light-mode .progress-handle {
+  background: #fff;
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .progress-bar:hover .progress-handle {
+  box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
 }
 
 .light-mode .speed-select {

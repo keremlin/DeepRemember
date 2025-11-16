@@ -26,6 +26,8 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
   const [isTranslating, setIsTranslating] = useState(false)
   const [translationType, setTranslationType] = useState('') // 'word' or 'sentence'
   const [originalText, setOriginalText] = useState('')
+  const [timeInput, setTimeInput] = useState('0:00')
+  const [isTimeInputFocused, setIsTimeInputFocused] = useState(false)
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
@@ -120,6 +122,38 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
+  const formatTimeForInput = (time) => {
+    const hours = Math.floor(time / 3600)
+    const minutes = Math.floor((time % 3600) / 60)
+    const seconds = Math.floor(time % 60)
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  const parseTimeInput = (timeString) => {
+    // Handle formats: M:SS, MM:SS, H:MM:SS, HH:MM:SS
+    const parts = timeString.split(':').map(part => parseInt(part.trim()) || 0)
+    
+    if (parts.length === 2) {
+      // MM:SS format
+      return parts[0] * 60 + parts[1]
+    } else if (parts.length === 3) {
+      // HH:MM:SS format
+      return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    }
+    return 0
+  }
+
+  // Update time input when currentTime changes (only if not focused)
+  useEffect(() => {
+    if (!isTimeInputFocused && audioRef.current) {
+      setTimeInput(formatTimeForInput(currentTime))
+    }
+  }, [currentTime, isTimeInputFocused])
+
   const handlePlayPause = () => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -136,6 +170,7 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
     setCurrentTime(0)
     setCurrentSubtitleIndex(-1)
     setSubtitleText('')
+    setTimeInput('0:00')
     
     if (audioRef.current) {
       // Force reload by clearing src first, then setting it again
@@ -180,27 +215,58 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
     }
   }
 
+  const handleTimeInputChange = (e) => {
+    setTimeInput(e.target.value)
+  }
+
+  const handleTimeInputBlur = () => {
+    setIsTimeInputFocused(false)
+    if (audioRef.current && duration > 0) {
+      const newTime = parseTimeInput(timeInput)
+      const clampedTime = Math.max(0, Math.min(duration, newTime))
+      
+      if (!isNaN(clampedTime) && isFinite(clampedTime)) {
+        try {
+          isSeekingRef.current = true
+          targetSeekTimeRef.current = clampedTime
+          wasPlayingBeforeSeekRef.current = !audioRef.current.paused
+          
+          if (audioRef.current.readyState >= 2) {
+            audioRef.current.currentTime = clampedTime
+            setCurrentTime(clampedTime)
+            setTimeInput(formatTimeForInput(clampedTime))
+          } else {
+            setTimeout(() => {
+              if (audioRef.current && targetSeekTimeRef.current !== null) {
+                audioRef.current.currentTime = clampedTime
+                setCurrentTime(clampedTime)
+                setTimeInput(formatTimeForInput(clampedTime))
+              }
+            }, 200)
+          }
+        } catch (error) {
+          console.error('Error seeking to time:', error)
+        }
+      } else {
+        // Reset to current time if invalid
+        setTimeInput(formatTimeForInput(currentTime))
+      }
+    }
+  }
+
+  const handleTimeInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.target.blur()
+    }
+  }
+
   const handleProgressClick = (e) => {
-    if (!audioRef.current || !progressRef.current) {
+    if (!audioRef.current || !progressRef.current || !duration) {
       return
     }
     
-    // Check if audio source is loaded
-    if (!audioRef.current.src) {
-      return
-    }
-    
-    // Get duration from audio element directly
-    const audioDuration = audioRef.current.duration
-    if (!audioDuration || !isFinite(audioDuration) || audioDuration <= 0) {
-      return
-    }
-    
-    // Use currentTarget to ensure we get the progress-bar element, not a child
     const progressBar = e.currentTarget || progressRef.current
     const rect = progressBar.getBoundingClientRect()
-    
-    // Calculate click position relative to the progress bar
     const clickX = e.clientX - rect.left
     const width = rect.width
     
@@ -208,76 +274,35 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
       return
     }
     
-    // Ensure clickX is within bounds
-    const boundedClickX = Math.max(0, Math.min(width, clickX))
+    const percentage = Math.max(0, Math.min(1, clickX / width))
+    const newTime = percentage * duration
     
-    // Calculate percentage (0 to 1)
-    const percentage = boundedClickX / width
-    const newTime = percentage * audioDuration
-    
-    // Only proceed if newTime is valid
-    if (newTime < 0 || !isFinite(newTime)) {
-      return
-    }
-    
-    try {
-      // Mark that we're seeking to prevent handleTimeUpdate from interfering
-      isSeekingRef.current = true
-      targetSeekTimeRef.current = newTime
-      seekRetryCountRef.current = 0 // Reset retry count for new seek
-      
-      // Store if audio was playing
-      wasPlayingBeforeSeekRef.current = !audioRef.current.paused
-      
-      // Safety timeout: reset seeking flag after 2 seconds even if seeked event doesn't fire
-      setTimeout(() => {
-        if (isSeekingRef.current) {
-          isSeekingRef.current = false
-          wasPlayingBeforeSeekRef.current = false
-          targetSeekTimeRef.current = null
-          seekRetryCountRef.current = 0
+    if (!isNaN(newTime) && isFinite(newTime) && newTime >= 0) {
+      try {
+        isSeekingRef.current = true
+        targetSeekTimeRef.current = newTime
+        wasPlayingBeforeSeekRef.current = !audioRef.current.paused
+        
+        // Update time input immediately
+        const formattedTime = formatTimeForInput(newTime)
+        setTimeInput(formattedTime)
+        setCurrentTime(newTime)
+        
+        if (audioRef.current.readyState >= 2) {
+          audioRef.current.currentTime = newTime
+        } else {
+          setTimeout(() => {
+            if (audioRef.current && targetSeekTimeRef.current !== null) {
+              audioRef.current.currentTime = newTime
+            }
+          }, 200)
         }
-      }, 2000)
-      
-      // Ensure audio has enough data loaded for seeking
-      if (audioRef.current.readyState < 2) {
-        setTimeout(() => {
-          if (audioRef.current && targetSeekTimeRef.current !== null && audioRef.current.readyState >= 2) {
-            audioRef.current.currentTime = targetSeekTimeRef.current
-            setCurrentTime(targetSeekTimeRef.current)
-          }
-        }, 200)
-        return
-      }
-      
-      // Check if audio supports seeking (has seekable ranges)
-      if (audioRef.current.seekable && audioRef.current.seekable.length > 0) {
-        const seekableStart = audioRef.current.seekable.start(0)
-        const seekableEnd = audioRef.current.seekable.end(audioRef.current.seekable.length - 1)
-        
-        // Clamp newTime to seekable range
-        const clampedTime = Math.max(seekableStart, Math.min(seekableEnd, newTime))
-        
-        // Set currentTime directly on the audio element
-        audioRef.current.currentTime = clampedTime
-        
-        // Update state immediately for UI responsiveness
-        setCurrentTime(clampedTime)
-      } else {
-        // No seekable ranges - can't seek
+      } catch (error) {
+        console.error('Error seeking audio:', error)
         isSeekingRef.current = false
         wasPlayingBeforeSeekRef.current = false
         targetSeekTimeRef.current = null
-        return
       }
-      
-      // The seeked event handler will resume playback if needed
-      // and reset isSeekingRef
-    } catch (error) {
-      console.error('Error seeking audio:', error)
-      isSeekingRef.current = false
-      wasPlayingBeforeSeekRef.current = false
-      targetSeekTimeRef.current = null
     }
   }
 
@@ -340,6 +365,7 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration)
+      setTimeInput(formatTimeForInput(0))
     }
   }
 
@@ -348,6 +374,7 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
     setCurrentTime(0)
     setSubtitleText('')
     setCurrentSubtitleIndex(-1)
+    setTimeInput('0:00')
   }
 
   // Auto-scroll subtitle list to keep active subtitle centered
@@ -405,7 +432,20 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
         <div className="player-info">
           <div className="track-info">
             <h3>{currentTrack || 'No track selected'}</h3>
-            <p>{formatTime(currentTime)} / {formatTime(duration)}</p>
+            <div className="time-display-container">
+              <p>{formatTime(currentTime)} / {formatTime(duration)}</p>
+              <input
+                type="text"
+                className="time-input"
+                value={timeInput}
+                onChange={handleTimeInputChange}
+                onBlur={handleTimeInputBlur}
+                onFocus={() => setIsTimeInputFocused(true)}
+                onKeyDown={handleTimeInputKeyDown}
+                placeholder="0:00"
+                title="Enter time to seek (MM:SS or HH:MM:SS)"
+              />
+            </div>
           </div>
           
           <div className="subtitle-display">
@@ -449,7 +489,7 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
             )}
             {!subtitleText && (
               <div className="current-subtitle">
-                No subtitle available or playing
+                -
               </div>
             )}
           </div>
@@ -476,6 +516,10 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
               <div 
                 className="progress-fill" 
                 style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+              />
+              <div 
+                className="progress-handle"
+                style={{ left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
               />
             </div>
           </div>
