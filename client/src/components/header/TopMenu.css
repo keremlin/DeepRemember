@@ -139,6 +139,96 @@
   scrollbar-width: none;
 }
 
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .top-menu {
+    padding: 0 18px;
+  }
+  
+  .top-menu-item {
+    padding: 0 6px;
+  }
+  
+  .top-menu-icon .material-symbols-outlined {
+    font-size: 22px;
+  }
+  
+  .top-menu-label {
+    font-size: 11px;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .top-menu {
+    padding: 0 15px;
+    height: 55px;
+  }
+  
+  .top-menu-container {
+    gap: 15px;
+  }
+  
+  .top-menu-item {
+    padding: 0 5px;
+    min-width: 50px;
+  }
+  
+  .top-menu-icon {
+    margin-bottom: 3px;
+  }
+  
+  .top-menu-icon .material-symbols-outlined {
+    font-size: 20px;
+  }
+  
+  .top-menu-label {
+    font-size: 10px;
+  }
+  
+  .top-menu-scroll-button {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-menu {
+    padding: 0 10px;
+    height: 50px;
+  }
+  
+  .top-menu-container {
+    gap: 10px;
+  }
+  
+  .top-menu-item {
+    padding: 0 4px;
+    min-width: 45px;
+  }
+  
+  .top-menu-icon {
+    margin-bottom: 2px;
+  }
+  
+  .top-menu-icon .material-symbols-outlined {
+    font-size: 18px;
+  }
+  
+  .top-menu-label {
+    font-size: 9px;
+  }
+  
+  .top-menu-scroll-button {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .top-menu-scroll-button span {
+    font-size: 10px;
+  }
+}
+
 /* Light Mode Styles */
 .light-mode .top-menu {
   background: #f5f5f5;

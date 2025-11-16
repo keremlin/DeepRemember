@@ -21,6 +21,8 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* SRS Card styles - Dark Theme */
@@ -660,50 +662,215 @@
 }
 
 
-/* Responsive design */
+/* Responsive design - Tablet */
+@media (max-width: 1024px) {
+  .content {
+    padding: 25px;
+  }
+  
+  .srs-container {
+    padding: 18px;
+  }
+  
+  .srs-card {
+    padding: 25px;
+  }
+}
+
+/* Responsive design - Mobile */
 @media (max-width: 768px) {
   .deep-remember-container {
     border-radius: 15px;
   }
   
+  .content {
+    padding: 20px 15px;
+  }
+  
+  .srs-container {
+    padding: 15px;
+  }
+  
+  .srs-card {
+    padding: 20px;
+    margin: 15px 0;
+  }
+  
+  .word-display {
+    padding: 12px;
+    margin: 15px 0;
+  }
+  
+  .word-display strong {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  
+  .translation-section,
+  .context-section {
+    padding: 15px;
+    margin: 12px 0;
+  }
+  
+  .translation-section h4,
+  .context-section h4 {
+    font-size: 16px;
+    padding-bottom: 6px;
+  }
+  
+  .translation-text {
+    font-size: 14px;
+    min-height: 3.5em;
+    height: 3.5em;
+  }
+  
+  .context-text {
+    font-size: 13px;
+    height: 6em;
+  }
   
   .rating-buttons {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    gap: 8px;
+    margin: 15px 0;
   }
   
   .rating-btn {
     width: 100%;
-    max-width: 200px;
+    max-width: none;
+    padding: 12px 20px;
   }
   
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .stat-item {
+    padding: 12px;
+  }
+  
+  .stat-number {
+    font-size: 1.8rem;
+  }
+  
+  .stat-label {
+    font-size: 0.85rem;
   }
   
   .card-item {
     flex-direction: column;
     align-items: flex-start;
+    gap: 10px;
   }
   
   .card-actions {
     align-self: flex-end;
+    margin-top: 5px;
+  }
+  
+  .card-meta {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
   }
   
   .modal {
     width: 95%;
     padding: 20px;
+    max-width: 500px;
   }
   
+  .answer-btn {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 480px) {
+  .content {
+    padding: 15px 10px;
+  }
+  
+  .srs-container {
+    padding: 10px;
+  }
+  
+  .srs-card {
+    padding: 15px;
+    margin: 10px 0;
+  }
+  
+  .word-display {
+    padding: 10px;
+    margin: 10px 0;
+  }
+  
+  .word-display strong {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .translation-section,
+  .context-section {
+    padding: 12px;
+    margin: 10px 0;
+  }
+  
+  .translation-section h4,
+  .context-section h4 {
+    font-size: 15px;
+    padding-bottom: 5px;
+  }
+  
+  .translation-text {
+    font-size: 13px;
+    min-height: 3em;
+    height: 3em;
+  }
+  
+  .context-text {
+    font-size: 12px;
+    height: 5em;
+  }
+  
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .stat-item {
+    padding: 15px;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+  
+  .modal {
+    width: 98%;
+    padding: 15px;
+    max-width: none;
   }
   
   .modal-buttons {
     flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-modal {
+    width: 100%;
+  }
+  
+  .answer-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+  
+  .rating-btn {
+    padding: 10px 15px;
+    min-width: auto;
   }
 }
 

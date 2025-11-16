@@ -298,67 +298,180 @@
   transform: scale(0.95);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
   .manage-cards-container {
-    padding: 0 10px;
+    max-width: 100%;
   }
   
   .manage-cards-container .srs-card {
-    padding: 20px;
+    padding: 22px;
+  }
+  
+  .cards-header h3 {
+    font-size: 1.4rem;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .manage-cards-container {
+    padding: 0;
+    max-width: 100%;
+  }
+  
+  .manage-cards-container .srs-card {
+    padding: 18px;
+    border-radius: 12px;
   }
   
   .cards-header {
     flex-direction: column;
     gap: 15px;
-    align-items: flex-start;
+    align-items: stretch;
+    padding-bottom: 12px;
+    margin-bottom: 15px;
+  }
+  
+  .cards-header h3 {
+    font-size: 1.3rem;
+    margin: 0;
   }
   
   .header-actions {
     width: 100%;
     justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .btn-add-list {
+    flex: 1;
+    min-width: auto;
+  }
+  
+  .btn-refresh {
+    min-width: 40px;
   }
   
   .card-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+    padding: 12px;
+  }
+  
+  .card-info {
+    width: 100%;
+  }
+  
+  .card-word {
+    font-size: 17px;
+  }
+  
+  .card-translation {
+    font-size: 15px;
+  }
+  
+  .card-context {
+    font-size: 13px;
   }
   
   .card-actions {
     align-self: flex-end;
-    margin-top: 10px;
+    margin-top: 5px;
+    width: 100%;
+    justify-content: flex-end;
   }
   
   .card-meta {
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
+    width: 100%;
   }
   
   .all-cards {
     max-height: 500px;
+  }
+  
+  .loading-message,
+  .no-cards-message,
+  .no-user-message {
+    padding: 30px 15px;
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
   .manage-cards-container .srs-card {
     padding: 15px;
+    border-radius: 10px;
+  }
+  
+  .cards-header {
+    gap: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .cards-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-add-list,
+  .btn-refresh {
+    width: 100%;
+    min-width: auto;
   }
   
   .card-item {
-    padding: 12px;
+    padding: 10px;
   }
   
   .card-word {
     font-size: 16px;
+    margin-bottom: 4px;
   }
   
   .card-translation {
     font-size: 14px;
+    margin-bottom: 4px;
   }
   
   .card-context {
-    font-size: 13px;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .card-state {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  
+  .card-due {
+    font-size: 11px;
+  }
+  
+  .btn-edit,
+  .btn-delete {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+  
+  .all-cards {
+    max-height: 400px;
+  }
+  
+  .loading-message,
+  .no-cards-message,
+  .no-user-message {
+    padding: 25px 10px;
+    font-size: 0.95rem;
   }
 }

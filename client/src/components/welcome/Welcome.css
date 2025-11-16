@@ -73,6 +73,36 @@
 }
 
 /* Mobile First Responsive Design */
+/* Base styles are for mobile (already defined above) */
+
+/* Small mobile devices */
+@media (max-width: 360px) {
+  .welcome-page {
+    padding: 12px;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .welcome-header {
+    margin-bottom: 20px;
+  }
+  
+  .welcome-footer {
+    margin-top: 20px;
+  }
+  
+  .welcome-footer p {
+    font-size: 0.7rem;
+  }
+}
+
+/* Tablet */
 @media (min-width: 481px) and (max-width: 768px) {
   .welcome-page {
     padding: 18px;
@@ -99,6 +129,7 @@
   }
 }
 
+/* Desktop */
 @media (min-width: 769px) {
   .welcome-page {
     padding: 20px;

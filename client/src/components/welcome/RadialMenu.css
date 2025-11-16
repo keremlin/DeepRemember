@@ -208,10 +208,88 @@
 }
 
 /* Mobile First Responsive Design */
-@media (max-width: 480px) {
+/* Very small mobile devices */
+@media (max-width: 360px) {
+  .radial-menu-container {
+    padding: 12px;
+    padding-top: 50px;
+    height: 400px;
+  }
+  
+  .radial-menu {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .menu-button {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .menu-button svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .center-button {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .center-button svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .menu-label {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+  
+  /* Adjust label positions for smaller menu */
+  .menu-item:nth-child(2) .menu-label {
+    top: -35px;
+  }
+  
+  .menu-item:nth-child(3) .menu-label {
+    top: -25px;
+    left: 70px;
+  }
+  
+  .menu-item:nth-child(4) .menu-label {
+    left: 70px;
+  }
+  
+  .menu-item:nth-child(5) .menu-label {
+    top: 70px;
+    left: 70px;
+  }
+  
+  .menu-item:nth-child(6) .menu-label {
+    top: 70px;
+  }
+  
+  .menu-item:nth-child(7) .menu-label {
+    top: 70px;
+    left: 15px;
+  }
+  
+  .menu-item:nth-child(8) .menu-label {
+    left: -70px;
+  }
+  
+  .menu-item:nth-child(9) .menu-label {
+    top: -25px;
+    left: 15px;
+  }
+}
+
+/* Small mobile devices */
+@media (min-width: 361px) and (max-width: 480px) {
   .radial-menu-container {
     padding: 15px;
     padding-top: 60px;
+    height: 450px;
   }
   
   .radial-menu {
@@ -245,10 +323,12 @@
   }
 }
 
+/* Tablet */
 @media (min-width: 481px) and (max-width: 768px) {
   .radial-menu-container {
     padding: 18px;
     padding-top: 70px;
+    height: 480px;
   }
   
   .radial-menu {
@@ -282,10 +362,12 @@
   }
 }
 
+/* Desktop */
 @media (min-width: 769px) {
   .radial-menu-container {
     padding: 20px;
     padding-top: 80px;
+    height: 500px;
   }
   
   .radial-menu {

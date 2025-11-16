@@ -191,18 +191,138 @@
   }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  /* Rating button styles moved to ReviewButt.css */
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .current-card {
+    padding: 22px;
+  }
+  
+  .word-display strong {
+    font-size: 1.6rem;
+  }
+  
+  .translation-text {
+    font-size: 1.1rem;
+  }
   
   .answer-content {
-    min-height: 180px; /* Slightly smaller on mobile */
+    min-height: 400px;
   }
   
   .translation-section {
-    min-height: 70px; /* Slightly smaller on mobile */
+    min-height: 75px;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .review-section h3 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
   }
   
+  .current-card {
+    padding: 18px;
+    margin: 0;
+  }
+  
+  .word-display {
+    padding: 12px;
+    margin-bottom: 15px;
+    gap: 12px;
+  }
+  
+  .word-display strong {
+    font-size: 1.4rem;
+  }
+  
+  .answer-btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+  
+  .answer-content {
+    padding: 15px;
+    min-height: 300px;
+  }
+  
+  .translation-section {
+    margin-bottom: 12px;
+    min-height: 65px;
+  }
+  
+  .translation-section h4 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  
+  .translation-text {
+    font-size: 1rem;
+  }
+  
+  .rating-buttons-container {
+    min-height: 55px;
+  }
+}
+
+@media (max-width: 480px) {
+  .review-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+  
+  .current-card {
+    padding: 15px;
+  }
+  
+  .word-display {
+    padding: 10px;
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+  
+  .word-display strong {
+    font-size: 1.2rem;
+  }
+  
+  .answer-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+  
+  .answer-shortcuts {
+    gap: 6px;
+    font-size: 0.75rem;
+  }
+  
+  .shortcut-item {
+    padding: 2px 5px;
+    font-size: 0.65rem;
+  }
+  
+  .answer-content {
+    padding: 12px;
+    min-height: 250px;
+  }
+  
+  .translation-section {
+    margin-bottom: 10px;
+    padding: 12px;
+    min-height: 60px;
+  }
+  
+  .translation-section h4 {
+    font-size: 0.95rem;
+    margin-bottom: 5px;
+  }
+  
+  .translation-text {
+    font-size: 0.9rem;
+  }
+  
+  .rating-buttons-container {
+    min-height: 50px;
+  }
 }
 
 /* Light Mode Styles */

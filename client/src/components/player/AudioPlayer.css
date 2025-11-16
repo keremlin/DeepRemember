@@ -7,7 +7,6 @@
   padding: 20px;
   width: 100%;
   max-width: 1000px;
-  min-width: 800px;
   margin: 0 auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -369,17 +368,65 @@
   font-style: italic;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
   .audio-player {
-    padding: 15px;
-    margin: 10px;
-    min-width: 600px;
+    padding: 18px;
     max-width: 100%;
   }
   
+  .subtitle-display {
+    height: 70px;
+    padding: 12px;
+  }
+  
+  .current-subtitle {
+    font-size: 1rem;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .audio-player {
+    padding: 15px;
+    margin: 0;
+    max-width: 100%;
+    border-radius: 10px;
+  }
+  
+  .player-main {
+    margin-bottom: 15px;
+  }
+  
+  .player-info {
+    margin-bottom: 15px;
+  }
+  
+  .track-info h3 {
+    font-size: 1rem;
+  }
+  
+  .track-info p {
+    font-size: 0.85rem;
+  }
+  
+  .subtitle-display {
+    height: 60px;
+    padding: 10px;
+  }
+  
+  .current-subtitle {
+    font-size: 0.95rem;
+    padding: 8px;
+  }
+  
+  .progress-container {
+    margin-bottom: 15px;
+  }
+  
   .control-buttons {
-    gap: 15px;
+    gap: 12px;
+    flex-wrap: wrap;
   }
   
   .btn-play-pause {
@@ -388,11 +435,31 @@
     font-size: 20px;
   }
   
+  .volume-control {
+    gap: 8px;
+  }
+  
   .volume-slider {
     width: 80px;
   }
   
-  .current-subtitle {
+  .speed-control {
+    gap: 8px;
+  }
+  
+  .speed-select {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+  
+  .playlist-panel,
+  .subtitle-panel {
+    padding: 12px;
+    margin-top: 15px;
+  }
+  
+  .playlist-panel h4,
+  .subtitle-panel h4 {
     font-size: 1rem;
   }
   
@@ -403,35 +470,86 @@
   .subtitle-list {
     height: 200px;
   }
+  
+  .playlist-item {
+    padding: 8px;
+  }
+  
+  .track-name {
+    font-size: 13px;
+  }
+  
+  .subtitle-item {
+    padding: 8px;
+  }
+  
+  .subtitle-text {
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 480px) {
   .audio-player {
     padding: 10px;
-    margin: 5px;
-    min-width: 400px;
+    margin: 0;
     max-width: 100%;
+    border-radius: 8px;
   }
   
-  .player-header h2 {
-    font-size: 1.3rem;
+  .track-info h3 {
+    font-size: 0.9rem;
   }
   
-  .btn-play-pause {
-    width: 45px;
-    height: 45px;
-    font-size: 18px;
+  .track-info p {
+    font-size: 0.8rem;
   }
   
-  .volume-slider {
-    width: 60px;
-  }
-  
-  .control-buttons {
-    gap: 10px;
+  .subtitle-display {
+    height: 50px;
+    padding: 8px;
   }
   
   .current-subtitle {
+    font-size: 0.85rem;
+    padding: 6px;
+  }
+  
+  .control-buttons {
+    gap: 8px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-play-pause {
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  
+  .volume-control,
+  .speed-control {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .volume-slider {
+    flex: 1;
+    max-width: 150px;
+  }
+  
+  .speed-select {
+    flex: 1;
+    max-width: 150px;
+  }
+  
+  .playlist-panel,
+  .subtitle-panel {
+    padding: 10px;
+    margin-top: 10px;
+  }
+  
+  .playlist-panel h4,
+  .subtitle-panel h4 {
     font-size: 0.9rem;
   }
   
@@ -441,6 +559,12 @@
   
   .subtitle-list {
     height: 150px;
+  }
+  
+  .playlist-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
   }
 }
 

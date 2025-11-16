@@ -78,7 +78,18 @@
   transform: translateY(-1px);
 }
 
-/* Responsive Design */
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .header {
+    padding: 18px;
+  }
+  
+  .header-left h1 {
+    font-size: 1.7rem;
+  }
+}
+
+/* Responsive Design - Mobile */
 @media (max-width: 768px) {
   .header {
     flex-direction: column;
@@ -87,8 +98,13 @@
     padding: 15px;
   }
   
+  .header-left {
+    width: 100%;
+  }
+  
   .header-left h1 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+    margin-bottom: 4px;
   }
   
   .header-left p {
@@ -99,6 +115,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
+    width: 100%;
   }
   
   .btn-manage-cards,
@@ -110,22 +127,28 @@
 
 @media (max-width: 480px) {
   .header {
-    padding: 10px;
-    gap: 10px;
+    padding: 12px 10px;
+    gap: 12px;
   }
   
   .header-left h1 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    margin-bottom: 3px;
   }
   
   .header-left p {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+  }
+  
+  .header-right {
+    gap: 8px;
   }
   
   .btn-manage-cards,
   .btn-secondary {
     padding: 6px 12px;
     font-size: 12px;
+    min-width: auto;
   }
 }
 
