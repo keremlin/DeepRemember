@@ -53,7 +53,10 @@ const StatsSection = ({
       
       <div className="srs-card">
         <div className="stats-header">
-          <h3>📊 Learning Statistics</h3>
+          <h3>
+            <span className="material-symbols-outlined">bar_chart</span>
+            Learning Statistics
+          </h3>
           <button className="help-btn" onClick={() => setShowHelp(true)}>?</button>
         </div>
         <div className="stats-grid">
@@ -78,7 +81,12 @@ const StatsSection = ({
         {/* Label Statistics */}
         {stats.labelCounts && stats.labelCounts.length > 0 && (
           <div className="label-stats-section">
-            <h4>🏷️ Cards by Labels</h4>
+            <div className="stats-header">
+            <h3>
+              <span className="material-symbols-outlined">Loyalty</span>
+              Cards by Labels
+            </h3>
+            </div>
             <div className="label-stats-grid">
               {stats.labelCounts.map((label, index) => (
                 <div key={index} className="label-stat-item">

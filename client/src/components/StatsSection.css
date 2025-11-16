@@ -39,6 +39,18 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  display: flex;
+  align-items: center;
+}
+
+.stats-header h3 .material-symbols-outlined {
+  font-size: 1.5rem;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  margin-right: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .help-btn {
@@ -65,7 +77,7 @@
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 20px;
 }
 
@@ -142,6 +154,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.label-stats-section h4 .material-symbols-outlined {
+  font-size: 1.2rem;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 .label-stats-grid {
@@ -243,7 +260,7 @@
   }
   
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 12px;
   }
   
@@ -271,7 +288,7 @@
   }
   
   .label-stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px;
   }
   
@@ -304,9 +321,9 @@
   }
   
   .stats-header {
-    flex-direction: column;
+    flex-direction: row;
     gap: 12px;
-    text-align: center;
+    text-align: left;
     align-items: center;
     margin-bottom: 12px;
     padding-bottom: 10px;
@@ -323,7 +340,7 @@
   }
   
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px;
   }
   
@@ -350,7 +367,7 @@
   }
   
   .label-stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px;
   }
   
