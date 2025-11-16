@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReviewSection from './ReviewSection/ReviewSection'
 import StatsSection from './StatsSection'
 import './DashboardView.css'
@@ -14,10 +14,12 @@ const DashboardView = ({
   setShowCreateCard,
   onShowManageCards 
 }) => {
+  const [isReviewMode, setIsReviewMode] = useState(false)
+
   return (
     <div className="dashboard-view">
-      {/* Review Cards */}
-      {currentCards.length > 0 && (
+      {/* Review Cards - only show in review mode */}
+      {isReviewMode && currentCards.length > 0 && (
         <ReviewSection
           currentCard={currentCard}
           showAnswer={showAnswer}
@@ -26,13 +28,16 @@ const DashboardView = ({
         />
       )}
 
-      {/* Statistics and Create Card Button */}
-      <StatsSection
-        stats={stats}
-        setShowHelp={setShowHelp}
-        setShowCreateCard={setShowCreateCard}
-        onShowManageCards={onShowManageCards}
-      />
+      {/* Statistics and Create Card Button - only show when not in review mode */}
+      {!isReviewMode && (
+        <StatsSection
+          stats={stats}
+          setShowHelp={setShowHelp}
+          setShowCreateCard={setShowCreateCard}
+          onShowManageCards={onShowManageCards}
+          onStartReview={() => setIsReviewMode(true)}
+        />
+      )}
     </div>
   )
 }
