@@ -43,6 +43,11 @@
   justify-content: center;
 }
 
+.theme-toggle-btn .material-symbols-outlined {
+  font-size: 1.2rem;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
 .theme-toggle-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.3);
@@ -104,6 +109,10 @@
     padding: 7px 14px;
     font-size: 1.1rem;
   }
+  
+  .theme-toggle-btn .material-symbols-outlined {
+    font-size: 1.1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -127,6 +136,10 @@
     padding: 6px 12px;
     font-size: 1rem;
     margin-top: 12px;
+  }
+  
+  .theme-toggle-btn .material-symbols-outlined {
+    font-size: 1rem;
   }
 }
 

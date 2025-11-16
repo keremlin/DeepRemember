@@ -100,14 +100,14 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
     <div className="edit-card-overlay" onClick={handleBackdropClick}>
       <div className="edit-card-modal">
         <div className="edit-card-header">
-          <h3>✏️ Edit Card</h3>
+          <h3><span className="material-symbols-outlined">edit</span> Edit Card</h3>
           <button 
             className="btn-close" 
             onClick={handleClose}
             disabled={isLoading}
             title="Close"
           >
-            ×
+            <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 

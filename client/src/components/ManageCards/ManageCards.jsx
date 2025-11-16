@@ -167,7 +167,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     return (
       <div className="manage-cards-container">
         <div className="srs-card">
-          <h3>📚 All My Cards</h3>
+          <h3><span className="material-symbols-outlined">menu_book</span> All My Cards</h3>
           <div className="no-user-message">
             <p>Please set up your user ID to view your cards.</p>
           </div>
@@ -180,14 +180,14 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     <div className="manage-cards-container">
       <div className="srs-card">
         <div className="cards-header">
-          <h3>📚 All My Cards</h3>
+          <h3><span className="material-symbols-outlined">menu_book</span> All My Cards</h3>
           <div className="header-actions">
             <button 
               className="btn-add-list" 
               onClick={handleOpenAddList}
               title="Add multiple cards"
             >
-              📝 Add List
+              <span className="material-symbols-outlined">note_add</span> Add List
             </button>
             <button 
               className="btn-refresh" 
@@ -195,7 +195,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
               disabled={isLoading}
               title="Refresh cards"
             >
-              {isLoading ? '🔄' : '↻'}
+              <span className="material-symbols-outlined">refresh</span>
             </button>
           </div>
         </div>
@@ -239,14 +239,14 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
                     onClick={() => handleEditCard(card)}
                     title="Edit card"
                   >
-                    ✏️
+                    <span className="material-symbols-outlined">edit</span>
                   </button>
                   <button 
                     className="btn-delete" 
                     onClick={() => deleteCard(card.id)}
                     title="Delete card"
                   >
-                    ×
+                    <span className="material-symbols-outlined">delete</span>
                   </button>
                 </div>
               </div>

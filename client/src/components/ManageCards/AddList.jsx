@@ -394,7 +394,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
                           disabled={isSaving}
                           title="Remove item"
                         >
-                          ×
+                          <span className="material-symbols-outlined">close</span>
                         </button>
                       </div>
                     </div>

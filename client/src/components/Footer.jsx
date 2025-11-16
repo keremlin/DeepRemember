@@ -11,7 +11,9 @@ const Footer = () => {
         <p>&copy; {new Date().getFullYear()} DeepRemember Learning System. All rights reserved.</p>
         <p className="footer-subtitle">Spaced Repetition System for vocabulary learning</p>
         <button className="theme-toggle-btn" onClick={toggleTheme} title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
-          {isDarkMode ? '☀️' : '🌙'}
+          <span className="material-symbols-outlined">
+            {isDarkMode ? 'light_mode' : 'dark_mode'}
+          </span>
         </button>
       </div>
     </footer>
