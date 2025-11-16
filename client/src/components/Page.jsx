@@ -12,10 +12,11 @@ const Page = ({
   onNavigateToWelcome,
   onNavigateToPlayer,
   onShowCards,
-  onNavigateToUserManagement
+  onNavigateToUserManagement,
+  isReviewMode
 }) => {
   return (
-    <div className="page-container">
+    <div className={`page-container ${isReviewMode ? 'review-mode' : ''}`}>
       <Header
         isCardsView={isCardsView}
         onUserSetup={onUserSetup}

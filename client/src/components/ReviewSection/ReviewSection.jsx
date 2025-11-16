@@ -151,7 +151,10 @@ const ReviewSection = ({
 
   return (
     <div className="srs-card review-section">
-      <h3>🔄 Review Cards</h3>
+      <h3>
+        <span className="material-symbols-outlined">dictionary</span>
+        Review Cards
+      </h3>
       <div className="srs-card current-card">
         <div className="card-content">
           <div className="word-display">

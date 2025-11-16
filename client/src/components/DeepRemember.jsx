@@ -20,6 +20,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [isCardsView, setIsCardsView] = useState(false)
   const [showAnswer, setShowAnswer] = useState(false)
+  const [isReviewMode, setIsReviewMode] = useState(false)
   const [stats, setStats] = useState({
     totalCards: 0,
     dueCards: 0,
@@ -253,6 +254,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
       onNavigateToPlayer={onNavigateToPlayer}
       onShowCards={() => setIsCardsView(false)}
       onNavigateToUserManagement={onNavigateToUserManagement}
+      isReviewMode={isReviewMode}
     >
       <div className="deep-remember-container">
         <div className="content">
@@ -268,6 +270,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
                 setShowHelp={setShowHelp}
                 setShowCreateCard={setShowCreateCard}
                 onShowManageCards={() => setIsCardsView(true)}
+                onReviewModeChange={setIsReviewMode}
               />
             ) : (
               // Cards Management View

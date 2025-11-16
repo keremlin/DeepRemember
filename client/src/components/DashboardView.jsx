@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ReviewSection from './ReviewSection/ReviewSection'
 import StatsSection from './StatsSection'
 import './DashboardView.css'
@@ -12,9 +12,38 @@ const DashboardView = ({
   stats, 
   setShowHelp, 
   setShowCreateCard,
-  onShowManageCards 
+  onShowManageCards,
+  onReviewModeChange
 }) => {
   const [isReviewMode, setIsReviewMode] = useState(false)
+
+  const handleStartReview = () => {
+    setIsReviewMode(true)
+    if (onReviewModeChange) {
+      onReviewModeChange(true)
+    }
+  }
+
+  const handleEndReview = () => {
+    setIsReviewMode(false)
+    if (onReviewModeChange) {
+      onReviewModeChange(false)
+    }
+  }
+
+  // Update parent when review mode changes
+  useEffect(() => {
+    if (onReviewModeChange) {
+      onReviewModeChange(isReviewMode && currentCards.length > 0)
+    }
+  }, [isReviewMode, currentCards.length, onReviewModeChange])
+
+  // Check if review is complete (no more cards)
+  useEffect(() => {
+    if (isReviewMode && currentCards.length === 0) {
+      handleEndReview()
+    }
+  }, [currentCards.length, isReviewMode])
 
   return (
     <div className="dashboard-view">
@@ -35,7 +64,7 @@ const DashboardView = ({
           setShowHelp={setShowHelp}
           setShowCreateCard={setShowCreateCard}
           onShowManageCards={onShowManageCards}
-          onStartReview={() => setIsReviewMode(true)}
+          onStartReview={handleStartReview}
         />
       )}
     </div>

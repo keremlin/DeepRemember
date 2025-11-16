@@ -49,3 +49,42 @@
   }
 }
 
+/* Hide footer when in review mode on mobile */
+@media (max-width: 768px) {
+  .page-container.review-mode .page-footer {
+    display: none;
+  }
+  
+  .page-container.review-mode {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .page-container.review-mode .page-body {
+    height: calc(100vh - 140px); /* Approximate header + top menu height on mobile */
+    min-height: calc(100vh - 140px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .page-container.review-mode .page-body > * {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container.review-mode .page-body {
+    height: calc(100vh - 120px); /* Smaller header on very small screens */
+    min-height: calc(100vh - 120px);
+  }
+}
+
