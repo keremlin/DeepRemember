@@ -1,0 +1,567 @@
+/* LabelsModal Component Styles */
+
+.labels-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 300px;
+  max-height: 600px;
+}
+
+/* Actions Section */
+.labels-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.btn-create-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-create-label:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-create-label:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-create-label .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Create Label Form */
+.create-label-form {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.create-label-form h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.create-label-form .form-group {
+  margin-bottom: 15px;
+}
+
+.create-label-form .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.create-label-form .form-group input[type="text"],
+.create-label-form .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.create-label-form .form-group input[type="text"]:focus,
+.create-label-form .form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Color Picker */
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.color-option:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.color-option.selected {
+  border-color: #333;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #667eea;
+}
+
+.color-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.color-input {
+  width: 100%;
+  height: 40px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.color-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+/* Labels List */
+.labels-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+}
+
+.labels-loading,
+.labels-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #666;
+  text-align: center;
+}
+
+.labels-loading .loading-spinner {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.labels-empty .material-symbols-outlined {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.labels-empty p {
+  margin: 0;
+  font-size: 14px;
+  color: #999;
+}
+
+/* Labels Grid */
+.labels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+  padding: 5px;
+}
+
+.label-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.label-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.label-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.label-color-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.label-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.label-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 15px;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.label-description {
+  font-size: 12px;
+  color: #666;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.btn-delete-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #dc3545;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-delete-label:hover {
+  background: rgba(220, 53, 69, 0.1);
+  transform: scale(1.1);
+}
+
+.btn-delete-label .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .labels-modal-content {
+    max-height: 550px;
+  }
+
+  .labels-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .labels-modal-content {
+    gap: 15px;
+    min-height: 250px;
+    max-height: 500px;
+  }
+
+  .labels-actions {
+    padding-bottom: 12px;
+  }
+
+  .btn-create-label {
+    padding: 8px 16px;
+    font-size: 13px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .create-label-form {
+    padding: 12px;
+  }
+
+  .create-label-form h4 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+
+  .create-label-form .form-group {
+    margin-bottom: 12px;
+  }
+
+  .labels-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 3px;
+  }
+
+  .label-item {
+    padding: 10px;
+  }
+
+  .color-picker {
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .color-option {
+    width: 28px;
+    height: 28px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .labels-list {
+    min-height: 150px;
+  }
+
+  .labels-loading,
+  .labels-empty {
+    padding: 30px 15px;
+  }
+
+  .labels-loading .loading-spinner {
+    font-size: 1.5rem;
+  }
+
+  .labels-empty .material-symbols-outlined {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .labels-modal-content {
+    gap: 12px;
+    min-height: 200px;
+    max-height: 450px;
+  }
+
+  .labels-actions {
+    padding-bottom: 10px;
+  }
+
+  .btn-create-label {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .btn-create-label .material-symbols-outlined {
+    font-size: 16px;
+  }
+
+  .create-label-form {
+    padding: 10px;
+  }
+
+  .create-label-form h4 {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+  }
+
+  .create-label-form .form-group {
+    margin-bottom: 10px;
+  }
+
+  .create-label-form .form-group label {
+    font-size: 13px;
+  }
+
+  .create-label-form .form-group input[type="text"],
+  .create-label-form .form-group textarea {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .color-picker {
+    gap: 5px;
+  }
+
+  .color-option {
+    width: 24px;
+    height: 24px;
+  }
+
+  .color-input {
+    height: 36px;
+  }
+
+  .labels-grid {
+    gap: 10px;
+  }
+
+  .label-item {
+    padding: 8px;
+    flex-wrap: wrap;
+  }
+
+  .label-header {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .label-color-indicator {
+    width: 18px;
+    height: 18px;
+  }
+
+  .label-name {
+    font-size: 14px;
+  }
+
+  .label-description {
+    font-size: 11px;
+  }
+
+  .btn-delete-label {
+    width: 28px;
+    height: 28px;
+  }
+
+  .btn-delete-label .material-symbols-outlined {
+    font-size: 16px;
+  }
+
+  .labels-loading,
+  .labels-empty {
+    padding: 25px 12px;
+  }
+
+  .labels-loading .loading-spinner {
+    font-size: 1.3rem;
+  }
+
+  .labels-empty .material-symbols-outlined {
+    font-size: 2rem;
+  }
+
+  .labels-empty p {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .labels-modal-content {
+    gap: 10px;
+  }
+
+  .btn-create-label {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .create-label-form {
+    padding: 8px;
+  }
+
+  .color-option {
+    width: 22px;
+    height: 22px;
+  }
+
+  .label-item {
+    padding: 6px;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .labels-modal-content {
+    max-height: 400px;
+  }
+
+  .labels-list {
+    max-height: 300px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .create-label-form {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  .create-label-form h4 {
+    color: #fff;
+  }
+
+  .create-label-form .form-group label {
+    color: #fff;
+  }
+
+  .create-label-form .form-group input[type="text"],
+  .create-label-form .form-group textarea {
+    background: #333;
+    border-color: #555;
+    color: #fff;
+  }
+
+  .create-label-form .form-group input[type="text"]:focus,
+  .create-label-form .form-group textarea:focus {
+    border-color: #667eea;
+  }
+
+  .label-item {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  .label-item:hover {
+    border-color: #667eea;
+  }
+
+  .label-name {
+    color: #fff;
+  }
+
+  .label-description {
+    color: #aaa;
+  }
+
+  .labels-empty {
+    color: #aaa;
+  }
+
+  .labels-empty p {
+    color: #888;
+  }
+}
+

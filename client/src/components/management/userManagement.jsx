@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Page from '../Page'
+import LabelsModal from '../labels/LabelsModal'
 import '../security/UserInfo.css'
 
 const UserManagement = ({ 
@@ -10,9 +11,10 @@ const UserManagement = ({
   onNavigateToUserManagement,
   onNavigateToManagement
 }) => {
+  const [showLabelsModal, setShowLabelsModal] = useState(false)
+
   const handleLabelsClick = () => {
-    // Handle labels button click
-    console.log('Labels button clicked')
+    setShowLabelsModal(true)
   }
 
   return (
@@ -40,6 +42,12 @@ const UserManagement = ({
           </div>
         </div>
       </div>
+
+      {/* Labels Modal */}
+      <LabelsModal
+        isOpen={showLabelsModal}
+        onClose={() => setShowLabelsModal(false)}
+      />
     </Page>
   )
 }
