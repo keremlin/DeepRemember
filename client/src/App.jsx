@@ -3,6 +3,7 @@ import Welcome from './components/welcome/Welcome'
 import DeepRemember from './components/DeepRemember'
 import PlayerPage from './components/player/PlayerPage'
 import UserManagement from './components/users/UserManagement'
+import ManagementPage from './components/management/userManagement'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
@@ -41,6 +42,10 @@ function App() {
     setCurrentView('usermanagement')
   }
 
+  const navigateToManagement = () => {
+    setCurrentView('management')
+  }
+
   return (
     <ThemeProvider>
       <ToastProvider>
@@ -63,6 +68,7 @@ function App() {
                   onNavigateToPlayer={navigateToPlayer}
                   showCardsOnMount={showCardsOnMount}
                   onNavigateToUserManagement={navigateToUserManagement}
+                  onNavigateToManagement={navigateToManagement}
                 />
               ) : currentView === 'usermanagement' ? (
                 <UserManagement 
@@ -71,6 +77,16 @@ function App() {
                   onNavigateToPlayer={navigateToPlayer}
                   onShowCards={() => navigateToDeepRemember(true)}
                   onNavigateToUserManagement={navigateToUserManagement}
+                  onNavigateToManagement={navigateToManagement}
+                />
+              ) : currentView === 'management' ? (
+                <ManagementPage 
+                  onUserSetup={() => {}}
+                  onNavigateToWelcome={navigateToWelcome}
+                  onNavigateToPlayer={navigateToPlayer}
+                  onShowCards={() => navigateToDeepRemember(true)}
+                  onNavigateToUserManagement={navigateToUserManagement}
+                  onNavigateToManagement={navigateToManagement}
                 />
               ) : (
                 <PlayerPage 
@@ -78,6 +94,7 @@ function App() {
                   onNavigateToPlayer={navigateToPlayer}
                   onNavigateToDeepRemember={navigateToDeepRemember}
                   onNavigateToUserManagement={navigateToUserManagement}
+                  onNavigateToManagement={navigateToManagement}
                 />
               )}
             </div>

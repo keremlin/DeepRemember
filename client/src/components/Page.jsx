@@ -13,6 +13,7 @@ function Page({
   onNavigateToPlayer,
   onShowCards,
   onNavigateToUserManagement,
+  onNavigateToManagement,
   isReviewMode
 }) {
   return (
@@ -25,6 +26,7 @@ function Page({
         onNavigateToPlayer={onNavigateToPlayer}
         onShowCards={onShowCards}
         onNavigateToUserManagement={onNavigateToUserManagement}
+        onNavigateToManagement={onNavigateToManagement}
       />
       
       <main className="page-body">

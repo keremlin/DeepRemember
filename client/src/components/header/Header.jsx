@@ -10,7 +10,8 @@ const Header = ({
   onNavigateToWelcome,
   onNavigateToPlayer,
   onShowCards,
-  onNavigateToUserManagement
+  onNavigateToUserManagement,
+  onNavigateToManagement
 }) => {
   return (
     <>
@@ -27,6 +28,7 @@ const Header = ({
         onNavigateToPlayer={onNavigateToPlayer}
         onShowCards={onShowCards}
         onNavigateToUserManagement={onNavigateToUserManagement}
+        onNavigateToManagement={onNavigateToManagement}
       />
     </>
   )
