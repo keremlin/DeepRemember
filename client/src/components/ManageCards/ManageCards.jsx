@@ -17,6 +17,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
   const [isAddListOpen, setIsAddListOpen] = useState(false)
   const [userLabels, setUserLabels] = useState([])
   const [showLabelTooltip, setShowLabelTooltip] = useState(false)
+  const [removingCardIds, setRemovingCardIds] = useState(new Set())
 
   // Helper function to format context with dot delimiters
   const formatContext = (context) => {
@@ -146,8 +147,19 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
       
       if (data.success) {
         showSuccess('Card deleted successfully!')
-        // Reload cards
-        await loadAllCards(false)
+        // Mark card as removing to trigger fade-out animation
+        setRemovingCardIds(prev => new Set(prev).add(cardId))
+        
+        // Wait for fade-out animation to complete, then remove from state
+        setTimeout(() => {
+          setAllCards(prevCards => prevCards.filter(card => card.id !== cardId))
+          setRemovingCardIds(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(cardId)
+            return newSet
+          })
+        }, 300) // Match CSS animation duration
+        
         // Notify parent component
         if (onCardDeleted) {
           onCardDeleted()
@@ -277,7 +289,10 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
         ) : (
           <div className="all-cards">
             {allCards.map((card, index) => (
-              <div key={card.id || index} className="card-item">
+              <div 
+                key={card.id || index} 
+                className={`card-item ${removingCardIds.has(card.id) ? 'card-item-removing' : ''}`}
+              >
                 <div className="card-info">
                   <div className="card-header-top">
                     <div className="card-word">{card.word}</div>

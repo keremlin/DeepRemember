@@ -235,6 +235,14 @@
   margin-bottom: 0;
 }
 
+/* Card removal animation */
+.card-item-removing {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
 /* Card Info */
 .card-info {
   flex: 1;
