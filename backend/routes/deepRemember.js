@@ -107,7 +107,7 @@ function generateSentenceHash(sentence, word = '') {
 // Create a new card for learning
 router.post('/create-card', authMiddleware.verifyToken, async (req, res) => {
   try {
-    const { word, translation, context, type } = req.body;
+    const { word, translation, context, type, labels } = req.body;
     const userId = req.userId; // Get userId from authenticated user
     
     if (!word) {
@@ -135,7 +135,11 @@ router.post('/create-card', authMiddleware.verifyToken, async (req, res) => {
       // Use database
       const result = await deepRememberRepository.createCard(userId, cardData);
       
-      // Automatically associate card with appropriate system label based on type
+      const addedLabels = [];
+      const failedLabels = [];
+      
+      // Step 1: Automatically associate card with appropriate system label based on type
+      // This should ALWAYS happen if type is provided, regardless of user labels
       if (type) {
         try {
           // Get system labels to find the appropriate label ID
@@ -143,21 +147,89 @@ router.post('/create-card', authMiddleware.verifyToken, async (req, res) => {
           const labelToAdd = systemLabels.find(label => label.name === type);
           
           if (labelToAdd) {
-            await deepRememberRepository.addLabelToCard(userId, result.id, labelToAdd.id);
-            console.log(`[DeepRemember] Added ${type} label to card ${result.id}`);
+            try {
+              await deepRememberRepository.addLabelToCard(userId, result.id, labelToAdd.id);
+              addedLabels.push({ id: labelToAdd.id, name: labelToAdd.name, type: 'system' });
+              console.log(`[DeepRemember] Successfully added system label "${type}" (ID: ${labelToAdd.id}) to card ${result.id}`);
+            } catch (addError) {
+              // Check if it's a duplicate error (label already exists on card)
+              // Different databases return different error messages/codes for UNIQUE constraint violations
+              const errorMsg = addError.message || '';
+              const errorCode = addError.code || '';
+              const isDuplicate = errorMsg.includes('UNIQUE constraint') || 
+                                  errorMsg.includes('UNIQUE constraint failed') ||
+                                  errorMsg.includes('duplicate key') ||
+                                  errorMsg.includes('already exists') ||
+                                  errorCode === '23505' || // PostgreSQL unique violation
+                                  errorCode === 'SQLITE_CONSTRAINT_UNIQUE';
+              
+              if (isDuplicate) {
+                addedLabels.push({ id: labelToAdd.id, name: labelToAdd.name, type: 'system' });
+                console.log(`[DeepRemember] System label "${type}" (ID: ${labelToAdd.id}) already exists on card ${result.id}`);
+              } else {
+                failedLabels.push({ id: labelToAdd.id, name: labelToAdd.name, type: 'system', error: errorMsg });
+                console.error(`[DeepRemember] Failed to add system label "${type}" (ID: ${labelToAdd.id}) to card ${result.id}:`, errorMsg);
+              }
+            }
+          } else {
+            console.warn(`[DeepRemember] System label "${type}" not found in database`);
           }
         } catch (labelError) {
-          console.warn(`[DeepRemember] Failed to add ${type} label to card ${result.id}:`, labelError);
+          console.error(`[DeepRemember] Error processing system label for type "${type}":`, labelError);
+          failedLabels.push({ type: 'system', name: type, error: labelError.message });
         }
       }
       
-      // Get the card with its labels
+      // Step 2: Add user-selected labels if provided
+      // This should ALWAYS happen if labels are provided, regardless of system label status
+      if (labels && Array.isArray(labels) && labels.length > 0) {
+        console.log(`[DeepRemember] Attempting to add ${labels.length} user label(s) to card ${result.id}`);
+        for (const labelId of labels) {
+          try {
+            await deepRememberRepository.addLabelToCard(userId, result.id, labelId);
+            addedLabels.push({ id: labelId, type: 'user' });
+            console.log(`[DeepRemember] Successfully added user label (ID: ${labelId}) to card ${result.id}`);
+          } catch (addError) {
+            // Check if it's a duplicate error (label already exists on card)
+            // Different databases return different error messages/codes for UNIQUE constraint violations
+            const errorMsg = addError.message || '';
+            const errorCode = addError.code || '';
+            const isDuplicate = errorMsg.includes('UNIQUE constraint') || 
+                                errorMsg.includes('UNIQUE constraint failed') ||
+                                errorMsg.includes('duplicate key') ||
+                                errorMsg.includes('already exists') ||
+                                errorCode === '23505' || // PostgreSQL unique violation
+                                errorCode === 'SQLITE_CONSTRAINT_UNIQUE';
+            
+            if (isDuplicate) {
+              addedLabels.push({ id: labelId, type: 'user' });
+              console.log(`[DeepRemember] User label (ID: ${labelId}) already exists on card ${result.id}`);
+            } else {
+              failedLabels.push({ id: labelId, type: 'user', error: errorMsg });
+              console.error(`[DeepRemember] Failed to add user label (ID: ${labelId}) to card ${result.id}:`, errorMsg);
+            }
+          }
+        }
+      }
+      
+      // Log summary
+      if (addedLabels.length > 0) {
+        console.log(`[DeepRemember] Card ${result.id} - Successfully added ${addedLabels.length} label(s)`);
+      }
+      if (failedLabels.length > 0) {
+        console.warn(`[DeepRemember] Card ${result.id} - Failed to add ${failedLabels.length} label(s)`);
+      }
+      
+      // Get the card with its labels to verify
       const cardLabels = await deepRememberRepository.getCardLabels(userId, result.id);
+      console.log(`[DeepRemember] Card ${result.id} - Final label count: ${cardLabels.length}`);
       
       res.json({
         success: true,
         card: { ...result, labels: cardLabels },
-        message: 'Card created successfully in database'
+        message: 'Card created successfully in database',
+        labelsAdded: addedLabels.length,
+        labelsFailed: failedLabels.length
       });
     } else {
       // Use memory storage

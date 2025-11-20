@@ -4,16 +4,19 @@ import { useAuth } from '../security/AuthContext'
 import { getApiUrl } from '../../config/api'
 import EditCard from './EditCard'
 import AddList from './AddList'
+import CardLabelList from '../labels/CardLabelList'
 import './ManageCards.css'
 
 const ManageCards = ({ currentUserId, onCardDeleted }) => {
   const { showSuccess, showError } = useToast()
-  const { getAuthHeaders } = useAuth()
+  const { getAuthHeaders, user } = useAuth()
   const [allCards, setAllCards] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isAddListOpen, setIsAddListOpen] = useState(false)
+  const [userLabels, setUserLabels] = useState([])
+  const [showLabelTooltip, setShowLabelTooltip] = useState(false)
 
   // Helper function to format context with dot delimiters
   const formatContext = (context) => {
@@ -40,6 +43,46 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     }
     const hasSentenceLabel = card.labels.some(label => label.name === 'sentence')
     return hasSentenceLabel ? 'sentence' : 'word'
+  }
+
+  // Get only user labels (filter out system labels)
+  const getUserLabelsFromCard = (card) => {
+    if (!card.labels || !Array.isArray(card.labels)) {
+      return []
+    }
+    return card.labels.filter(label => label.type === 'user')
+  }
+
+  // Load user labels for tooltip
+  const loadUserLabels = async () => {
+    const userId = user?.email || user?.id || currentUserId
+    if (!userId) return
+
+    try {
+      const response = await fetch(getApiUrl(`/api/srs/labels/${userId}`), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        mode: 'cors'
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Filter to show only user-defined labels (not system labels)
+        const userLabelsOnly = (data.labels || []).filter(label => label.type === 'user')
+        setUserLabels(userLabelsOnly)
+      }
+    } catch (error) {
+      console.error('Error loading user labels:', error)
+      setUserLabels([])
+    }
   }
 
   // Load all cards
@@ -160,8 +203,9 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
   useEffect(() => {
     if (currentUserId) {
       loadAllCards(false)
+      loadUserLabels()
     }
-}, [currentUserId])
+  }, [currentUserId])
 
   if (!currentUserId) {
     return (
@@ -182,13 +226,35 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
         <div className="cards-header">
           <h3><span className="material-symbols-outlined">menu_book</span> All My Cards</h3>
           <div className="header-actions">
-            <button 
-              className="btn-add-list" 
-              onClick={handleOpenAddList}
-              title="Add multiple cards"
+            <div 
+              className="btn-add-list-wrapper"
+              onMouseEnter={() => setShowLabelTooltip(true)}
+              onMouseLeave={() => setShowLabelTooltip(false)}
             >
-              <span className="material-symbols-outlined">note_add</span> Add List
-            </button>
+              <button 
+                className="btn-add-list" 
+                onClick={handleOpenAddList}
+                title="Add multiple cards"
+              >
+                <span className="material-symbols-outlined">note_add</span> Add List
+              </button>
+              {showLabelTooltip && userLabels.length > 0 && (
+                <div className="label-tooltip">
+                  <div className="label-tooltip-title">Available Labels:</div>
+                  <div className="label-tooltip-labels">
+                    {userLabels.map((label) => (
+                      <div key={label.id} className="label-tooltip-item">
+                        <span 
+                          className="label-tooltip-color" 
+                          style={{ backgroundColor: label.color || '#3B82F6' }}
+                        />
+                        <span className="label-tooltip-name">{label.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <button 
               className="btn-refresh" 
               onClick={() => loadAllCards(true)}
@@ -215,12 +281,11 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
                 <div className="card-info">
                   <div className="card-header-top">
                     <div className="card-word">{card.word}</div>
-                    <span className={`card-tag ${getCardType(card) === 'word' ? 'tag-word' : 'tag-sentence'}`}>
-                      <span className="material-symbols-outlined">
-                        {getCardType(card) === 'word' ? 'text_fields' : 'article'}
-                      </span>
-                      {getCardType(card) === 'word' ? 'Word' : 'Sentence'}
-                    </span>
+                    <CardLabelList
+                      card={card}
+                      getCardType={getCardType}
+                      getUserLabelsFromCard={getUserLabelsFromCard}
+                    />
                   </div>
                   <div className="card-translation">{card.translation}</div>
                   <div className="card-context">{formatContext(card.context)}</div>

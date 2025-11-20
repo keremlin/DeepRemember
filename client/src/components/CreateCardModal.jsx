@@ -3,6 +3,7 @@ import CloseButton from './CloseButton'
 import { useToast } from './ToastProvider'
 import { useAuth } from './security/AuthContext'
 import { getApiUrl, getApiBaseUrl } from '../config/api'
+import LabelSelector from './labels/LabelSelector'
 import './CreateCardModal.css'
 
 const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefillData }) => {
@@ -14,6 +15,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
   const [newTranslation, setNewTranslation] = useState('')
   const [newContext, setNewContext] = useState('')
   const [cardType, setCardType] = useState('word') // 'word' or 'sentence'
+  const [selectedLabels, setSelectedLabels] = useState([])
   const [similarWords, setSimilarWords] = useState([])
   const [showSimilarWords, setShowSimilarWords] = useState(false)
   const [translationData, setTranslationData] = useState(null)
@@ -302,7 +304,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
           word: newWord,
           translation: newTranslation,
           context: newContext,
-          type: cardType
+          type: cardType,
+          labels: selectedLabels
         })
       })
       
@@ -346,6 +349,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
         setNewTranslation('')
         setNewContext('')
         setCardType('word')
+        setSelectedLabels([])
         setShowSimilarWords(false)
         setShowTranslationResult(false)
         setTranslationData(null)
@@ -372,6 +376,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
     setNewTranslation('')
     setNewContext('')
     setCardType('word')
+    setSelectedLabels([])
     setShowSimilarWords(false)
     setShowTranslationResult(false)
     setTranslationData(null)
@@ -475,6 +480,18 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
             placeholder="Enter context or example sentence"
             tabIndex={4}
           />
+          
+          {/* Label Selector */}
+          <div className="label-selector-wrapper">
+            <label htmlFor="label-selector" style={{ marginBottom: '8px', display: 'block', fontWeight: '500', fontSize: '14px' }}>
+              Labels (Optional)
+            </label>
+            <LabelSelector
+              selectedLabels={selectedLabels}
+              setSelectedLabels={setSelectedLabels}
+              disabled={isCreatingCard}
+            />
+          </div>
           
           {/* Similar Words Section */}
           {showSimilarWords && similarWords.length > 0 && (

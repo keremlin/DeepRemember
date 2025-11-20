@@ -3,6 +3,7 @@ import CloseButton from '../CloseButton'
 import { useToast } from '../ToastProvider'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl } from '../../config/api'
+import LabelSelector from '../labels/LabelSelector'
 import './AddList.css'
 
 const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
@@ -12,6 +13,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
   // Form states
   const [inputText, setInputText] = useState('')
   const [processedItems, setProcessedItems] = useState([])
+  const [selectedLabels, setSelectedLabels] = useState([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
@@ -167,7 +169,8 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
               word: item.word,
               translation: item.translation,
               context: item.sampleSentence,
-              type: item.isWord ? 'word' : 'sentence' // Use isWord to determine type
+              type: item.isWord ? 'word' : 'sentence', // Use isWord to determine type
+              labels: selectedLabels // Add selected labels to all cards
             })
           })
           
@@ -213,6 +216,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
   const handleClose = () => {
     setInputText('')
     setProcessedItems([])
+    setSelectedLabels([])
     setIsProcessing(false)
     setIsSaving(false)
     setCurrentProcessingIndex(-1)
@@ -328,6 +332,19 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
               rows={8}
               disabled={isProcessing || isSaving}
             />
+            
+            {/* Label Selector */}
+            <div className="label-selector-wrapper" style={{ marginTop: '15px', marginBottom: '15px' }}>
+              <label htmlFor="label-selector" style={{ marginBottom: '8px', display: 'block', fontWeight: '500', fontSize: '14px' }}>
+                Labels (Optional) - Applied to all cards
+              </label>
+              <LabelSelector
+                selectedLabels={selectedLabels}
+                setSelectedLabels={setSelectedLabels}
+                disabled={isProcessing || isSaving}
+              />
+            </div>
+            
             <div className="input-actions">
               <button 
                 className="btn-process"
