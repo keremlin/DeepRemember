@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import ReviewButt from './ReviewButt'
 import Samples from './Samples'
 import SampleSentenceCircle from './SampleSentenceCircle'
+import CardLabelList from '../labels/CardLabelList'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import './ReviewSection.css'
@@ -16,6 +17,23 @@ const ReviewSection = ({
   const [pressedKey, setPressedKey] = useState(null)
   const [isPlayingWord, setIsPlayingWord] = useState(false)
   const [isCreatingWordAudio, setIsCreatingWordAudio] = useState(false)
+
+  // Check if card is a word or sentence based on labels
+  const getCardType = (card) => {
+    if (!card?.labels || !Array.isArray(card.labels)) {
+      return 'word' // Default to word if no labels
+    }
+    const hasSentenceLabel = card.labels.some(label => label.name === 'sentence')
+    return hasSentenceLabel ? 'sentence' : 'word'
+  }
+
+  // Get only user labels (filter out system labels)
+  const getUserLabelsFromCard = (card) => {
+    if (!card?.labels || !Array.isArray(card.labels)) {
+      return []
+    }
+    return card.labels.filter(label => label.type === 'user')
+  }
 
   // Function to create word audio
   const createWordAudio = async () => {
@@ -159,17 +177,28 @@ const ReviewSection = ({
         <div className="card-content">
           <div className="word-display">
             <div className="word-with-audio">
-              <strong>{currentCard?.word || 'Loading...'}</strong>
-              {currentCard?.word && (
-                <SampleSentenceCircle
-                  type="play"
-                  isPlaying={isPlayingWord}
-                  onClick={playWordAudio}
-                  title={
-                    isCreatingWordAudio 
-                      ? 'Creating audio...' 
-                      : 'Play word audio'
-                  }
+              <div className="word-center-container">
+                <strong>{currentCard?.word || 'Loading...'}</strong>
+                {currentCard?.word && (
+                  <div className="word-audio-button">
+                    <SampleSentenceCircle
+                      type="play"
+                      isPlaying={isPlayingWord}
+                      onClick={playWordAudio}
+                      title={
+                        isCreatingWordAudio 
+                          ? 'Creating audio...' 
+                          : 'Play word audio'
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+              {currentCard && (
+                <CardLabelList
+                  card={currentCard}
+                  getCardType={getCardType}
+                  getUserLabelsFromCard={getUserLabelsFromCard}
                 />
               )}
             </div>

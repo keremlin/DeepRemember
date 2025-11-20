@@ -58,6 +58,43 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
+.word-with-audio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  gap: 10px;
+}
+
+.word-center-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.word-center-container strong {
+  font-size: 1.8rem;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+}
+
+.word-audio-button {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.word-with-audio .card-label-list {
+  position: absolute;
+  right: 0;
+  top: 0;
+  flex-shrink: 0;
+}
+
 .word-display strong {
   font-size: 1.8rem;
   color: #fff;
@@ -263,6 +300,14 @@
     gap: 4px;
   }
   
+  .word-with-audio {
+    gap: 8px;
+  }
+  
+  .word-with-audio strong {
+    font-size: 1.4rem;
+  }
+  
   .word-display strong {
     font-size: 1.4rem;
   }
@@ -326,6 +371,14 @@
     padding: 3px;
     margin-bottom: 4px;
     gap: 3px;
+  }
+  
+  .word-with-audio {
+    gap: 6px;
+  }
+  
+  .word-with-audio strong {
+    font-size: 1.2rem;
   }
   
   .word-display strong {
