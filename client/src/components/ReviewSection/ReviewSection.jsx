@@ -11,7 +11,8 @@ const ReviewSection = ({
   currentCard, 
   showAnswer, 
   setShowAnswer, 
-  answerCard 
+  answerCard,
+  onDeleteCard
 }) => {
   const { getAuthHeaders } = useAuth()
   const [pressedKey, setPressedKey] = useState(null)
@@ -19,8 +20,10 @@ const ReviewSection = ({
   const [isCreatingWordAudio, setIsCreatingWordAudio] = useState(false)
   const [autoPlay, setAutoPlay] = useState(false)
   const [isPlayingTranslation, setIsPlayingTranslation] = useState(false)
+  const [isDeletingCard, setIsDeletingCard] = useState(false)
   const hasAutoPlayedRef = useRef(false)
   const hasAutoPlayedAnswerRef = useRef(false)
+  const canDeleteCard = Boolean(onDeleteCard && currentCard?.id)
 
   // Check if card is a word or sentence based on labels
   const getCardType = (card) => {
@@ -81,6 +84,16 @@ const ReviewSection = ({
       setIsCreatingWordAudio(false)
     }
   }
+
+  const handleDeleteCard = useCallback(async () => {
+    if (!currentCard?.id || !onDeleteCard) return
+    setIsDeletingCard(true)
+    try {
+      await onDeleteCard(currentCard.id)
+    } finally {
+      setIsDeletingCard(false)
+    }
+  }, [currentCard?.id, onDeleteCard])
 
   // Function to play word audio
   const playWordAudio = async () => {
@@ -423,7 +436,19 @@ const ReviewSection = ({
         <div className="card-content">
           <div className="word-display">
             <div className="word-with-audio">
-              <div className="word-center-container">
+              <div className={`word-center-container ${canDeleteCard ? 'has-delete-button' : ''}`.trim()}>
+                {canDeleteCard && (
+                  <button
+                    type="button"
+                    className="word-delete-button"
+                    onClick={handleDeleteCard}
+                    disabled={isDeletingCard}
+                    title="Delete this card"
+                    aria-label="Delete this card"
+                  >
+                    <span className="material-symbols-outlined google-icon">delete</span>
+                  </button>
+                )}
                 <strong>{currentCard?.word || 'Loading...'}</strong>
                 {currentCard?.word && (
                   <div className="word-audio-button">

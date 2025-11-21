@@ -216,6 +216,43 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
     }
   }
 
+  const deleteCurrentCard = async (cardId) => {
+    if (!cardId) return false
+    
+    const confirmed = window.confirm('Delete this card permanently?')
+    if (!confirmed) {
+      return false
+    }
+    
+    try {
+      const response = await fetch(getApiUrl(`/deepRemember/delete-card/${currentUserId}/${cardId}`), {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        mode: 'cors'
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      if (data.success) {
+        showSuccess('Card deleted successfully')
+        await loadReviewCards(false)
+        return true
+      } else {
+        throw new Error(data.error || 'Failed to delete card')
+      }
+    } catch (error) {
+      console.error('Error deleting card:', error)
+      showError(`Failed to delete card: ${error.message}`)
+      return false
+    }
+  }
+
 
   // Show current card
   const showCurrentCard = () => {
@@ -267,6 +304,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
                 showAnswer={showAnswer}
                 setShowAnswer={setShowAnswer}
                 answerCard={answerCard}
+                onDeleteCard={deleteCurrentCard}
                 stats={stats}
                 setShowHelp={setShowHelp}
                 setShowCreateCard={setShowCreateCard}
