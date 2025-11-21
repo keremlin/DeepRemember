@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import ReviewButt from './ReviewButt'
 import Samples from './Samples'
 import SampleSentenceCircle from './SampleSentenceCircle'
@@ -17,6 +17,10 @@ const ReviewSection = ({
   const [pressedKey, setPressedKey] = useState(null)
   const [isPlayingWord, setIsPlayingWord] = useState(false)
   const [isCreatingWordAudio, setIsCreatingWordAudio] = useState(false)
+  const [autoPlay, setAutoPlay] = useState(false)
+  const [isPlayingTranslation, setIsPlayingTranslation] = useState(false)
+  const hasAutoPlayedRef = useRef(false)
+  const hasAutoPlayedAnswerRef = useRef(false)
 
   // Check if card is a word or sentence based on labels
   const getCardType = (card) => {
@@ -125,6 +129,186 @@ const ReviewSection = ({
     }
   }
 
+  // Function to create translation audio
+  const createTranslationAudio = async () => {
+    if (!currentCard?.translation) return null
+    
+    try {
+      const response = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        mode: 'cors',
+        body: JSON.stringify({ 
+          text: currentCard.translation.trim(), 
+          word: currentCard.word?.trim() || currentCard.translation.trim()
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.success && data.audioUrl) {
+        const baseUrl = getApiBaseUrl()
+        const fullUrl = baseUrl ? `${baseUrl}${data.audioUrl}` : data.audioUrl
+        return fullUrl
+      } else {
+        console.warn('Translation audio generation failed or TTS service unavailable')
+        return null
+      }
+    } catch (error) {
+      console.error('Error creating translation audio:', error)
+      return null
+    }
+  }
+
+  // Function to play translation audio
+  const playTranslationAudio = async () => {
+    if (!currentCard?.translation || isPlayingTranslation) return
+    
+    setIsPlayingTranslation(true)
+    
+    try {
+      const encodedTranslation = encodeURIComponent(currentCard.translation.trim())
+      const encodedWord = encodeURIComponent(currentCard.word?.trim() || currentCard.translation.trim())
+      
+      const response = await fetch(getApiUrl(`/deepRemember/get-audio/${encodedWord}/${encodedTranslation}`), {
+        method: 'GET',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        mode: 'cors'
+      })
+      
+      const data = await response.json()
+      let audioUrl = null
+      
+      if (data.success && data.exists && data.audioUrl) {
+        const baseUrl = getApiBaseUrl()
+        audioUrl = baseUrl ? `${baseUrl}${data.audioUrl}` : data.audioUrl
+      } else {
+        audioUrl = await createTranslationAudio()
+      }
+      
+      if (audioUrl) {
+        const audio = new Audio(audioUrl)
+        audio.onended = () => setIsPlayingTranslation(false)
+        audio.onerror = () => {
+          console.warn('Translation audio not available')
+          setIsPlayingTranslation(false)
+        }
+        await audio.play()
+        return audio
+      } else {
+        console.warn('Translation audio not available or TTS service unavailable')
+        setIsPlayingTranslation(false)
+        return null
+      }
+    } catch (error) {
+      console.error('Error playing translation audio:', error)
+      setIsPlayingTranslation(false)
+      return null
+    }
+  }
+
+  // Function to play a single sample sentence audio
+  const playSampleSentenceAudio = async (sentence, word) => {
+    if (!sentence || !word) return null
+    
+    try {
+      const encodedSentence = encodeURIComponent(sentence.trim())
+      const encodedWord = encodeURIComponent(word.trim())
+      
+      const response = await fetch(getApiUrl(`/deepRemember/get-audio/${encodedWord}/${encodedSentence}`), {
+        method: 'GET',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        mode: 'cors'
+      })
+      
+      const data = await response.json()
+      let audioUrl = null
+      
+      if (data.success && data.exists && data.audioUrl) {
+        const baseUrl = getApiBaseUrl()
+        audioUrl = baseUrl ? `${baseUrl}${data.audioUrl}` : data.audioUrl
+      } else {
+        // Create audio if it doesn't exist
+        try {
+          const createResponse = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders()
+            },
+            mode: 'cors',
+            body: JSON.stringify({ 
+              text: sentence.trim(), 
+              word: word.trim() 
+            })
+          })
+          
+          if (createResponse.ok) {
+            const createData = await createResponse.json()
+            if (createData.success && createData.audioUrl) {
+              const baseUrl = getApiBaseUrl()
+              audioUrl = baseUrl ? `${baseUrl}${createData.audioUrl}` : createData.audioUrl
+            }
+          }
+        } catch (error) {
+          console.error('Error creating sample sentence audio:', error)
+        }
+      }
+      
+      if (audioUrl) {
+        const audio = new Audio(audioUrl)
+        return new Promise((resolve, reject) => {
+          audio.onended = () => resolve()
+          audio.onerror = () => {
+            console.warn('Sample sentence audio not available')
+            resolve() // Resolve anyway to continue sequence
+          }
+          audio.play().catch(reject)
+        })
+      }
+    } catch (error) {
+      console.error('Error playing sample sentence audio:', error)
+    }
+    return Promise.resolve()
+  }
+
+  // Function to play all sample sentences sequentially
+  const playAllSampleSentences = useCallback(async () => {
+    if (!currentCard?.context || !showAnswer || !currentCard?.word) return
+    
+    const sentences = currentCard.context.split('\n').filter(s => s.trim())
+    if (sentences.length === 0) return
+    
+    // Wait 2 seconds after translation finishes
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    for (let i = 0; i < sentences.length; i++) {
+      const sentence = sentences[i].trim()
+      if (!sentence) continue
+      
+      // Play the sentence audio and wait for it to finish
+      await playSampleSentenceAudio(sentence, currentCard.word)
+      
+      // Wait 2 seconds idle time between sentences (except after the last one)
+      if (i < sentences.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      }
+    }
+  }, [currentCard?.context, currentCard?.word, showAnswer])
+
   // Keyboard event handlers
   const handleKeyDown = (event) => {
     // Enter or Space to show answer
@@ -167,11 +351,73 @@ const ReviewSection = ({
     }
   }, [showAnswer, currentCard, setShowAnswer, answerCard])
 
+  // Auto-play word audio when card changes (if auto-play is enabled)
+  useEffect(() => {
+    if (autoPlay && currentCard?.word && !showAnswer) {
+      // Reset the flag when card changes
+      hasAutoPlayedRef.current = false
+      hasAutoPlayedAnswerRef.current = false
+    }
+  }, [currentCard?.word, autoPlay, showAnswer])
+
+  useEffect(() => {
+    if (autoPlay && currentCard?.word && !showAnswer && !hasAutoPlayedRef.current) {
+      hasAutoPlayedRef.current = true
+      // Small delay to ensure card is fully loaded
+      const timer = setTimeout(() => {
+        playWordAudio()
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [autoPlay, currentCard?.word, showAnswer])
+
+  // Auto-play translation and samples when answer is shown (if auto-play is enabled)
+  useEffect(() => {
+    if (autoPlay && showAnswer && currentCard && !hasAutoPlayedAnswerRef.current) {
+      hasAutoPlayedAnswerRef.current = true
+      const playSequence = async () => {
+        // Play translation audio first
+        const translationAudio = await playTranslationAudio()
+        
+        // Wait for translation audio to finish, then play samples
+        if (translationAudio) {
+          translationAudio.onended = () => {
+            setIsPlayingTranslation(false)
+            // Start playing sample sentences after translation finishes
+            playAllSampleSentences()
+          }
+        } else {
+          // If translation audio failed, still try to play samples after delay
+          setTimeout(() => {
+            playAllSampleSentences()
+          }, 2000)
+        }
+      }
+      
+      playSequence()
+    }
+  }, [showAnswer, autoPlay, currentCard, playAllSampleSentences])
+
+  // Reset flags when showAnswer changes to false
+  useEffect(() => {
+    if (!showAnswer) {
+      hasAutoPlayedAnswerRef.current = false
+    }
+  }, [showAnswer])
+
   return (
     <div className="srs-card review-section">
       <h3>
         <span className="material-symbols-outlined">dictionary</span>
         Review Cards
+        <label className="auto-play-checkbox">
+          <input
+            type="checkbox"
+            checked={autoPlay}
+            onChange={(e) => setAutoPlay(e.target.checked)}
+          />
+          <span className="material-symbols-outlined google-icon">volume_up</span>
+        </label>
       </h3>
       <div className="srs-card current-card">
         <div className="card-content">
