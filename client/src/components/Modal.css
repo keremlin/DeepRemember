@@ -257,6 +257,27 @@
   font-size: 14px;
 }
 
+.are-you-sure-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 16px;
+  color: #1f2933;
+}
+
+.are-you-sure-modal-question {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.are-you-sure-modal-description {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .modal-large {

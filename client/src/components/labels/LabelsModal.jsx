@@ -3,6 +3,7 @@ import Modal from '../Modal'
 import { useToast } from '../ToastProvider'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl } from '../../config/api'
+import AreYouSureModal from '../AreYouSureModal'
 import './LabelsModal.css'
 
 /**
@@ -22,6 +23,9 @@ const LabelsModal = ({ isOpen, onClose }) => {
   const [newLabelColor, setNewLabelColor] = useState('#3B82F6')
   const [newLabelDescription, setNewLabelDescription] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [labelToDelete, setLabelToDelete] = useState(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeletingLabel, setIsDeletingLabel] = useState(false)
 
   // Get current user ID
   const currentUserId = user?.email || user?.id || ''
@@ -141,15 +145,17 @@ const LabelsModal = ({ isOpen, onClose }) => {
   }
 
   // Delete label
-  const handleDeleteLabel = async (labelId) => {
+  const handleDeleteLabel = (label) => {
     if (!currentUserId) {
       showError('User ID not available')
       return
     }
+    setLabelToDelete(label)
+    setIsDeleteModalOpen(true)
+  }
 
-    if (!window.confirm('Are you sure you want to delete this label? This action cannot be undone.')) {
-      return
-    }
+  const deleteLabel = async (labelId) => {
+    if (!labelId) return false
 
     try {
       const response = await fetch(getApiUrl(`/api/srs/labels/${currentUserId}/${labelId}`), {
@@ -172,13 +178,32 @@ const LabelsModal = ({ isOpen, onClose }) => {
         showSuccess('Label deleted successfully!')
         // Reload labels
         await loadLabels()
+        return true
       } else {
         throw new Error(data.error || 'Failed to delete label')
       }
     } catch (error) {
       console.error('Error deleting label:', error)
       showError(`Failed to delete label: ${error.message}`)
+      return false
     }
+  }
+
+  const handleConfirmDeleteLabel = async () => {
+    if (!labelToDelete?.id) return
+    setIsDeletingLabel(true)
+    try {
+      await deleteLabel(labelToDelete.id)
+    } finally {
+      setIsDeletingLabel(false)
+      setIsDeleteModalOpen(false)
+      setLabelToDelete(null)
+    }
+  }
+
+  const handleCancelDeleteLabel = () => {
+    setIsDeleteModalOpen(false)
+    setLabelToDelete(null)
   }
 
   // Predefined color options
@@ -208,158 +233,170 @@ const LabelsModal = ({ isOpen, onClose }) => {
   )
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={
-        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="material-symbols-outlined">label</span>
-          My Labels
-        </span>
-      }
-      size="medium"
-      footer={footer}
-    >
-      <div className="labels-modal-content">
-        {/* Create New Label Button */}
-        {!showCreateForm && (
-          <div className="labels-actions">
-            <button
-              className="btn-create-label"
-              onClick={() => setShowCreateForm(true)}
-              disabled={isLoading}
-            >
-              <span className="material-symbols-outlined">add</span>
-              Create New Label
-            </button>
-          </div>
-        )}
-
-        {/* Create Label Form */}
-        {showCreateForm && (
-          <div className="create-label-form">
-            <h4>Create New Label</h4>
-            <form onSubmit={handleCreateLabel} className="modal-form">
-              <div className="form-group">
-                <label htmlFor="labelName">Label Name *</label>
-                <input
-                  type="text"
-                  id="labelName"
-                  value={newLabelName}
-                  onChange={(e) => setNewLabelName(e.target.value)}
-                  placeholder="Enter label name"
-                  required
-                  disabled={isCreating}
-                  maxLength={50}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="labelColor">Color</label>
-                <div className="color-picker">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      className={`color-option ${newLabelColor === color ? 'selected' : ''}`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => setNewLabelColor(color)}
-                      disabled={isCreating}
-                      title={color}
-                    />
-                  ))}
-                </div>
-                <input
-                  type="color"
-                  id="labelColor"
-                  value={newLabelColor}
-                  onChange={(e) => setNewLabelColor(e.target.value)}
-                  className="color-input"
-                  disabled={isCreating}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="labelDescription">Description (Optional)</label>
-                <textarea
-                  id="labelDescription"
-                  value={newLabelDescription}
-                  onChange={(e) => setNewLabelDescription(e.target.value)}
-                  placeholder="Enter label description"
-                  rows="3"
-                  disabled={isCreating}
-                  maxLength={200}
-                />
-              </div>
-
-              <div className="form-actions">
-                <button
-                  type="button"
-                  className="btn-modal btn-modal-secondary"
-                  onClick={() => {
-                    setShowCreateForm(false)
-                    setNewLabelName('')
-                    setNewLabelColor('#3B82F6')
-                    setNewLabelDescription('')
-                  }}
-                  disabled={isCreating}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-modal btn-modal-primary"
-                  disabled={isCreating || !newLabelName.trim()}
-                >
-                  {isCreating ? 'Creating...' : 'Create Label'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Labels List */}
-        <div className="labels-list">
-          {isLoading ? (
-            <div className="labels-loading">
-              <span className="material-symbols-outlined loading-spinner">hourglass_empty</span>
-              <p>Loading labels...</p>
-            </div>
-          ) : labels.length === 0 ? (
-            <div className="labels-empty">
-              <span className="material-symbols-outlined">label_off</span>
-              <p>No labels yet. Create your first label to get started!</p>
-            </div>
-          ) : (
-            <div className="labels-grid">
-              {labels.map((label) => (
-                <div key={label.id} className="label-item">
-                  <div className="label-header">
-                    <div 
-                      className="label-color-indicator" 
-                      style={{ backgroundColor: label.color || '#3B82F6' }}
-                    />
-                    <div className="label-info">
-                      <div className="label-name">{label.name}</div>
-                      {label.description && (
-                        <div className="label-description">{label.description}</div>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    className="btn-delete-label"
-                    onClick={() => handleDeleteLabel(label.id)}
-                    title="Delete label"
-                  >
-                    <span className="material-symbols-outlined">delete</span>
-                  </button>
-                </div>
-              ))}
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="material-symbols-outlined">label</span>
+            My Labels
+          </span>
+        }
+        size="medium"
+        footer={footer}
+      >
+        <div className="labels-modal-content">
+          {/* Create New Label Button */}
+          {!showCreateForm && (
+            <div className="labels-actions">
+              <button
+                className="btn-create-label"
+                onClick={() => setShowCreateForm(true)}
+                disabled={isLoading}
+              >
+                <span className="material-symbols-outlined">add</span>
+                Create New Label
+              </button>
             </div>
           )}
+
+          {/* Create Label Form */}
+          {showCreateForm && (
+            <div className="create-label-form">
+              <h4>Create New Label</h4>
+              <form onSubmit={handleCreateLabel} className="modal-form">
+                <div className="form-group">
+                  <label htmlFor="labelName">Label Name *</label>
+                  <input
+                    type="text"
+                    id="labelName"
+                    value={newLabelName}
+                    onChange={(e) => setNewLabelName(e.target.value)}
+                    placeholder="Enter label name"
+                    required
+                    disabled={isCreating}
+                    maxLength={50}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="labelColor">Color</label>
+                  <div className="color-picker">
+                    {colorOptions.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`color-option ${newLabelColor === color ? 'selected' : ''}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setNewLabelColor(color)}
+                        disabled={isCreating}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                  <input
+                    type="color"
+                    id="labelColor"
+                    value={newLabelColor}
+                    onChange={(e) => setNewLabelColor(e.target.value)}
+                    className="color-input"
+                    disabled={isCreating}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="labelDescription">Description (Optional)</label>
+                  <textarea
+                    id="labelDescription"
+                    value={newLabelDescription}
+                    onChange={(e) => setNewLabelDescription(e.target.value)}
+                    placeholder="Enter label description"
+                    rows="3"
+                    disabled={isCreating}
+                    maxLength={200}
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="btn-modal btn-modal-secondary"
+                    onClick={() => {
+                      setShowCreateForm(false)
+                      setNewLabelName('')
+                      setNewLabelColor('#3B82F6')
+                      setNewLabelDescription('')
+                    }}
+                    disabled={isCreating}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-modal btn-modal-primary"
+                    disabled={isCreating || !newLabelName.trim()}
+                  >
+                    {isCreating ? 'Creating...' : 'Create Label'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Labels List */}
+          <div className="labels-list">
+            {isLoading ? (
+              <div className="labels-loading">
+                <span className="material-symbols-outlined loading-spinner">hourglass_empty</span>
+                <p>Loading labels...</p>
+              </div>
+            ) : labels.length === 0 ? (
+              <div className="labels-empty">
+                <span className="material-symbols-outlined">label_off</span>
+                <p>No labels yet. Create your first label to get started!</p>
+              </div>
+            ) : (
+              <div className="labels-grid">
+                {labels.map((label) => (
+                  <div key={label.id} className="label-item">
+                    <div className="label-header">
+                      <div 
+                        className="label-color-indicator" 
+                        style={{ backgroundColor: label.color || '#3B82F6' }}
+                      />
+                      <div className="label-info">
+                        <div className="label-name">{label.name}</div>
+                        {label.description && (
+                          <div className="label-description">{label.description}</div>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      className="btn-delete-label"
+                      onClick={() => handleDeleteLabel(label)}
+                      title="Delete label"
+                    >
+                      <span className="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+
+      <AreYouSureModal
+        isOpen={isDeleteModalOpen}
+        question={`Delete the label "${labelToDelete?.name || 'this label'}"?`}
+        description="This action cannot be undone."
+        confirmLabel={isDeletingLabel ? 'Deleting...' : 'Yes, delete'}
+        onConfirm={handleConfirmDeleteLabel}
+        onCancel={handleCancelDeleteLabel}
+        isConfirming={isDeletingLabel}
+      />
+    </>
   )
 }
 

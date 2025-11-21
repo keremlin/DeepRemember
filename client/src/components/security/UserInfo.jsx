@@ -1,14 +1,29 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useAuth } from './AuthContext'
+import AreYouSureModal from '../AreYouSureModal'
 import './UserInfo.css'
 
 const UserInfo = ({ onUserSetup }) => {
   const { user, logout } = useAuth()
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  const handleLogout = async () => {
-    if (confirm('Are you sure you want to logout?')) {
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true)
+  }
+
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true)
+    try {
       await logout()
+    } finally {
+      setIsLoggingOut(false)
+      setIsLogoutModalOpen(false)
     }
+  }
+
+  const handleCancelLogout = () => {
+    setIsLogoutModalOpen(false)
   }
 
   const handleUserSetup = () => {
@@ -25,28 +40,40 @@ const UserInfo = ({ onUserSetup }) => {
   }
 
   return (
-    <div className="user-info">
-      <div 
-        className="user-info-item" 
-        onClick={handleUserSetup} 
-        title={user?.email || 'Not logged in'}
-      >
-        <div className="user-info-icon">
-          <span className="material-symbols-outlined">person</span>
+    <>
+      <div className="user-info">
+        <div 
+          className="user-info-item" 
+          onClick={handleUserSetup} 
+          title={user?.email || 'Not logged in'}
+        >
+          <div className="user-info-icon">
+            <span className="material-symbols-outlined">person</span>
+          </div>
+          <div className="user-info-label">{getDisplayText()}</div>
         </div>
-        <div className="user-info-label">{getDisplayText()}</div>
-      </div>
-      <div 
-        className="user-info-item logout-item" 
-        onClick={handleLogout} 
-        title="Logout"
-      >
-        <div className="user-info-icon">
-          <span className="material-symbols-outlined">logout</span>
+        <div 
+          className="user-info-item logout-item" 
+          onClick={handleLogoutClick} 
+          title="Logout"
+        >
+          <div className="user-info-icon">
+            <span className="material-symbols-outlined">logout</span>
+          </div>
+          <div className="user-info-label">Logout</div>
         </div>
-        <div className="user-info-label">Logout</div>
       </div>
-    </div>
+
+      <AreYouSureModal
+        isOpen={isLogoutModalOpen}
+        question="Are you sure you want to logout?"
+        confirmLabel={isLoggingOut ? 'Logging out...' : 'Yes, logout'}
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+        isConfirming={isLoggingOut}
+        confirmButtonVariant="primary"
+      />
+    </>
   )
 }
 

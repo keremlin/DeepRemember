@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react'
 import CreateCardModal from './CreateCardModal'
 import DashboardView from './DashboardView'
 import ManageCards from './ManageCards/ManageCards'
+import EditCard from './ManageCards/EditCard'
 import HelpDeepRememberModal from './HelpDeepRememberModal'
 import Page from './Page'
 import UserManage from './header/user/UserManage'
 import { useToast } from './ToastProvider'
 import { useAuth } from './security/AuthContext'
 import { getApiUrl } from '../config/api'
+import AreYouSureModal from './AreYouSureModal'
 import './DeepRemember.css'
 
 const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMount = false, onNavigateToUserManagement, onNavigateToManagement }) => {
@@ -32,6 +34,14 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
   const [showUserSetup, setShowUserSetup] = useState(false)
   const [showCreateCard, setShowCreateCard] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    cardId: null,
+    resolver: null
+  })
+  const [isDeletingCard, setIsDeletingCard] = useState(false)
+  const [isEditCardModalOpen, setIsEditCardModalOpen] = useState(false)
+  const [editingCard, setEditingCard] = useState(null)
   
   // Refs for loading states
   const lastNumberKeyRef = useRef(null)
@@ -219,11 +229,6 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
   const deleteCurrentCard = async (cardId) => {
     if (!cardId) return false
     
-    const confirmed = window.confirm('Delete this card permanently?')
-    if (!confirmed) {
-      return false
-    }
-    
     try {
       const response = await fetch(getApiUrl(`/deepRemember/delete-card/${currentUserId}/${cardId}`), {
         method: 'DELETE',
@@ -251,6 +256,58 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
       showError(`Failed to delete card: ${error.message}`)
       return false
     }
+  }
+
+  const requestDeleteCard = (cardId) => {
+    if (!cardId) return Promise.resolve(false)
+    return new Promise((resolve) => {
+      setDeleteConfirmation({
+        isOpen: true,
+        cardId,
+        resolver: resolve
+      })
+    })
+  }
+
+  const resetDeleteConfirmation = () => {
+    setDeleteConfirmation({
+      isOpen: false,
+      cardId: null,
+      resolver: null
+    })
+  }
+
+  const handleCancelDeleteCard = () => {
+    deleteConfirmation?.resolver?.(false)
+    resetDeleteConfirmation()
+  }
+
+  const handleConfirmDeleteCard = async () => {
+    if (!deleteConfirmation.cardId) return
+    const resolver = deleteConfirmation.resolver
+    setIsDeletingCard(true)
+    try {
+      const success = await deleteCurrentCard(deleteConfirmation.cardId)
+      resolver?.(success)
+    } finally {
+      setIsDeletingCard(false)
+      resetDeleteConfirmation()
+    }
+  }
+
+  const handleEditCardRequest = (card) => {
+    if (!card) return
+    setEditingCard(card)
+    setIsEditCardModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditCardModalOpen(false)
+    setEditingCard(null)
+  }
+
+  const handleCardUpdatedFromReview = async () => {
+    await loadUserData()
   }
 
 
@@ -304,7 +361,8 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
                 showAnswer={showAnswer}
                 setShowAnswer={setShowAnswer}
                 answerCard={answerCard}
-                onDeleteCard={deleteCurrentCard}
+                onDeleteCard={requestDeleteCard}
+                onEditCard={handleEditCardRequest}
                 stats={stats}
                 setShowHelp={setShowHelp}
                 setShowCreateCard={setShowCreateCard}
@@ -343,6 +401,25 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
       <HelpDeepRememberModal 
         isOpen={showHelp}
         onClose={() => setShowHelp(false)}
+      />
+
+      <AreYouSureModal
+        isOpen={deleteConfirmation.isOpen}
+        question="Delete this card permanently?"
+        description="This action cannot be undone."
+        confirmLabel={isDeletingCard ? 'Deleting...' : 'Yes, delete'}
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmDeleteCard}
+        onCancel={handleCancelDeleteCard}
+        isConfirming={isDeletingCard}
+      />
+
+      <EditCard
+        isOpen={isEditCardModalOpen}
+        onClose={handleCloseEditModal}
+        card={editingCard}
+        currentUserId={currentUserId}
+        onCardUpdated={handleCardUpdatedFromReview}
       />
     </Page>
   )

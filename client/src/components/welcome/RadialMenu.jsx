@@ -1,15 +1,30 @@
 import React, { useState } from 'react'
 import { useAuth } from '../security/AuthContext'
+import AreYouSureModal from '../AreYouSureModal'
 import './RadialMenu.css'
 
 const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer }) => {
   const [isOpen, setIsOpen] = useState(true)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { logout } = useAuth()
 
-  const handleLogout = async () => {
-    if (confirm('Are you sure you want to logout?')) {
+  const handleLogout = () => {
+    setShowLogoutConfirm(true)
+  }
+
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true)
+    try {
       await logout()
+    } finally {
+      setIsLoggingOut(false)
+      setShowLogoutConfirm(false)
     }
+  }
+
+  const handleCancelLogout = () => {
+    setShowLogoutConfirm(false)
   }
 
   const menuItems = [
@@ -130,47 +145,59 @@ const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer }) => {
   }
 
   return (
-    <div className="radial-menu-container">
-      <div className="radial-menu">
-        {/* Center close button */}
-        <button 
-          className={`center-button ${isOpen ? 'open' : ''}`}
-          onClick={handleMenuToggle}
-          aria-label={isOpen ? 'Close menu' : 'Open menu'}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-        </button>
+    <>
+      <div className="radial-menu-container">
+        <div className="radial-menu">
+          {/* Center close button */}
+          <button 
+            className={`center-button ${isOpen ? 'open' : ''}`}
+            onClick={handleMenuToggle}
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </button>
 
-        {/* Menu items */}
-        {menuItems.map((item, index) => {
-          const angle = (index * 45) - 90 // Start from top, 45 degrees apart
-          const radius = 120 // Distance from center
-          const x = Math.cos(angle * Math.PI / 180) * radius
-          const y = Math.sin(angle * Math.PI / 180) * radius
+          {/* Menu items */}
+          {menuItems.map((item, index) => {
+            const angle = (index * 45) - 90 // Start from top, 45 degrees apart
+            const radius = 120 // Distance from center
+            const x = Math.cos(angle * Math.PI / 180) * radius
+            const y = Math.sin(angle * Math.PI / 180) * radius
 
-          return (
-            <div
-              key={item.id}
-              className={`menu-item ${isOpen ? 'open' : ''}`}
-              style={{
-                '--x': `${x}px`,
-                '--y': `${y}px`,
-                '--delay': `${index * 0.1}s`
-              }}
-              onClick={() => handleItemClick(item)}
-            >
-              <div className="menu-button">
-                {item.icon}
+            return (
+              <div
+                key={item.id}
+                className={`menu-item ${isOpen ? 'open' : ''}`}
+                style={{
+                  '--x': `${x}px`,
+                  '--y': `${y}px`,
+                  '--delay': `${index * 0.1}s`
+                }}
+                onClick={() => handleItemClick(item)}
+              >
+                <div className="menu-button">
+                  {item.icon}
+                </div>
+                <span className="menu-label">{item.label}</span>
               </div>
-              <span className="menu-label">{item.label}</span>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
-    </div>
+
+      <AreYouSureModal
+        isOpen={showLogoutConfirm}
+        question="Are you sure you want to logout?"
+        confirmLabel={isLoggingOut ? 'Logging out...' : 'Yes, logout'}
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+        isConfirming={isLoggingOut}
+        confirmButtonVariant="primary"
+      />
+    </>
   )
 }
 

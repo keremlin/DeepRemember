@@ -108,19 +108,25 @@
   position: relative;
 }
 
-.word-center-container.has-delete-button {
-  padding-left: 32px;
+.word-center-container.has-side-actions {
+  padding-left: 64px;
 }
 
-.word-delete-button {
+.word-side-actions {
   position: absolute;
   left: 0;
-  top: 6px;
-  width: 24px;
-  height: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.word-side-button {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 77, 79, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -129,16 +135,20 @@
   padding: 0;
 }
 
-.word-delete-button .google-icon {
+.word-side-button .google-icon {
   font-size: 16px;
-  color: #ff4d4f;
   background: none;
-  -webkit-text-fill-color: #ff4d4f;
+  -webkit-text-fill-color: currentColor;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
 }
 
+.word-delete-button {
+  background: rgba(255, 77, 79, 0.2);
+  color: #ff4d4f;
+}
+
 .word-delete-button:hover:not(:disabled) {
-  background: rgba(255, 77, 79, 0.28);
+  background: rgba(255, 77, 79, 0.3);
   transform: translateY(-1px);
 }
 
@@ -146,6 +156,16 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+.word-edit-button {
+  background: rgba(52, 199, 89, 0.2);
+  color: #34c759;
+}
+
+.word-edit-button:hover {
+  background: rgba(52, 199, 89, 0.32);
+  transform: translateY(-1px);
 }
 
 .word-center-container strong {

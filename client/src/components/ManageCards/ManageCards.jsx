@@ -5,6 +5,7 @@ import { getApiUrl } from '../../config/api'
 import EditCard from './EditCard'
 import AddList from './AddList'
 import CardLabelList from '../labels/CardLabelList'
+import AreYouSureModal from '../AreYouSureModal'
 import './ManageCards.css'
 
 const ManageCards = ({ currentUserId, onCardDeleted }) => {
@@ -18,6 +19,12 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
   const [userLabels, setUserLabels] = useState([])
   const [showLabelTooltip, setShowLabelTooltip] = useState(false)
   const [removingCardIds, setRemovingCardIds] = useState(new Set())
+  const [deleteModalState, setDeleteModalState] = useState({
+    isOpen: false,
+    cardId: null,
+    cardWord: ''
+  })
+  const [isDeletingCard, setIsDeletingCard] = useState(false)
 
   // Helper function to format context with dot delimiters
   const formatContext = (context) => {
@@ -126,8 +133,8 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
   }
 
   // Delete card
-  const deleteCard = async (cardId) => {
-    if (!confirm('Are you sure you want to delete this card?')) return
+  const performDeleteCard = async (cardId) => {
+    if (!cardId) return false
     
     try {
       const response = await fetch(getApiUrl(`/deepRemember/delete-card/${currentUserId}/${cardId}`), {
@@ -164,13 +171,47 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
         if (onCardDeleted) {
           onCardDeleted()
         }
+        return true
       } else {
         throw new Error(data.error || 'Failed to delete card')
       }
     } catch (error) {
       console.error('Error deleting card:', error)
       showError(`Failed to delete card: ${error.message}`)
+      return false
     }
+  }
+
+  const openDeleteCardModal = (card) => {
+    if (!card?.id) return
+    setDeleteModalState({
+      isOpen: true,
+      cardId: card.id,
+      cardWord: card.word || ''
+    })
+  }
+
+  const resetDeleteModal = () => {
+    setDeleteModalState({
+      isOpen: false,
+      cardId: null,
+      cardWord: ''
+    })
+  }
+
+  const handleConfirmDeleteCard = async () => {
+    if (!deleteModalState.cardId) return
+    setIsDeletingCard(true)
+    try {
+      await performDeleteCard(deleteModalState.cardId)
+    } finally {
+      setIsDeletingCard(false)
+      resetDeleteModal()
+    }
+  }
+
+  const handleCancelDeleteCard = () => {
+    resetDeleteModal()
   }
 
   // Edit card handlers
@@ -323,7 +364,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
                   </button>
                   <button 
                     className="btn-delete" 
-                    onClick={() => deleteCard(card.id)}
+                    onClick={() => openDeleteCardModal(card)}
                     title="Delete card"
                   >
                     <span className="material-symbols-outlined">delete</span>
@@ -350,6 +391,16 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
         onClose={handleCloseAddList}
         currentUserId={currentUserId}
         onCardsCreated={handleCardsCreated}
+      />
+
+      <AreYouSureModal
+        isOpen={deleteModalState.isOpen}
+        question={`Delete the card "${deleteModalState.cardWord || 'this card'}"?`}
+        description="This action cannot be undone."
+        confirmLabel={isDeletingCard ? 'Deleting...' : 'Yes, delete'}
+        onConfirm={handleConfirmDeleteCard}
+        onCancel={handleCancelDeleteCard}
+        isConfirming={isDeletingCard}
       />
     </div>
   )

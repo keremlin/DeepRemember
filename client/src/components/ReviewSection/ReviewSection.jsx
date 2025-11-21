@@ -12,7 +12,8 @@ const ReviewSection = ({
   showAnswer, 
   setShowAnswer, 
   answerCard,
-  onDeleteCard
+  onDeleteCard,
+  onEditCard
 }) => {
   const { getAuthHeaders } = useAuth()
   const [pressedKey, setPressedKey] = useState(null)
@@ -23,7 +24,9 @@ const ReviewSection = ({
   const [isDeletingCard, setIsDeletingCard] = useState(false)
   const hasAutoPlayedRef = useRef(false)
   const hasAutoPlayedAnswerRef = useRef(false)
+  const canEditCard = Boolean(onEditCard && currentCard)
   const canDeleteCard = Boolean(onDeleteCard && currentCard?.id)
+  const hasSideActions = canEditCard || canDeleteCard
 
   // Check if card is a word or sentence based on labels
   const getCardType = (card) => {
@@ -94,6 +97,11 @@ const ReviewSection = ({
       setIsDeletingCard(false)
     }
   }, [currentCard?.id, onDeleteCard])
+
+  const handleEditCard = useCallback(() => {
+    if (!currentCard || !onEditCard) return
+    onEditCard(currentCard)
+  }, [currentCard, onEditCard])
 
   // Function to play word audio
   const playWordAudio = async () => {
@@ -436,18 +444,33 @@ const ReviewSection = ({
         <div className="card-content">
           <div className="word-display">
             <div className="word-with-audio">
-              <div className={`word-center-container ${canDeleteCard ? 'has-delete-button' : ''}`.trim()}>
-                {canDeleteCard && (
-                  <button
-                    type="button"
-                    className="word-delete-button"
-                    onClick={handleDeleteCard}
-                    disabled={isDeletingCard}
-                    title="Delete this card"
-                    aria-label="Delete this card"
-                  >
-                    <span className="material-symbols-outlined google-icon">delete</span>
-                  </button>
+              <div className={`word-center-container ${hasSideActions ? 'has-side-actions' : ''}`.trim()}>
+                {hasSideActions && (
+                  <div className="word-side-actions">
+                    {canEditCard && (
+                      <button
+                        type="button"
+                        className="word-side-button word-edit-button"
+                        onClick={handleEditCard}
+                        title="Edit this card"
+                        aria-label="Edit this card"
+                      >
+                        <span className="material-symbols-outlined google-icon">edit</span>
+                      </button>
+                    )}
+                    {canDeleteCard && (
+                      <button
+                        type="button"
+                        className="word-side-button word-delete-button"
+                        onClick={handleDeleteCard}
+                        disabled={isDeletingCard}
+                        title="Delete this card"
+                        aria-label="Delete this card"
+                      >
+                        <span className="material-symbols-outlined google-icon">delete</span>
+                      </button>
+                    )}
+                  </div>
                 )}
                 <strong>{currentCard?.word || 'Loading...'}</strong>
                 {currentCard?.word && (

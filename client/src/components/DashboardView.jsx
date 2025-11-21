@@ -10,6 +10,7 @@ const DashboardView = ({
   setShowAnswer, 
   answerCard,
   onDeleteCard,
+  onEditCard,
   stats, 
   setShowHelp, 
   setShowCreateCard,
@@ -56,6 +57,7 @@ const DashboardView = ({
           setShowAnswer={setShowAnswer}
           answerCard={answerCard}
           onDeleteCard={onDeleteCard}
+          onEditCard={onEditCard}
         />
       )}
 
