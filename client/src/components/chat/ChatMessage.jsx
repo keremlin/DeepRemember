@@ -1,19 +1,52 @@
 import React, { useState, useRef, useEffect } from 'react'
 import './ChatMessage.css'
 
-const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = false, audioBlob = null }) => {
+const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = false, audioBlob = null, audioMimeType = null }) => {
   const isUser = role === 'user'
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
 
   useEffect(() => {
-    if (audioBlob && isVoice) {
+    if (audioBlob) {
       const url = URL.createObjectURL(audioBlob)
       setAudioUrl(url)
       return () => URL.revokeObjectURL(url)
     }
-  }, [audioBlob, isVoice])
+  }, [audioBlob])
+
+  // Auto-play audio for assistant messages with audio (TTS responses)
+  useEffect(() => {
+    if (audioUrl && !isUser && role === 'assistant' && audioRef.current) {
+      const audio = audioRef.current
+      
+      // Wait for audio to be ready before playing
+      const handleCanPlay = () => {
+        const playPromise = audio.play()
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setIsPlaying(true)
+            })
+            .catch(error => {
+              // Auto-play was prevented (browser policy), user will need to click play
+              // Silently fail - this is expected behavior in many browsers
+            })
+        }
+      }
+
+      if (audio.readyState >= 2) {
+        // Audio is already loaded enough to play
+        handleCanPlay()
+      } else {
+        // Wait for audio to be ready
+        audio.addEventListener('canplay', handleCanPlay, { once: true })
+        return () => {
+          audio.removeEventListener('canplay', handleCanPlay)
+        }
+      }
+    }
+  }, [audioUrl, isUser, role])
 
   const handlePlayAudio = () => {
     if (audioRef.current) {
@@ -142,9 +175,36 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
             />
           </div>
         ) : (
-          <div className="chat-message-text">
-            {formatContent(content)}
-          </div>
+          <>
+            <div className="chat-message-text">
+              <div className="chat-message-text-content">
+                {formatContent(content)}
+              </div>
+              {audioUrl && (
+                <button 
+                  className="voice-play-button-inline"
+                  onClick={handlePlayAudio}
+                  title={isPlaying ? 'Pause audio' : 'Play audio'}
+                >
+                  <span className="material-symbols-outlined">
+                    {isPlaying ? 'pause' : 'play_arrow'}
+                  </span>
+                </button>
+              )}
+            </div>
+            {audioUrl && (
+              <audio
+                ref={audioRef}
+                src={audioUrl}
+                preload="metadata"
+                onLoadedMetadata={() => {
+                  if (audioRef.current) {
+                    setIsPlaying(prev => prev)
+                  }
+                }}
+              />
+            )}
+          </>
         )}
         {timestamp && (
           <div className="chat-message-timestamp">

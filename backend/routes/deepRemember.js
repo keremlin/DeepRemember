@@ -9,7 +9,11 @@ const FileSystemFactory = require('../filesystem/FileSystemFactory');
 const fileSystem = FileSystemFactory.createDefault();
 const crypto = require('crypto'); // Added for hash generation
 const TtsFactory = require('../tts/TtsFactory');
+const SstFactory = require('../stt/SstFactory');
 const appConfig = require('../config/app');
+const fs = require('fs');
+const multer = require('multer');
+const { upload } = require('../middleware/uploadConfig');
 
 const router = express.Router();
 const { LlmFactory } = require('../llm/LlmFactory');
@@ -18,6 +22,42 @@ const authMiddleware = new AuthMiddleware();
 
 // Initialize TTS service with configuration
 const ttsService = TtsFactory.createTtsService();
+// Initialize STT service with configuration
+const sstService = SstFactory.createSstService();
+
+/**
+ * Clean text for TTS - removes markdown and keeps only letters, numbers, periods, commas, and question marks
+ * @param {string} text - Text to clean
+ * @returns {string} - Cleaned text suitable for TTS
+ */
+function cleanTextForTTS(text) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+
+  // Remove markdown formatting (**, *, _, etc.)
+  let cleaned = text
+    .replace(/\*\*/g, '') // Remove bold markdown
+    .replace(/\*/g, '') // Remove italic markdown
+    .replace(/_/g, '') // Remove underline markdown
+    .replace(/`/g, '') // Remove code markdown
+    .replace(/#{1,6}\s/g, '') // Remove heading markdown
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove links, keep text
+    .replace(/!\[([^\]]*)\]\([^\)]+\)/g, '') // Remove images
+    .replace(/•/g, '') // Remove bullet points
+    .replace(/- /g, '') // Remove list markers
+    .replace(/\n{2,}/g, '. ') // Replace multiple newlines with period and space
+    .replace(/\n/g, ' ') // Replace single newlines with space
+    .trim();
+
+  // Keep only letters, numbers, spaces, periods (.), commas (,), and question marks (?)
+  cleaned = cleaned.replace(/[^a-zA-Z0-9\s.,?]/g, ' ');
+
+  // Clean up multiple spaces
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+  return cleaned;
+}
 
 // Initialize FSRS instance
 const fsrs = new FSRS();
@@ -801,6 +841,185 @@ Conversation History:
       error: 'Failed to process chat message',
       details: error.message 
     });
+  }
+});
+
+// Voice chat endpoint for AI language learning assistant
+// Use memory storage for voice chat to avoid filesystem abstraction issues
+const voiceChatUpload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      const tempDir = path.join(__dirname, '..', 'temp');
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      cb(null, tempDir);
+    },
+    filename: function (req, file, cb) {
+      cb(null, `voice_chat_${Date.now()}_${file.originalname}`);
+    }
+  })
+});
+
+router.post('/chat-voice', authMiddleware.verifyToken, voiceChatUpload.single('audio'), async (req, res) => {
+  let tempAudioPath = null;
+  let tempSubtitlePath = null;
+
+  try {
+    const user = req.user;
+    const audioFile = req.file;
+
+    if (!audioFile) {
+      return res.status(400).json({ error: 'Audio file is required' });
+    }
+
+    // Parse messages from FormData (it comes as a JSON string)
+    let messages = [];
+    if (req.body.messages) {
+      try {
+        messages = typeof req.body.messages === 'string' 
+          ? JSON.parse(req.body.messages) 
+          : req.body.messages;
+      } catch (parseError) {
+        console.error('[DeepRemember] Error parsing messages:', parseError);
+        return res.status(400).json({ error: 'Invalid messages format' });
+      }
+    }
+
+    if (!Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages must be an array' });
+    }
+
+    tempAudioPath = audioFile.path;
+
+    // Wait for file to be fully written by multer
+    let fileReady = false;
+    let retries = 0;
+    const maxRetries = 20;
+    const expectedSize = audioFile.size;
+    
+    while (!fileReady && retries < maxRetries) {
+      if (fs.existsSync(tempAudioPath)) {
+        const stats = fs.statSync(tempAudioPath);
+        if (stats.size >= expectedSize * 0.9) {
+          fileReady = true;
+        }
+      }
+      
+      if (!fileReady) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retries++;
+      }
+    }
+
+    if (!fileReady) {
+      throw new Error(`Audio file not ready after waiting: ${tempAudioPath}`);
+    }
+
+    // Step 1: Convert audio to text using STT
+    tempSubtitlePath = path.join(__dirname, '..', 'temp', `voice_chat_${Date.now()}.srt`);
+    
+    const tempDir = path.dirname(tempSubtitlePath);
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    const sttResult = await sstService.convert(tempAudioPath, tempSubtitlePath, {
+      outputFormat: 'text'
+    });
+
+    if (!sttResult || !sttResult.text) {
+      throw new Error('STT conversion failed - no text returned');
+    }
+
+    const userText = sttResult.text.trim();
+
+    // Step 2: Add user message to chat history and send to LLM
+    const apiMessages = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+
+    // Add the transcribed text as a user message
+    apiMessages.push({
+      role: 'user',
+      content: userText
+    });
+
+    // Build conversation history prompt for Llama 3.2
+    let conversationHistory = `You are DeepChat, an AI language learning assistant. Your role is to help users learn languages through conversation, vocabulary practice, grammar explanations, and contextual learning.
+
+Guidelines:
+- Be friendly, encouraging, and patient
+- Provide clear explanations in simple language
+- Use examples when explaining grammar or vocabulary
+- Encourage practice and active learning
+- If asked about vocabulary, provide translations, example sentences, and usage tips
+- If asked about grammar, explain rules clearly with examples
+- Keep responses concise but informative
+- Use markdown formatting for better readability (use **bold** for emphasis, • for lists)
+
+Conversation History:
+`;
+
+    // Format messages for Llama 3.2 chat format
+    apiMessages.forEach((msg) => {
+      if (msg.role === 'user') {
+        conversationHistory += `User: ${msg.content}\n`;
+      } else if (msg.role === 'assistant') {
+        conversationHistory += `Assistant: ${msg.content}\n`;
+      }
+    });
+
+    conversationHistory += `\nNow, respond to the user's latest message as the Assistant.`;
+
+    const llmData = await llmClient.query(conversationHistory, { stream: false });
+    
+    if (!llmData || !llmData.response) {
+      throw new Error('Invalid response from LLM');
+    }
+
+    const assistantText = llmData.response.trim();
+
+    // Step 3: Clean text for TTS (remove markdown, keep only letters, numbers, punctuation)
+    const cleanedText = cleanTextForTTS(assistantText);
+    console.log('[DeepRemember] TTS Input:', cleanedText);
+
+    // Step 4: Convert cleaned LLM response to speech using TTS
+    const audioBuffer = await ttsService.convert(cleanedText, {
+      timeout: 30000
+    });
+
+    // Convert audio buffer to base64 for frontend
+    const audioBase64 = audioBuffer.toString('base64');
+    const audioMimeType = appConfig.TTS_TYPE === 'google' ? 'audio/mp3' : 'audio/wav';
+
+    res.json({
+      success: true,
+      response: assistantText,
+      audio: audioBase64,
+      audioMimeType: audioMimeType,
+      userText: userText
+    });
+
+  } catch (error) {
+    console.error('[DeepRemember] Voice chat error:', error);
+    res.status(500).json({ 
+      error: 'Failed to process voice chat message',
+      details: error.message 
+    });
+  } finally {
+    // Cleanup temporary files
+    try {
+      if (tempAudioPath && fs.existsSync(tempAudioPath)) {
+        fs.unlinkSync(tempAudioPath);
+      }
+      if (tempSubtitlePath && fs.existsSync(tempSubtitlePath)) {
+        fs.unlinkSync(tempSubtitlePath);
+      }
+    } catch (cleanupError) {
+      console.warn('[DeepRemember] Error cleaning up temp files:', cleanupError);
+    }
   }
 });
 

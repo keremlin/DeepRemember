@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
+import VoiceChatInput from './VoiceChatInput'
+import Button from '../Button'
 import Page from '../Page'
 import { useAuth } from '../security/AuthContext'
 import { useToast } from '../ToastProvider'
@@ -16,6 +18,7 @@ const Chat = ({
 }) => {
   const { getAuthHeaders } = useAuth()
   const { showError } = useToast()
+  const [chatMode, setChatMode] = useState('text') // 'text' or 'voice'
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -101,6 +104,78 @@ const Chat = ({
     setInputValue(value)
   }
 
+  const handleVoiceSend = async (audioBlob) => {
+    if (isLoading) return
+
+    setIsLoading(true)
+
+    try {
+      // Prepare messages for API (only role and content, exclude voice messages and audio blobs)
+      const apiMessages = messages
+        .filter(msg => !msg.isVoice && !msg.audioBlob)
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }))
+
+      // Create FormData to send audio file
+      const formData = new FormData()
+      formData.append('audio', audioBlob, 'voice_message.webm')
+      formData.append('messages', JSON.stringify(apiMessages))
+
+      const response = await fetch(getApiUrl('/deepRemember/chat-voice'), {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders()
+        },
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process voice message')
+      }
+
+      if (data.success) {
+        // Add user message (transcribed text)
+        const userMessage = {
+          id: Date.now(),
+          role: 'user',
+          content: data.userText || '[Voice message]',
+          timestamp: new Date()
+        }
+
+        // Convert base64 audio to blob for assistant message
+        const audioBytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))
+        const assistantAudioBlob = new Blob([audioBytes], { type: data.audioMimeType || 'audio/wav' })
+
+        // Add assistant message with text and audio
+        const assistantMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: data.response,
+          audioBlob: assistantAudioBlob,
+          audioMimeType: data.audioMimeType,
+          timestamp: new Date()
+        }
+
+        setMessages(prev => [...prev, userMessage, assistantMessage])
+      } else {
+        throw new Error('Invalid response from server')
+      }
+    } catch (error) {
+      console.error('Voice chat error:', error)
+      showError(error.message || 'Failed to send voice message. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const toggleChatMode = () => {
+    setChatMode(prev => prev === 'text' ? 'voice' : 'text')
+  }
+
   return (
     <Page
       onNavigateToWelcome={onNavigateToWelcome}
@@ -109,13 +184,22 @@ const Chat = ({
       onNavigateToUserManagement={onNavigateToUserManagement}
       onNavigateToManagement={onNavigateToManagement}
     >
-      <div className="chat-container">
+      <div className={`chat-container ${chatMode === 'voice' ? 'voice-mode' : ''}`}>
         <div className="chat-header">
           <div className="chat-header-content">
             <div className="chat-header-title">
               <span className="material-symbols-outlined">conversation</span>
               <h2>DeepChat</h2>
             </div>
+            <Button
+              onClick={toggleChatMode}
+              variant={chatMode === 'voice' ? 'primary' : 'secondary'}
+              size="medium"
+              iconName={chatMode === 'voice' ? 'keyboard' : 'mic'}
+              className="chat-mode-toggle"
+            >
+              {chatMode === 'voice' ? 'Text Chat' : 'Voice Chat'}
+            </Button>
           </div>
         </div>
         
@@ -128,6 +212,7 @@ const Chat = ({
               timestamp={message.timestamp}
               isVoice={message.isVoice}
               audioBlob={message.audioBlob}
+              audioMimeType={message.audioMimeType}
             />
           ))}
           {isLoading && (
@@ -140,12 +225,19 @@ const Chat = ({
           <div ref={messagesEndRef} />
         </div>
 
-        <ChatInput
-          value={inputValue}
-          onChange={handleInputChange}
-          onSend={handleSendMessage}
-          disabled={isLoading}
-        />
+        {chatMode === 'text' ? (
+          <ChatInput
+            value={inputValue}
+            onChange={handleInputChange}
+            onSend={handleSendMessage}
+            disabled={isLoading}
+          />
+        ) : (
+          <VoiceChatInput
+            onSend={handleVoiceSend}
+            disabled={isLoading}
+          />
+        )}
       </div>
     </Page>
   )
