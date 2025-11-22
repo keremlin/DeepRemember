@@ -738,6 +738,72 @@ router.get('/search-similar/:userId/:query', authMiddleware.verifyToken, authMid
     }
 });
 
+// Chat endpoint for AI language learning assistant
+router.post('/chat', authMiddleware.verifyToken, async (req, res) => {
+  try {
+    const { messages } = req.body;
+    const user = req.user;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    // Build conversation history prompt for Llama 3.2
+    // Llama 3.2 uses a specific chat format with system/user/assistant roles
+    let conversationHistory = `You are DeepChat, an AI language learning assistant. Your role is to help users learn languages through conversation, vocabulary practice, grammar explanations, and contextual learning.
+
+Guidelines:
+- Be friendly, encouraging, and patient
+- Provide clear explanations in simple language
+- Use examples when explaining grammar or vocabulary
+- Encourage practice and active learning
+- If asked about vocabulary, provide translations, example sentences, and usage tips
+- If asked about grammar, explain rules clearly with examples
+- Keep responses concise but informative
+- Use markdown formatting for better readability (use **bold** for emphasis, • for lists)
+
+Conversation History:
+`;
+
+    // Format messages for Llama 3.2 chat format
+    messages.forEach((msg, index) => {
+      if (msg.role === 'user') {
+        conversationHistory += `User: ${msg.content}\n`;
+      } else if (msg.role === 'assistant') {
+        conversationHistory += `Assistant: ${msg.content}\n`;
+      }
+    });
+
+    conversationHistory += `\nNow, respond to the user's latest message as the Assistant.`;
+
+    console.log('[DeepRemember] Sending chat prompt to LLM:', {
+      userId: user?.email || 'unknown',
+      messageCount: messages.length,
+      promptLength: conversationHistory.length
+    });
+
+    const data = await llmClient.query(conversationHistory, { stream: false });
+    
+    if (!data || !data.response) {
+      console.error('[DeepRemember] Invalid LLM response:', data);
+      return res.status(500).json({ error: 'Invalid response from LLM' });
+    }
+
+    console.log('[DeepRemember] LLM chat response received');
+
+    res.json({
+      success: true,
+      response: data.response.trim()
+    });
+  } catch (error) {
+    console.error('[DeepRemember] Chat error:', error);
+    res.status(500).json({ 
+      error: 'Failed to process chat message',
+      details: error.message 
+    });
+  }
+});
+
 // Get all cards for a user (not just due cards)
 router.get('/all-cards/:userId', authMiddleware.verifyToken, authMiddleware.checkResourceOwnership('userId'), async (req, res) => {
   try {
