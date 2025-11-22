@@ -9,7 +9,8 @@ const UserManagement = ({
   onNavigateToPlayer,
   onShowCards,
   onNavigateToUserManagement,
-  onNavigateToManagement
+  onNavigateToManagement,
+  onNavigateToChat
 }) => {
   const [showLabelsModal, setShowLabelsModal] = useState(false)
 
@@ -27,6 +28,7 @@ const UserManagement = ({
       onShowCards={onShowCards}
       onNavigateToUserManagement={onNavigateToUserManagement}
       onNavigateToManagement={onNavigateToManagement}
+      onNavigateToChat={onNavigateToChat}
     >
       <div className="user-management-content">
         <div className="user-info">

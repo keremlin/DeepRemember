@@ -267,7 +267,39 @@ The AreYouSureModal component at `src/components/AreYouSureModal.jsx` is a speci
 
 The component accepts an `isOpen` boolean to control visibility, a `title` string for the modal header, a `question` string that serves as the main confirmation prompt, and an optional `description` string for additional context. It provides customizable button labels through `confirmLabel` and `cancelLabel` props, with default values of "Yes" and "Cancel" respectively. The component accepts `onConfirm` and `onCancel` callback functions that are triggered when the user clicks the respective buttons. The `isConfirming` boolean prop is used to show a loading state, typically disabling buttons and updating the confirm button label to indicate processing. The `confirmButtonVariant` prop allows customization of the confirm button style, supporting primary, secondary, and danger variants, with danger being the default for destructive actions. The component automatically handles button states during confirmation and prevents multiple submissions.
 
-These components work together to create consistent user interfaces. The Modal component serves as the foundation for dialogs, the CloseButton is integrated into modals and can be used standalone, the Button component provides consistent action buttons throughout the application, the AreYouSureModal builds on Modal for confirmation dialogs, and the Page component provides the overall page structure. When creating new features, use these components to maintain design consistency and reduce development time.
+#### Chat Component
+
+The Chat component located at `src/components/chat/Chat.jsx` is the main chat interface container that provides an AI language learning assistant interface. It supports both text-based and voice-based chat modes, allowing users to switch between typing messages and recording voice messages. The component wraps its content in a Page component to provide consistent navigation and layout structure.
+
+The component manages chat state including the current chat mode (text or voice), an array of messages with their roles (user or assistant), content, timestamps, and optional voice data. It maintains loading state during AI response generation and automatically scrolls to the latest message when new messages are added. The component accepts navigation callback props that are passed to the Page wrapper, including callbacks for navigating to welcome page, player page, showing cards, user management, and management pages.
+
+The Chat component renders a header with a title and a mode toggle button that switches between text and voice chat modes. It displays messages using the ChatMessage component in a scrollable container, and conditionally renders either ChatInput for text mode or VoiceChatInput for voice mode based on the current chat mode. The component handles message sending through callback functions, manages input state, and provides loading indicators during AI response generation. When integrating with a backend API, the message sending handlers should be updated to make actual API calls instead of simulated responses.
+
+#### ChatMessage Component
+
+The ChatMessage component at `src/components/chat/ChatMessage.jsx` renders individual chat messages in the conversation. It displays messages differently based on whether they are from the user or the assistant, with distinct styling and avatar icons. The component supports both text and voice messages, with special handling for audio playback in voice messages.
+
+The component accepts a `role` prop that determines if the message is from the user or assistant, a `content` string for text content, a `timestamp` Date object for displaying message time, an `isLoading` boolean for showing a loading animation, an `isVoice` boolean to indicate voice messages, and an `audioBlob` for voice message audio data. The component automatically formats timestamps to display hours and minutes, and processes text content to support basic markdown formatting including bold text and bullet points.
+
+For voice messages, the component creates an audio URL from the provided audio blob and renders a play button with audio controls. It manages audio playback state, displays recording duration when available, and handles audio event listeners for play, pause, and end events. The component shows a loading animation with three animated dots when the `isLoading` prop is true, which is typically used while waiting for AI responses. The component uses Material icons for avatars, with a person icon for user messages and a smart toy icon for assistant messages.
+
+#### ChatInput Component
+
+The ChatInput component at `src/components/chat/ChatInput.jsx` provides a text input interface for typing and sending chat messages. It features an auto-expanding textarea that grows with content, keyboard shortcuts for sending messages, and integration with the Button component for the send action.
+
+The component accepts a `value` string prop for the current input text, an `onChange` callback that receives the new input value whenever the user types, an `onSend` callback that is triggered when the user sends a message, and a `disabled` boolean to prevent input during loading states. The textarea automatically adjusts its height based on content, resetting to a single line when a message is sent. The component handles Enter key press to send messages, while Shift+Enter creates a new line, and provides a placeholder text explaining these keyboard shortcuts.
+
+The send button is integrated using the Button component with a send icon, and is automatically disabled when the input is empty or when the component is in a disabled state. The component clears the input and resets the textarea height after sending a message. The ChatInput is designed to work seamlessly with the Chat component's message handling system.
+
+#### VoiceChatInput Component
+
+The VoiceChatInput component at `src/components/chat/VoiceChatInput.jsx` provides voice recording functionality for chat messages. It allows users to record audio messages using their microphone, with visual feedback during recording including audio level visualization, recording timer, and recording status indicators.
+
+The component accepts an `onSend` callback that receives the recorded audio blob when recording is stopped, and a `disabled` boolean to prevent recording during loading states. It uses the browser's MediaRecorder API to capture audio and Web Audio API for real-time audio level analysis and visualization. The component manages microphone permissions, handles recording start and stop actions, and automatically cleans up media streams and audio contexts when unmounted.
+
+During recording, the component displays a recording indicator with a pulsing dot, shows elapsed recording time in minutes and seconds format, and provides an audio level visualizer with animated bars that respond to audio input levels. The record button changes appearance and icon when recording is active, and includes an audio level indicator that scales with input volume. The component handles errors gracefully, showing alerts if microphone access is denied, and properly stops all media tracks and cleans up resources when recording ends or the component is unmounted. The recorded audio is converted to a Blob object and passed to the onSend callback for further processing by the parent Chat component.
+
+These components work together to create consistent user interfaces. The Modal component serves as the foundation for dialogs, the CloseButton is integrated into modals and can be used standalone, the Button component provides consistent action buttons throughout the application, the AreYouSureModal builds on Modal for confirmation dialogs, the Page component provides the overall page structure, and the Chat components provide a complete conversational interface for AI interactions. When creating new features, use these components to maintain design consistency and reduce development time.
 
 ## Additional Documentation
 

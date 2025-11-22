@@ -14,6 +14,7 @@ function Page({
   onShowCards,
   onNavigateToUserManagement,
   onNavigateToManagement,
+  onNavigateToChat,
   isReviewMode
 }) {
   return (
@@ -27,6 +28,7 @@ function Page({
         onShowCards={onShowCards}
         onNavigateToUserManagement={onNavigateToUserManagement}
         onNavigateToManagement={onNavigateToManagement}
+        onNavigateToChat={onNavigateToChat}
       />
       
       <main className="page-body">

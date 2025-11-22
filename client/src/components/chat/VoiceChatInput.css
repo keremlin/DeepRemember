@@ -1,0 +1,266 @@
+/* VoiceChatInput Component Styles - Dark Theme */
+
+.voice-chat-input-container {
+  padding: 16px 20px;
+  background: #2a2a2a;
+  border-top: 1px solid #333;
+}
+
+.voice-chat-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 100%;
+}
+
+.recording-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  justify-content: center;
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ff4444;
+}
+
+.recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff4444;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+.recording-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #ff4444;
+}
+
+.recording-time {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  font-variant-numeric: tabular-nums;
+}
+
+.voice-record-button {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+}
+
+.voice-record-button:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+}
+
+.voice-record-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.voice-record-button.recording {
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  box-shadow: 0 4px 20px rgba(255, 68, 68, 0.5);
+  animation: recordingPulse 2s ease-in-out infinite;
+}
+
+@keyframes recordingPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(255, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(255, 68, 68, 0.8);
+  }
+}
+
+.voice-record-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.voice-record-button .material-symbols-outlined {
+  font-size: 36px;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+  position: relative;
+  z-index: 2;
+}
+
+.audio-level-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: transform 0.1s ease;
+  z-index: 1;
+}
+
+.audio-visualizer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 60px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.visualizer-bar {
+  flex: 1;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
+  min-width: 4px;
+  animation: visualizerWave 1s ease-in-out infinite;
+}
+
+@keyframes visualizerWave {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Light Mode Styles */
+.light-mode .voice-chat-input-container {
+  background: #f5f5f5;
+  border-top: 1px solid #ddd;
+}
+
+.light-mode .recording-text {
+  color: #ff4444;
+}
+
+.light-mode .recording-time {
+  color: #333;
+}
+
+.light-mode .voice-record-button {
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .voice-record-button:hover:not(:disabled) {
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+}
+
+.light-mode .voice-record-button.recording {
+  box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
+}
+
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .voice-chat-input-container {
+    padding: 14px 18px;
+  }
+
+  .voice-record-button {
+    width: 70px;
+    height: 70px;
+  }
+
+  .voice-record-button .material-symbols-outlined {
+    font-size: 32px;
+  }
+
+  .audio-visualizer {
+    height: 50px;
+    max-width: 350px;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .voice-chat-input-container {
+    padding: 12px 15px;
+  }
+
+  .voice-chat-controls {
+    gap: 12px;
+  }
+
+  .voice-record-button {
+    width: 64px;
+    height: 64px;
+  }
+
+  .voice-record-button .material-symbols-outlined {
+    font-size: 28px;
+  }
+
+  .recording-time {
+    font-size: 1.1rem;
+  }
+
+  .audio-visualizer {
+    height: 45px;
+    max-width: 300px;
+    gap: 3px;
+  }
+
+  .visualizer-bar {
+    min-width: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .voice-chat-input-container {
+    padding: 10px 12px;
+  }
+
+  .voice-record-button {
+    width: 56px;
+    height: 56px;
+  }
+
+  .voice-record-button .material-symbols-outlined {
+    font-size: 24px;
+  }
+
+  .recording-time {
+    font-size: 1rem;
+  }
+
+  .audio-visualizer {
+    height: 40px;
+    max-width: 250px;
+    gap: 2px;
+  }
+
+  .visualizer-bar {
+    min-width: 2px;
+  }
+}
+

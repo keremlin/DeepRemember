@@ -4,6 +4,7 @@ import DeepRemember from './components/DeepRemember'
 import PlayerPage from './components/player/PlayerPage'
 import UserManagement from './components/users/UserManagement'
 import ManagementPage from './components/management/userManagement'
+import Chat from './components/chat/Chat'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
@@ -46,6 +47,10 @@ function App() {
     setCurrentView('management')
   }
 
+  const navigateToChat = () => {
+    setCurrentView('chat')
+  }
+
   return (
     <ThemeProvider>
       <ToastProvider>
@@ -69,6 +74,7 @@ function App() {
                   showCardsOnMount={showCardsOnMount}
                   onNavigateToUserManagement={navigateToUserManagement}
                   onNavigateToManagement={navigateToManagement}
+                  onNavigateToChat={navigateToChat}
                 />
               ) : currentView === 'usermanagement' ? (
                 <UserManagement 
@@ -78,10 +84,20 @@ function App() {
                   onShowCards={() => navigateToDeepRemember(true)}
                   onNavigateToUserManagement={navigateToUserManagement}
                   onNavigateToManagement={navigateToManagement}
+                  onNavigateToChat={navigateToChat}
                 />
               ) : currentView === 'management' ? (
                 <ManagementPage 
                   onUserSetup={() => {}}
+                  onNavigateToWelcome={navigateToWelcome}
+                  onNavigateToPlayer={navigateToPlayer}
+                  onShowCards={() => navigateToDeepRemember(true)}
+                  onNavigateToUserManagement={navigateToUserManagement}
+                  onNavigateToManagement={navigateToManagement}
+                  onNavigateToChat={navigateToChat}
+                />
+              ) : currentView === 'chat' ? (
+                <Chat 
                   onNavigateToWelcome={navigateToWelcome}
                   onNavigateToPlayer={navigateToPlayer}
                   onShowCards={() => navigateToDeepRemember(true)}
@@ -95,6 +111,7 @@ function App() {
                   onNavigateToDeepRemember={navigateToDeepRemember}
                   onNavigateToUserManagement={navigateToUserManagement}
                   onNavigateToManagement={navigateToManagement}
+                  onNavigateToChat={navigateToChat}
                 />
               )}
             </div>

@@ -11,7 +11,8 @@ const Header = ({
   onNavigateToPlayer,
   onShowCards,
   onNavigateToUserManagement,
-  onNavigateToManagement
+  onNavigateToManagement,
+  onNavigateToChat
 }) => {
   return (
     <>
@@ -29,6 +30,7 @@ const Header = ({
         onShowCards={onShowCards}
         onNavigateToUserManagement={onNavigateToUserManagement}
         onNavigateToManagement={onNavigateToManagement}
+        onNavigateToChat={onNavigateToChat}
       />
     </>
   )
