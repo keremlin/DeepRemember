@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Page from '../Page'
 import LabelsModal from '../labels/LabelsModal'
+import ChatTemplates from '../chat/ChatTemplates'
 import '../security/UserInfo.css'
 
 const UserManagement = ({ 
@@ -13,9 +14,31 @@ const UserManagement = ({
   onNavigateToChat
 }) => {
   const [showLabelsModal, setShowLabelsModal] = useState(false)
+  const [showChatTemplates, setShowChatTemplates] = useState(false)
 
   const handleLabelsClick = () => {
     setShowLabelsModal(true)
+  }
+
+  const handleChatTemplatesClick = () => {
+    setShowChatTemplates(true)
+  }
+
+  if (showChatTemplates) {
+    return (
+      <ChatTemplates
+        onUserSetup={onUserSetup}
+        onNavigateToWelcome={onNavigateToWelcome}
+        onNavigateToPlayer={onNavigateToPlayer}
+        onShowCards={onShowCards}
+        onNavigateToUserManagement={onNavigateToUserManagement}
+        onNavigateToManagement={() => {
+          setShowChatTemplates(false)
+          onNavigateToManagement()
+        }}
+        onNavigateToChat={onNavigateToChat}
+      />
+    )
   }
 
   return (
@@ -41,6 +64,16 @@ const UserManagement = ({
               <span className="material-symbols-outlined">label</span>
             </div>
             <div className="user-info-label">Labels</div>
+          </div>
+          <div 
+            className="user-info-item" 
+            onClick={handleChatTemplatesClick} 
+            title="Chat Templates"
+          >
+            <div className="user-info-icon">
+              <span className="material-symbols-outlined">chat_bubble_outline</span>
+            </div>
+            <div className="user-info-label">Chat Templates</div>
           </div>
         </div>
       </div>

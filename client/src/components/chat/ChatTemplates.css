@@ -1,0 +1,504 @@
+/* Chat Templates Component - Mobile First Design */
+
+.chat-templates-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 15px;
+}
+
+.chat-templates-card {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.chat-templates-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+}
+
+.chat-templates-header {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-templates-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 300;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-templates-header h3 .material-symbols-outlined {
+  font-size: 1.5rem;
+  -webkit-text-fill-color: #667eea;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-refresh {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #aaa;
+}
+
+.empty-state .material-symbols-outlined {
+  font-size: 4rem;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Table Styles */
+.templates-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.templates-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.templates-table thead {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.templates-table th {
+  padding: 12px 10px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #667eea;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.templates-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+  word-break: break-word;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.templates-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.templates-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.templates-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-edit,
+.btn-delete {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.btn-edit {
+  color: #4da6ff;
+}
+
+.btn-edit:hover {
+  background: rgba(77, 166, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.btn-delete {
+  color: #ff6b6b;
+}
+
+.btn-delete:hover {
+  background: rgba(255, 107, 107, 0.2);
+  transform: scale(1.1);
+}
+
+.btn-edit .material-symbols-outlined,
+.btn-delete .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Form Styles */
+.chat-template-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chat-template-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-template-form .form-group label,
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group textarea,
+.form-group select {
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #ffffff;
+  color: #333;
+  transition: all 0.3s ease;
+  resize: vertical;
+}
+
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  background: #ffffff;
+}
+
+.form-group textarea::placeholder {
+  color: #999;
+}
+
+.form-group select {
+  cursor: pointer;
+}
+
+.form-group select option {
+  background: #ffffff;
+  color: #333;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .chat-templates-container {
+    padding: 20px;
+  }
+
+  .chat-templates-card {
+    padding: 25px;
+  }
+
+  .chat-templates-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chat-templates-header h3 {
+    font-size: 1.5rem;
+  }
+
+  .templates-table th,
+  .templates-table td {
+    padding: 15px;
+    font-size: 1rem;
+  }
+
+  .templates-table td {
+    max-width: 300px;
+  }
+
+  .chat-template-form {
+    gap: 20px;
+  }
+
+  .form-group label {
+    font-size: 1rem;
+  }
+
+  .form-group textarea,
+  .form-group select {
+    padding: 12px;
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chat-templates-container {
+    padding: 30px;
+  }
+
+  .templates-table td {
+    max-width: 400px;
+  }
+}
+
+/* Light Mode Support */
+.light-mode .chat-templates-card {
+  background: #ffffff;
+  border-color: #e0e0e0;
+  color: #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .chat-templates-card:hover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .chat-templates-header {
+  border-bottom-color: #e0e0e0;
+}
+
+.light-mode .templates-table thead {
+  background: #f8f9fa;
+}
+
+.light-mode .templates-table th {
+  color: #667eea;
+  border-bottom-color: rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .templates-table td {
+  border-bottom-color: #e0e0e0;
+}
+
+.light-mode .templates-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.light-mode .empty-state {
+  color: #666;
+}
+
+/* Light mode form styles - ensure labels are visible */
+.light-mode .modal .chat-template-form .form-group label,
+.light-mode .chat-template-form .form-group label,
+.light-mode .form-group label,
+.light-mode .modal-content .form-group label {
+  color: #333 !important;
+}
+
+.light-mode .form-group textarea,
+.light-mode .form-group select {
+  background: #ffffff;
+  border-color: #e0e0e0;
+  color: #333;
+}
+
+.light-mode .form-group textarea:focus,
+.light-mode .form-group select:focus {
+  border-color: #667eea;
+  background: #ffffff;
+}
+
+.light-mode .form-group textarea::placeholder {
+  color: #999;
+}
+
+.light-mode .form-group select option {
+  background: #ffffff;
+  color: #333;
+}
+
+.light-mode .btn-edit {
+  color: #0066cc;
+}
+
+.light-mode .btn-edit:hover {
+  background: rgba(0, 102, 204, 0.1);
+}
+
+.light-mode .btn-delete {
+  color: #dc3545;
+}
+
+.light-mode .btn-delete:hover {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+/* Dark Mode (explicit) */
+.dark-mode .chat-templates-card {
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.dark-mode .chat-templates-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .templates-table thead {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .templates-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Dark mode form styles - ensure labels are visible */
+.dark-mode .modal .chat-template-form .form-group label,
+.dark-mode .chat-template-form .form-group label,
+.dark-mode .form-group label,
+.dark-mode .modal-content .form-group label {
+  color: #fff !important;
+}
+
+.dark-mode .chat-template-form .form-group textarea,
+.dark-mode .chat-template-form .form-group select,
+.dark-mode .form-group textarea,
+.dark-mode .form-group select {
+  background: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #fff !important;
+}
+
+.dark-mode .chat-template-form .form-group textarea:focus,
+.dark-mode .chat-template-form .form-group select:focus,
+.dark-mode .form-group textarea:focus,
+.dark-mode .form-group select:focus {
+  background: #2a2a2a !important;
+  border-color: #667eea !important;
+  color: #fff !important;
+}
+
+.dark-mode .chat-template-form .form-group textarea::placeholder,
+.dark-mode .form-group textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.dark-mode .chat-template-form .form-group select option,
+.dark-mode .form-group select option {
+  background: #2a2a2a !important;
+  color: #fff !important;
+}
+
+/* Also handle prefers-color-scheme for better compatibility */
+@media (prefers-color-scheme: dark) {
+  .modal .chat-template-form .form-group label,
+  .chat-template-form .form-group label,
+  .form-group label,
+  .modal-content .form-group label {
+    color: #fff !important;
+  }
+
+  .chat-template-form .form-group textarea,
+  .chat-template-form .form-group select,
+  .form-group textarea,
+  .form-group select {
+    background: #2a2a2a !important;
+    border-color: #444 !important;
+    color: #fff !important;
+  }
+
+  .chat-template-form .form-group textarea:focus,
+  .chat-template-form .form-group select:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    background: #2a2a2a !important;
+    border-color: #667eea !important;
+    color: #fff !important;
+  }
+
+  .chat-template-form .form-group textarea::placeholder,
+  .form-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .chat-template-form .form-group select option,
+  .form-group select option {
+    background: #2a2a2a !important;
+    color: #fff !important;
+  }
+}
+

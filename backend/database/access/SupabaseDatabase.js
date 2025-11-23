@@ -148,6 +148,40 @@ class SupabaseDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
     `;
 
+    const createChatTemplatesTable = `
+      CREATE TABLE IF NOT EXISTS chattemplates (
+        id SERIAL PRIMARY KEY,
+        thema TEXT,
+        persons TEXT,
+        scenario TEXT,
+        questions_and_thema TEXT,
+        words_to_use TEXT,
+        words_not_to_use TEXT,
+        grammar_to_use TEXT,
+        level TEXT CHECK (level IN ('A1', 'A2', 'B1', 'B2')),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `;
+
+    const createUserChatTemplatesTable = `
+      CREATE TABLE IF NOT EXISTS user_chattemplates (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        template_id INTEGER NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (template_id) REFERENCES chattemplates(id) ON DELETE CASCADE,
+        UNIQUE(user_id, template_id)
+      )
+    `;
+
+    const createChatTemplateIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_user_chattemplates_user_id ON user_chattemplates(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_chattemplates_template_id ON user_chattemplates(template_id);
+      CREATE INDEX IF NOT EXISTS idx_chattemplates_level ON chattemplates(level);
+    `;
+
     try {
       // Check if tables exist by attempting a simple query
       dbLog('[DB] Checking if tables exist...');
@@ -305,6 +339,30 @@ class SupabaseDatabase extends IDatabase {
           UNIQUE(card_id, user_id, label_id)
         )`,
         
+        `CREATE TABLE IF NOT EXISTS chattemplates (
+          id SERIAL PRIMARY KEY,
+          thema TEXT,
+          persons TEXT,
+          scenario TEXT,
+          questions_and_thema TEXT,
+          words_to_use TEXT,
+          words_not_to_use TEXT,
+          grammar_to_use TEXT,
+          level TEXT CHECK (level IN ('A1', 'A2', 'B1', 'B2')),
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )`,
+        
+        `CREATE TABLE IF NOT EXISTS user_chattemplates (
+          id SERIAL PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          template_id INTEGER NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+          FOREIGN KEY (template_id) REFERENCES chattemplates(id) ON DELETE CASCADE,
+          UNIQUE(user_id, template_id)
+        )`,
+        
         'CREATE INDEX IF NOT EXISTS idx_cards_user_id ON cards(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due)',
         'CREATE INDEX IF NOT EXISTS idx_cards_state ON cards(state)',
@@ -312,7 +370,10 @@ class SupabaseDatabase extends IDatabase {
         'CREATE INDEX IF NOT EXISTS idx_labels_user_id ON labels(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_labels_type ON labels(type)',
         'CREATE INDEX IF NOT EXISTS idx_card_labels_card_id ON card_labels(card_id, user_id)',
-        'CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id)'
+        'CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id)',
+        'CREATE INDEX IF NOT EXISTS idx_user_chattemplates_user_id ON user_chattemplates(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_user_chattemplates_template_id ON user_chattemplates(template_id)',
+        'CREATE INDEX IF NOT EXISTS idx_chattemplates_level ON chattemplates(level)'
       ];
 
       let successCount = 0;

@@ -489,3 +489,104 @@
   }
 }
 
+/* Class-based dark mode support */
+.dark-mode .modal {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.dark-mode .modal-title {
+  color: #fff;
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: #333;
+}
+
+.dark-mode .modal-footer {
+  border-top-color: #333;
+}
+
+.dark-mode .modal-content {
+  color: #fff;
+}
+
+.dark-mode .modal-form input,
+.dark-mode .modal-form textarea,
+.dark-mode .modal-form select {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #fff !important;
+}
+
+.dark-mode .modal-form input:focus,
+.dark-mode .modal-form textarea:focus,
+.dark-mode .modal-form select:focus {
+  border-color: #667eea !important;
+  background-color: #2a2a2a !important;
+  color: #fff !important;
+}
+
+.dark-mode .modal-form label {
+  color: #fff !important;
+}
+
+.dark-mode .modal-content label {
+  color: #fff !important;
+}
+
+.dark-mode .btn-modal-secondary {
+  background: #333;
+  color: #fff;
+}
+
+.dark-mode .btn-modal-secondary:hover:not(:disabled) {
+  background: #444;
+}
+
+/* Class-based light mode support */
+.light-mode .modal {
+  background: white;
+  color: #333;
+}
+
+.light-mode .modal-title {
+  color: #333;
+}
+
+.light-mode .modal-header {
+  border-bottom-color: #e0e0e0;
+}
+
+.light-mode .modal-footer {
+  border-top-color: #e0e0e0;
+}
+
+.light-mode .modal-content {
+  color: #333;
+}
+
+.light-mode .modal-form input,
+.light-mode .modal-form textarea,
+.light-mode .modal-form select {
+  background-color: white !important;
+  border-color: #e0e0e0 !important;
+  color: #333 !important;
+}
+
+.light-mode .modal-form input:focus,
+.light-mode .modal-form textarea:focus,
+.light-mode .modal-form select:focus {
+  border-color: #667eea !important;
+  background-color: white !important;
+  color: #333 !important;
+}
+
+.light-mode .modal-form label {
+  color: #333 !important;
+}
+
+.light-mode .modal-content label {
+  color: #333 !important;
+}
+

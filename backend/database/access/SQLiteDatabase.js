@@ -134,15 +134,52 @@ class SQLiteDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
     `;
 
+    const createChatTemplatesTable = `
+      CREATE TABLE IF NOT EXISTS chattemplates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        thema TEXT,
+        persons TEXT,
+        scenario TEXT,
+        questions_and_thema TEXT,
+        words_to_use TEXT,
+        words_not_to_use TEXT,
+        grammar_to_use TEXT,
+        level TEXT CHECK (level IN ('A1', 'A2', 'B1', 'B2')),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    const createUserChatTemplatesTable = `
+      CREATE TABLE IF NOT EXISTS user_chattemplates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        template_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (template_id) REFERENCES chattemplates(id) ON DELETE CASCADE,
+        UNIQUE(user_id, template_id)
+      )
+    `;
+
+    const createChatTemplateIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_user_chattemplates_user_id ON user_chattemplates(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_chattemplates_template_id ON user_chattemplates(template_id);
+      CREATE INDEX IF NOT EXISTS idx_chattemplates_level ON chattemplates(level);
+    `;
+
     try {
       this.db.exec(createUsersTable);
       this.db.exec(createCardsTable);
       this.db.exec(createSentenceAnalysisCacheTable);
       this.db.exec(createLabelsTable);
       this.db.exec(createCardLabelsTable);
+      this.db.exec(createChatTemplatesTable);
+      this.db.exec(createUserChatTemplatesTable);
       this.db.exec(createIndexes);
       this.db.exec(createSentenceAnalysisIndexes);
       this.db.exec(createLabelIndexes);
+      this.db.exec(createChatTemplateIndexes);
       console.log('[DB] Database tables created successfully');
     } catch (error) {
       console.error('[DB] Failed to create tables:', error);
