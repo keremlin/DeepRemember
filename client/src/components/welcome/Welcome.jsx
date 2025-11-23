@@ -2,7 +2,7 @@ import React from 'react'
 import RadialMenu from './RadialMenu'
 import './Welcome.css'
 
-const Welcome = ({ onNavigateToDeepRemember, onNavigateToPlayer }) => {
+const Welcome = ({ onNavigateToDeepRemember, onNavigateToPlayer, onNavigateToManagement, onNavigateToChat, onNavigateToUserManagement }) => {
   return (
     <div className="welcome-page">
       <div className="welcome-header">
@@ -13,6 +13,9 @@ const Welcome = ({ onNavigateToDeepRemember, onNavigateToPlayer }) => {
       <RadialMenu 
         onNavigateToDeepRemember={onNavigateToDeepRemember}
         onNavigateToPlayer={onNavigateToPlayer}
+        onNavigateToManagement={onNavigateToManagement}
+        onNavigateToChat={onNavigateToChat}
+        onNavigateToUserManagement={onNavigateToUserManagement}
       />
       
       <div className="welcome-footer">

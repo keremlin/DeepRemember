@@ -66,6 +66,9 @@ function App() {
                 <Welcome 
                   onNavigateToDeepRemember={navigateToDeepRemember}
                   onNavigateToPlayer={navigateToPlayer}
+                  onNavigateToManagement={navigateToManagement}
+                  onNavigateToChat={navigateToChat}
+                  onNavigateToUserManagement={navigateToUserManagement}
                 />
               ) : currentView === 'deepremember' ? (
                 <DeepRemember 
