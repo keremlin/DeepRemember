@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Button from '../Button'
 import './VoiceChatInput.css'
 
@@ -78,7 +78,8 @@ const VoiceChatInput = ({ onSend, disabled = false }) => {
   }
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    // Check MediaRecorder state directly instead of React state
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
       
@@ -127,13 +128,72 @@ const VoiceChatInput = ({ onSend, disabled = false }) => {
     updateLevel()
   }
 
-  const handleToggleRecording = () => {
-    if (isRecording) {
+  // Use ref to track recording state for keyboard shortcut
+  const isRecordingRef = useRef(isRecording)
+  useEffect(() => {
+    isRecordingRef.current = isRecording
+  }, [isRecording])
+
+  const handleToggleRecording = useCallback(() => {
+    if (isRecordingRef.current) {
       stopRecording()
     } else {
       startRecording()
     }
-  }
+  }, [])
+
+  // Keyboard shortcut: Spacebar to start/stop recording
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Only handle spacebar
+      if (event.code !== 'Space' && event.key !== ' ') {
+        return
+      }
+
+      // Don't trigger if user is typing in an input field, textarea, or contenteditable
+      const target = event.target
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
+      // Don't trigger if component is disabled
+      if (disabled) {
+        return
+      }
+
+      // Prevent default spacebar behavior (scrolling)
+      event.preventDefault()
+
+      // Toggle recording
+      handleToggleRecording()
+    }
+
+    const handleKeyUp = (event) => {
+      // Prevent default spacebar behavior on keyup as well
+      if ((event.code === 'Space' || event.key === ' ') && !disabled) {
+        const target = event.target
+        if (
+          target.tagName !== 'INPUT' &&
+          target.tagName !== 'TEXTAREA' &&
+          !target.isContentEditable
+        ) {
+          event.preventDefault()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [disabled, handleToggleRecording])
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
