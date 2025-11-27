@@ -101,12 +101,24 @@ const Chat = ({
 
       if (response.ok && data.success) {
         setModelProvider(data.provider || '')
-        setModels(data.models || [])
+        const availableModels = data.models || []
+        setModels(availableModels)
+        
+        // Set default model: prefer "llama-3.3-70b-versatile", otherwise first available
+        const preferredModel = 'llama-3.3-70b-versatile'
+        const preferredModelExists = availableModels.some(model => model.id === preferredModel)
+        
         setSelectedModelId(prev => {
-          if (prev && (data.models || []).some(model => model.id === prev)) {
+          // If previous selection still exists, keep it
+          if (prev && availableModels.some(model => model.id === prev)) {
             return prev
           }
-          return data.defaultModel || data.models?.[0]?.id || ''
+          // Otherwise, prefer "llama-3.3-70b-versatile" if available
+          if (preferredModelExists) {
+            return preferredModel
+          }
+          // Fallback to defaultModel from API or first model
+          return data.defaultModel || availableModels[0]?.id || ''
         })
       } else {
         throw new Error(data.error || 'Failed to load models')
