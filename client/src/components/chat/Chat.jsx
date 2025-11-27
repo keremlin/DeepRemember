@@ -37,6 +37,7 @@ const Chat = ({
   const [selectedModelId, setSelectedModelId] = useState('')
   const [modelProvider, setModelProvider] = useState('')
   const [isLoadingModels, setIsLoadingModels] = useState(false)
+  const [sttLanguage, setSttLanguage] = useState('de')
 
   const messagesEndRef = useRef(null)
   const chatContainerRef = useRef(null)
@@ -186,6 +187,10 @@ const Chat = ({
     })
   }
 
+  const handleSttLanguageChange = (event) => {
+    setSttLanguage(event.target.value)
+  }
+
   const handleSendMessage = async (message, options = {}) => {
     const {
       baseMessages,
@@ -291,6 +296,9 @@ const Chat = ({
       if (selectedModelId) {
         formData.append('model', selectedModelId)
       }
+    if (sttLanguage) {
+      formData.append('sttLanguage', sttLanguage)
+    }
 
       const response = await fetch(getApiUrl('/deepRemember/chat-voice'), {
         method: 'POST',
@@ -377,6 +385,22 @@ const Chat = ({
                     {template.thema || 'Untitled'} ({template.level || 'N/A'})
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="chat-selector">
+              <label htmlFor="stt-language-select" className="chat-select-label">
+                STT Language
+              </label>
+              <select
+                id="stt-language-select"
+                value={sttLanguage}
+                onChange={handleSttLanguageChange}
+                className="chat-select"
+                disabled={isLoading}
+              >
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
               </select>
             </div>
 

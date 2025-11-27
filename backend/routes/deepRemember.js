@@ -50,8 +50,8 @@ function cleanTextForTTS(text) {
     .replace(/\n/g, ' ') // Replace single newlines with space
     .trim();
 
-  // Keep only letters, numbers, spaces, periods (.), commas (,), and question marks (?)
-  cleaned = cleaned.replace(/[^a-zA-Z0-9\s.,?]/g, ' ');
+  // Keep letters (including diacritics), numbers, spaces, and basic punctuation
+  cleaned = cleaned.replace(/[^\p{L}\p{M}\p{N}\s.,?!'-]/gu, ' ');
 
   // Clean up multiple spaces
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
@@ -876,6 +876,10 @@ router.post('/chat-voice', authMiddleware.verifyToken, voiceChatUpload.single('a
     const user = req.user;
     const audioFile = req.file;
     const selectedModel = typeof req.body.model === 'string' ? req.body.model.trim() : '';
+    const requestedSttLanguage = typeof req.body.sttLanguage === 'string' ? req.body.sttLanguage.trim() : '';
+    const sttLanguage = ['de', 'en'].includes(requestedSttLanguage.toLowerCase())
+      ? requestedSttLanguage.toLowerCase()
+      : null;
 
     if (!audioFile) {
       return res.status(400).json({ error: 'Audio file is required' });
@@ -932,9 +936,12 @@ router.post('/chat-voice', authMiddleware.verifyToken, voiceChatUpload.single('a
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    const sttResult = await sstService.convert(tempAudioPath, tempSubtitlePath, {
-      outputFormat: 'text'
-    });
+    const sttOptions = { outputFormat: 'text' };
+    if (sttLanguage) {
+      sttOptions.language = sttLanguage;
+    }
+
+    const sttResult = await sstService.convert(tempAudioPath, tempSubtitlePath, sttOptions);
 
     if (!sttResult || !sttResult.text) {
       throw new Error('STT conversion failed - no text returned');
