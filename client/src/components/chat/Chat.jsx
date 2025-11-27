@@ -29,8 +29,12 @@ const Chat = ({
   ])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [templates, setTemplates] = useState([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState('free-chat')
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
   const messagesEndRef = useRef(null)
   const chatContainerRef = useRef(null)
+  const hasSentTemplateMessage = useRef(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -39,6 +43,135 @@ const Chat = ({
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Load templates on mount
+  useEffect(() => {
+    loadTemplates()
+  }, [])
+
+  // Load chat templates from API
+  const loadTemplates = async () => {
+    setIsLoadingTemplates(true)
+    try {
+      const response = await fetch(getApiUrl('/api/chat-templates'), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        }
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setTemplates(data.templates || [])
+        console.log('Loaded templates:', data.templates)
+      } else {
+        console.error('Failed to load templates:', data.error)
+        showError(data.error || 'Failed to load templates')
+      }
+    } catch (error) {
+      console.error('Error loading templates:', error)
+      showError(`Failed to load templates: ${error.message}`)
+    } finally {
+      setIsLoadingTemplates(false)
+    }
+  }
+
+  // Handle template selection
+  const handleTemplateChange = async (e) => {
+    const templateId = e.target.value
+    setSelectedTemplateId(templateId)
+    hasSentTemplateMessage.current = false
+
+    // Create initial message state
+    const initialMessage = {
+      id: 1,
+      role: 'assistant',
+      content: 'Hello! I\'m DeepChat, your AI language learning assistant. How can I help you today?',
+      timestamp: new Date()
+    }
+
+    // Reset messages to initial state
+    setMessages([initialMessage])
+
+    // If not "Free Chat", send the template JSON as first message
+    if (templateId !== 'free-chat') {
+      const template = templates.find(t => t.id === parseInt(templateId))
+      if (template) {
+        // Create JSON export of template
+        const templateJson = {
+          thema: template.thema || '',
+          persons: template.persons || '',
+          scenario: template.scenario || '',
+          questions_and_thema: template.questions_and_thema || '',
+          words_to_use: template.words_to_use || '',
+          words_not_to_use: template.words_not_to_use || '',
+          grammar_to_use: template.grammar_to_use || '',
+          level: template.level || ''
+        }
+
+        // Send JSON as first message using the initial state
+        const jsonMessage = JSON.stringify(templateJson, null, 2)
+        hasSentTemplateMessage.current = true
+        
+        // Send message with the initial message state
+        const userMessage = {
+          id: Date.now(),
+          role: 'user',
+          content: jsonMessage,
+          timestamp: new Date()
+        }
+
+        const updatedMessages = [initialMessage, userMessage]
+        setMessages(updatedMessages)
+        setIsLoading(true)
+
+        try {
+          // Prepare messages for API (only role and content)
+          const apiMessages = updatedMessages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+
+          const response = await fetch(getApiUrl('/deepRemember/chat'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders()
+            },
+            body: JSON.stringify({ messages: apiMessages })
+          })
+
+          const data = await response.json()
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to get response from AI')
+          }
+
+          if (data.success && data.response) {
+            const assistantMessage = {
+              id: Date.now() + 1,
+              role: 'assistant',
+              content: data.response,
+              timestamp: new Date()
+            }
+            setMessages(prev => [...prev, assistantMessage])
+          } else {
+            throw new Error('Invalid response from server')
+          }
+        } catch (error) {
+          console.error('Chat error:', error)
+          showError(error.message || 'Failed to send message. Please try again.')
+          
+          // Remove the user message on error and reset to initial
+          setMessages([initialMessage])
+        } finally {
+          setIsLoading(false)
+        }
+      }
+    }
+  }
 
   const handleSendMessage = async (message) => {
     if (!message.trim() || isLoading) return
@@ -186,6 +319,25 @@ const Chat = ({
     >
       <div className={`chat-container ${chatMode === 'voice' ? 'voice-mode' : ''}`}>
         <div className="chat-header">
+          <div className="chat-template-selector">
+            <label htmlFor="template-select" className="template-select-label">
+              Template:
+            </label>
+            <select
+              id="template-select"
+              value={selectedTemplateId}
+              onChange={handleTemplateChange}
+              className="template-select"
+              disabled={isLoadingTemplates || isLoading}
+            >
+              <option value="free-chat">Free Chat (A2)</option>
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.thema || 'Untitled'} ({template.level || 'N/A'})
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="chat-header-content">
             <div className="chat-header-title">
               <span className="material-symbols-outlined">conversation</span>

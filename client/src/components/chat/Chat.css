@@ -18,6 +18,59 @@
   padding: 10px 20px;
   background: #2a2a2a;
   border-bottom: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-template-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.template-select-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+.template-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #444;
+  border-radius: 8px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  max-width: 400px;
+}
+
+.template-select:hover:not(:disabled) {
+  border-color: #667eea;
+  background: #222;
+}
+
+.template-select:focus {
+  outline: none;
+  border-color: #667eea;
+  background: #222;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.template-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.template-select option {
+  background: #1a1a1a;
+  color: #fff;
+  padding: 8px;
 }
 
 .chat-header-content {
@@ -93,6 +146,31 @@
   border-bottom: 1px solid #ddd;
 }
 
+.light-mode .template-select-label {
+  color: #333;
+}
+
+.light-mode .template-select {
+  background: #ffffff;
+  color: #333;
+  border-color: #ddd;
+}
+
+.light-mode .template-select:hover:not(:disabled) {
+  border-color: #667eea;
+  background: #f9f9f9;
+}
+
+.light-mode .template-select:focus {
+  background: #ffffff;
+  border-color: #667eea;
+}
+
+.light-mode .template-select option {
+  background: #ffffff;
+  color: #333;
+}
+
 .light-mode .chat-header-title .material-symbols-outlined {
   color: #667eea;
 }
@@ -127,6 +205,15 @@
     padding: 9px 18px;
   }
 
+  .template-select {
+    max-width: 300px;
+    font-size: 0.85rem;
+  }
+
+  .template-select-label {
+    font-size: 0.85rem;
+  }
+
   .chat-header-title .material-symbols-outlined {
     font-size: 1.4rem;
   }
@@ -152,6 +239,24 @@
 
   .chat-header {
     padding: 7.5px 15px;
+    gap: 10px;
+  }
+
+  .chat-template-selector {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .template-select {
+    max-width: 100%;
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  .template-select-label {
+    font-size: 0.85rem;
   }
 
   .chat-header-title .material-symbols-outlined {
@@ -177,6 +282,16 @@
 
   .chat-header {
     padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .template-select {
+    font-size: 0.8rem;
+    padding: 5px 8px;
+  }
+
+  .template-select-label {
+    font-size: 0.8rem;
   }
 
   .chat-header-title .material-symbols-outlined {
