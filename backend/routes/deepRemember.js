@@ -778,6 +778,38 @@ router.get('/search-similar/:userId/:query', authMiddleware.verifyToken, authMid
     }
 });
 
+// Helper function to check if a message is a template JSON
+function isTemplateMessage(content) {
+  if (!content || typeof content !== 'string') {
+    return false;
+  }
+  try {
+    const parsed = JSON.parse(content);
+    // Check if it has template-like structure (has at least one template field)
+    const templateFields = ['thema', 'persons', 'scenario', 'questions_and_thema', 'words_to_use', 'words_not_to_use', 'grammar_to_use', 'level'];
+    return templateFields.some(field => parsed.hasOwnProperty(field));
+  } catch (e) {
+    return false;
+  }
+}
+
+// Helper function to format template as prompt
+function formatTemplateAsPrompt(templateJson) {
+  const template = typeof templateJson === 'string' ? JSON.parse(templateJson) : templateJson;
+  let prompt = '';
+  
+  if (template.thema) prompt += `Thema: ${template.thema}\n`;
+  if (template.persons) prompt += `Persons: ${template.persons}\n`;
+  if (template.scenario) prompt += `Scenario: ${template.scenario}\n`;
+  if (template.questions_and_thema) prompt += `Questions and Thema: ${template.questions_and_thema}\n`;
+  if (template.words_to_use) prompt += `Words to use: ${template.words_to_use}\n`;
+  if (template.words_not_to_use) prompt += `Words not to use: ${template.words_not_to_use}\n`;
+  if (template.grammar_to_use) prompt += `Grammar to use: ${template.grammar_to_use}\n`;
+  if (template.level) prompt += `Level: ${template.level}\n`;
+  
+  return prompt.trim();
+}
+
 // Chat endpoint for AI language learning assistant
 router.post('/chat', authMiddleware.verifyToken, async (req, res) => {
   try {
@@ -789,31 +821,43 @@ router.post('/chat', authMiddleware.verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
-    // Build conversation history prompt for Llama 3.2
-    // Llama 3.2 uses a specific chat format with system/user/assistant roles
-    let conversationHistory = `You are DeepChat, an AI language learning assistant. Your role is to help users learn languages through conversation, vocabulary practice, grammar explanations, and contextual learning.
-
-Guidelines:
-- Be friendly, encouraging, and patient
-- Provide clear explanations in simple language
-- Use examples when explaining grammar or vocabulary
-- Encourage practice and active learning
-- If asked about vocabulary, provide translations, example sentences, and usage tips
-- If asked about grammar, explain rules clearly with examples
-- Keep responses concise but informative
-- Use markdown formatting for better readability (use **bold** for emphasis, • for lists)
-
-Conversation History:
-`;
-
-    // Format messages for Llama 3.2 chat format
-    messages.forEach((msg, index) => {
-      if (msg.role === 'user') {
-        conversationHistory += `User: ${msg.content}\n`;
-      } else if (msg.role === 'assistant') {
-        conversationHistory += `Assistant: ${msg.content}\n`;
-      }
-    });
+    // Check if first user message is a template
+    const firstUserMessage = messages.find(msg => msg.role === 'user');
+    const hasTemplate = firstUserMessage && isTemplateMessage(firstUserMessage.content);
+    
+    let conversationHistory = '';
+    
+    if (hasTemplate) {
+      // Use template as the first prompt
+      conversationHistory = formatTemplateAsPrompt(firstUserMessage.content);
+      conversationHistory += '\n\nConversation History:\n';
+      
+      // Skip the template message and format remaining messages
+      let foundFirstUser = false;
+      messages.forEach((msg, index) => {
+        if (msg.role === 'user' && !foundFirstUser && msg === firstUserMessage) {
+          foundFirstUser = true;
+          return; // Skip the template message
+        }
+        if (msg.role === 'user') {
+          conversationHistory += `User: ${msg.content}\n`;
+        } else if (msg.role === 'assistant') {
+          conversationHistory += `Assistant: ${msg.content}\n`;
+        }
+      });
+    } else {
+      // Free chat - no guidelines, just conversation
+      conversationHistory = 'Conversation History:\n';
+      
+      // Format messages for Llama 3.2 chat format
+      messages.forEach((msg, index) => {
+        if (msg.role === 'user') {
+          conversationHistory += `User: ${msg.content}\n`;
+        } else if (msg.role === 'assistant') {
+          conversationHistory += `Assistant: ${msg.content}\n`;
+        }
+      });
+    }
 
     conversationHistory += `\nNow, respond to the user's latest message as the Assistant.`;
 
@@ -961,30 +1005,43 @@ router.post('/chat-voice', authMiddleware.verifyToken, voiceChatUpload.single('a
       content: userText
     });
 
-    // Build conversation history prompt for Llama 3.2
-    let conversationHistory = `You are DeepChat, an AI language learning assistant. Your role is to help users learn languages through conversation, vocabulary practice, grammar explanations, and contextual learning.
-
-Guidelines:
-- Be friendly, encouraging, and patient
-- Provide clear explanations in simple language
-- Use examples when explaining grammar or vocabulary
-- Encourage practice and active learning
-- If asked about vocabulary, provide translations, example sentences, and usage tips
-- If asked about grammar, explain rules clearly with examples
-- Keep responses concise but informative
-- Use markdown formatting for better readability (use **bold** for emphasis, • for lists)
-
-Conversation History:
-`;
-
-    // Format messages for Llama 3.2 chat format
-    apiMessages.forEach((msg) => {
-      if (msg.role === 'user') {
-        conversationHistory += `User: ${msg.content}\n`;
-      } else if (msg.role === 'assistant') {
-        conversationHistory += `Assistant: ${msg.content}\n`;
-      }
-    });
+    // Check if first user message is a template
+    const firstUserMessage = apiMessages.find(msg => msg.role === 'user');
+    const hasTemplate = firstUserMessage && isTemplateMessage(firstUserMessage.content);
+    
+    let conversationHistory = '';
+    
+    if (hasTemplate) {
+      // Use template as the first prompt
+      conversationHistory = formatTemplateAsPrompt(firstUserMessage.content);
+      conversationHistory += '\n\nConversation History:\n';
+      
+      // Skip the template message and format remaining messages
+      let foundFirstUser = false;
+      apiMessages.forEach((msg) => {
+        if (msg.role === 'user' && !foundFirstUser && msg === firstUserMessage) {
+          foundFirstUser = true;
+          return; // Skip the template message
+        }
+        if (msg.role === 'user') {
+          conversationHistory += `User: ${msg.content}\n`;
+        } else if (msg.role === 'assistant') {
+          conversationHistory += `Assistant: ${msg.content}\n`;
+        }
+      });
+    } else {
+      // Free chat - no guidelines, just conversation
+      conversationHistory = 'Conversation History:\n';
+      
+      // Format messages for Llama 3.2 chat format
+      apiMessages.forEach((msg) => {
+        if (msg.role === 'user') {
+          conversationHistory += `User: ${msg.content}\n`;
+        } else if (msg.role === 'assistant') {
+          conversationHistory += `Assistant: ${msg.content}\n`;
+        }
+      });
+    }
 
     conversationHistory += `\nNow, respond to the user's latest message as the Assistant.`;
 

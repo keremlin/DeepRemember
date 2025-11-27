@@ -1,5 +1,6 @@
 const { LLM } = require('./llm');
 const GroqSDK = require('groq-sdk');
+const appConfig = require('../config/app');
 
 class Groq extends LLM {
   constructor(config = {}) {
@@ -18,6 +19,13 @@ class Groq extends LLM {
 
     const model = options.model || this.defaultModel;
     const stream = options.stream === undefined ? this.defaultStream : !!options.stream;
+
+    // Log prompt if enabled
+    if (appConfig.LOG_LLM_PROMPTS) {
+      console.log('[LLM Prompt Log] Groq - Model:', model, '- Stream:', stream);
+      console.log('[LLM Prompt Log] Prompt:', prompt);
+      console.log('[LLM Prompt Log] Options:', JSON.stringify(options, null, 2));
+    }
 
     if (stream) {
       const completion = await this.client.chat.completions.create({

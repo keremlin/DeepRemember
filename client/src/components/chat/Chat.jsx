@@ -22,7 +22,7 @@ const Chat = ({
   const createInitialAssistantMessage = () => ({
     id: Date.now(),
     role: 'assistant',
-    content: 'Hello! I\'m DeepChat, your AI language learning assistant. How can I help you today?',
+    content: 'Hallo !',
     timestamp: new Date()
   })
 
@@ -43,6 +43,7 @@ const Chat = ({
   const messagesEndRef = useRef(null)
   const chatContainerRef = useRef(null)
   const chatSessionRef = useRef(0)
+  const chatInputRef = useRef(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -51,6 +52,20 @@ const Chat = ({
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Auto-focus input when LLM answer is shown (when loading completes and we're in text mode)
+  useEffect(() => {
+    if (!isLoading && chatMode === 'text' && messages.length > 0) {
+      // Check if the last message is from assistant
+      const lastMessage = messages[messages.length - 1]
+      if (lastMessage && lastMessage.role === 'assistant') {
+        // Small delay to ensure the message is rendered
+        setTimeout(() => {
+          chatInputRef.current?.focus()
+        }, 100)
+      }
+    }
+  }, [isLoading, messages, chatMode])
 
   // Load templates and models on mount
   useEffect(() => {
@@ -518,6 +533,7 @@ const Chat = ({
 
         {chatMode === 'text' ? (
           <ChatInput
+            ref={chatInputRef}
             value={inputValue}
             onChange={handleInputChange}
             onSend={handleSendMessage}

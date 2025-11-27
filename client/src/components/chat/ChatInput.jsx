@@ -1,9 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import Button from '../Button'
 import './ChatInput.css'
 
-const ChatInput = ({ value, onChange, onSend, disabled = false }) => {
+const ChatInput = forwardRef(({ value, onChange, onSend, disabled = false }, ref) => {
   const textareaRef = useRef(null)
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      textareaRef.current?.focus()
+    }
+  }))
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -58,7 +64,9 @@ const ChatInput = ({ value, onChange, onSend, disabled = false }) => {
       </div>
     </div>
   )
-}
+})
+
+ChatInput.displayName = 'ChatInput'
 
 export default ChatInput
 

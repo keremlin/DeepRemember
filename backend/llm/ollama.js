@@ -1,4 +1,5 @@
 const { LLM } = require('./llm');
+const appConfig = require('../config/app');
 
 class Ollama extends LLM {
   constructor(config = {}) {
@@ -12,6 +13,13 @@ class Ollama extends LLM {
     const model = options.model || this.defaultModel;
     const stream = options.stream === undefined ? this.defaultStream : !!options.stream;
     const url = `${this.baseUrl}/api/generate`;
+
+    // Log prompt if enabled
+    if (appConfig.LOG_LLM_PROMPTS) {
+      console.log('[LLM Prompt Log] Ollama - Model:', model, '- Stream:', stream, '- URL:', url);
+      console.log('[LLM Prompt Log] Prompt:', prompt);
+      console.log('[LLM Prompt Log] Options:', JSON.stringify(options, null, 2));
+    }
 
     const response = await fetch(url, {
       method: 'POST',

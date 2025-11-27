@@ -26,6 +26,7 @@ module.exports = {
   
   // Logging
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
-  DB_LOG: process.env.DB_LOG === 'true' || process.env.DB_LOG === '1'
+  DB_LOG: process.env.DB_LOG === 'true' || process.env.DB_LOG === '1',
+  LOG_LLM_PROMPTS: process.env.LOG_LLM_PROMPTS === 'true' || process.env.LOG_LLM_PROMPTS === '1'
 };
 

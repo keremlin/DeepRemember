@@ -37,6 +37,7 @@ LLM_BASE_URL=http://localhost:11434  # For Ollama
 LLM_MODEL=llama3.2           # Model name
 LLM_STREAM=false             # true/false for streaming
 LLM_API_KEY=                 # Required for Groq
+LOG_LLM_PROMPTS=false        # Enable/disable logging of prompts sent to LLM (true/false)
 ```
 
 ### Environment Variables
@@ -46,6 +47,7 @@ LLM_API_KEY=                 # Required for Groq
 - `LLM_MODEL`: model name to use (e.g., `llama3.2`).
 - `LLM_STREAM`: whether to request streamed responses (`true`/`false`).
 - `LLM_API_KEY`: API key for providers that require it (Groq).
+- `LOG_LLM_PROMPTS`: enable/disable logging of prompts sent to LLM (`true`/`false`). When enabled, logs the model, stream settings, prompt content, and options before sending to the LLM.
 
 ## Usage in the Project
 
