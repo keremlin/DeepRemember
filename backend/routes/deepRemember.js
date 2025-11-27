@@ -781,8 +781,9 @@ router.get('/search-similar/:userId/:query', authMiddleware.verifyToken, authMid
 // Chat endpoint for AI language learning assistant
 router.post('/chat', authMiddleware.verifyToken, async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages, model } = req.body;
     const user = req.user;
+    const selectedModel = typeof model === 'string' ? model.trim() : '';
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages array is required' });
@@ -819,10 +820,16 @@ Conversation History:
     console.log('[DeepRemember] Sending chat prompt to LLM:', {
       userId: user?.email || 'unknown',
       messageCount: messages.length,
-      promptLength: conversationHistory.length
+      promptLength: conversationHistory.length,
+      model: selectedModel || 'default'
     });
 
-    const data = await llmClient.query(conversationHistory, { stream: false });
+    const llmOptions = { stream: false };
+    if (selectedModel) {
+      llmOptions.model = selectedModel;
+    }
+
+    const data = await llmClient.query(conversationHistory, llmOptions);
     
     if (!data || !data.response) {
       console.error('[DeepRemember] Invalid LLM response:', data);
@@ -868,6 +875,7 @@ router.post('/chat-voice', authMiddleware.verifyToken, voiceChatUpload.single('a
   try {
     const user = req.user;
     const audioFile = req.file;
+    const selectedModel = typeof req.body.model === 'string' ? req.body.model.trim() : '';
 
     if (!audioFile) {
       return res.status(400).json({ error: 'Audio file is required' });
@@ -973,7 +981,12 @@ Conversation History:
 
     conversationHistory += `\nNow, respond to the user's latest message as the Assistant.`;
 
-    const llmData = await llmClient.query(conversationHistory, { stream: false });
+    const voiceLlmOptions = { stream: false };
+    if (selectedModel) {
+      voiceLlmOptions.model = selectedModel;
+    }
+
+    const llmData = await llmClient.query(conversationHistory, voiceLlmOptions);
     
     if (!llmData || !llmData.response) {
       throw new Error('Invalid response from LLM');
