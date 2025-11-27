@@ -38,6 +38,7 @@ const Chat = ({
   const [modelProvider, setModelProvider] = useState('')
   const [isLoadingModels, setIsLoadingModels] = useState(false)
   const [sttLanguage, setSttLanguage] = useState('de')
+  const [playbackSpeed, setPlaybackSpeed] = useState(0.9) // Playback speed for voice responses (0.5-1.3)
 
   const messagesEndRef = useRef(null)
   const chatContainerRef = useRef(null)
@@ -189,6 +190,11 @@ const Chat = ({
 
   const handleSttLanguageChange = (event) => {
     setSttLanguage(event.target.value)
+  }
+
+  const handlePlaybackSpeedChange = (event) => {
+    const newSpeed = parseFloat(event.target.value)
+    setPlaybackSpeed(newSpeed)
   }
 
   const handleSendMessage = async (message, options = {}) => {
@@ -404,6 +410,27 @@ const Chat = ({
               </select>
             </div>
 
+            {chatMode === 'voice' && (
+              <div className="chat-selector">
+                <label htmlFor="playback-speed-range" className="chat-select-label">
+                  Playback Speed: {playbackSpeed.toFixed(1)}x
+                </label>
+                <div className="chat-speed-range-container">
+                  <input
+                    type="range"
+                    id="playback-speed-range"
+                    min="0.5"
+                    max="1.3"
+                    step="0.1"
+                    value={playbackSpeed}
+                    onChange={handlePlaybackSpeedChange}
+                    className="chat-speed-range"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="chat-selector">
               <label htmlFor="model-select" className="chat-select-label">
                 AI Model {modelProvider ? `(${modelProvider})` : ''}
@@ -464,6 +491,7 @@ const Chat = ({
               isVoice={message.isVoice}
               audioBlob={message.audioBlob}
               audioMimeType={message.audioMimeType}
+              playbackSpeed={playbackSpeed}
             />
           ))}
           {isLoading && (

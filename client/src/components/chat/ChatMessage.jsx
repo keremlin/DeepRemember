@@ -3,7 +3,7 @@ import WordTranslationPopover from './WordTranslationPopover'
 import SentenceTranslationPopover from './SentenceTranslationPopover'
 import './ChatMessage.css'
 
-const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = false, audioBlob = null, audioMimeType = null }) => {
+const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = false, audioBlob = null, audioMimeType = null, playbackSpeed = 1.0 }) => {
   const isUser = role === 'user'
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -22,10 +22,20 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
     }
   }, [audioBlob])
 
+  // Apply playback speed to audio element
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackSpeed
+    }
+  }, [playbackSpeed])
+
   // Auto-play audio for assistant messages with audio (TTS responses)
   useEffect(() => {
     if (audioUrl && !isUser && role === 'assistant' && audioRef.current) {
       const audio = audioRef.current
+      
+      // Set playback speed before playing
+      audio.playbackRate = playbackSpeed
       
       // Wait for audio to be ready before playing
       const handleCanPlay = () => {
@@ -53,7 +63,7 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
         }
       }
     }
-  }, [audioUrl, isUser, role])
+  }, [audioUrl, isUser, role, playbackSpeed])
 
   const handlePlayAudio = () => {
     if (audioRef.current) {
