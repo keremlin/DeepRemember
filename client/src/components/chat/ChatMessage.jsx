@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import WordTranslationPopover from './WordTranslationPopover'
+import SentenceTranslationPopover from './SentenceTranslationPopover'
 import './ChatMessage.css'
 
 const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = false, audioBlob = null, audioMimeType = null }) => {
@@ -8,7 +9,10 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
   const [isPlaying, setIsPlaying] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
   const [popoverState, setPopoverState] = useState({ word: null, position: null })
+  const [sentencePopoverState, setSentencePopoverState] = useState({ text: null, position: null })
   const contentRef = useRef(null)
+  const translateButtonRef = useRef(null)
+  const messageTextRef = useRef(null)
 
   useEffect(() => {
     if (audioBlob) {
@@ -78,19 +82,20 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
     }
   }, [audioUrl])
 
-  // Close popover on scroll
+  // Close popovers on scroll
   useEffect(() => {
-    if (!popoverState.word) return
+    if (!popoverState.word && !sentencePopoverState.text) return
 
     const handleScroll = () => {
       setPopoverState({ word: null, position: null })
+      setSentencePopoverState({ text: null, position: null })
     }
 
     window.addEventListener('scroll', handleScroll, true)
     return () => {
       window.removeEventListener('scroll', handleScroll, true)
     }
-  }, [popoverState.word])
+  }, [popoverState.word, sentencePopoverState.text])
 
   const formatTime = (date) => {
     if (!date) return ''
@@ -103,6 +108,9 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
     if (isUser) return
     
     e.stopPropagation()
+    
+    // Close sentence popover if open
+    setSentencePopoverState({ text: null, position: null })
     
     // Clean the word (remove punctuation)
     const cleanWord = word.replace(/[.,!?;:()\[\]{}'"`]/g, '').trim()
@@ -146,6 +154,45 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
 
   const handleClosePopover = () => {
     setPopoverState({ word: null, position: null })
+  }
+
+  const handleTranslateClick = (e) => {
+    if (isUser || !content) return
+    
+    e.stopPropagation()
+    
+    // Close word popover if open
+    setPopoverState({ word: null, position: null })
+    
+    const messageTextRect = messageTextRef.current?.getBoundingClientRect()
+    const contentRect = contentRef.current?.getBoundingClientRect()
+    
+    if (!messageTextRect || !contentRect) return
+    
+    // Position popover below the message bubble, centered horizontally on the bubble
+    // Calculate position relative to contentRef (where popover will be positioned)
+    const popoverMaxWidth = 400 // Max width of popover
+    const messageCenterX = messageTextRect.left - contentRect.left + messageTextRect.width / 2
+    let x = messageCenterX
+    // Position below the message bubble - calculate from messageTextRect bottom to contentRect top
+    const y = messageTextRect.bottom - contentRect.top + 8 // Position below the message bubble
+    
+    // Adjust if popover would go off screen horizontally
+    const halfPopoverWidth = popoverMaxWidth / 2
+    if (x - halfPopoverWidth < 0) {
+      x = halfPopoverWidth
+    } else if (x + halfPopoverWidth > contentRect.width) {
+      x = contentRect.width - halfPopoverWidth
+    }
+    
+    setSentencePopoverState({ 
+      text: content, 
+      position: { x, y, showBelow: true } // Always show below the message
+    })
+  }
+
+  const handleCloseSentencePopover = () => {
+    setSentencePopoverState({ text: null, position: null })
   }
 
   const renderWord = (word, wordIndex, lineIndex) => {
@@ -287,7 +334,10 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
           </div>
         ) : (
           <>
-            <div className="chat-message-text">
+            <div 
+              ref={messageTextRef}
+              className="chat-message-text"
+            >
               <div 
                 ref={contentRef}
                 className="chat-message-text-content"
@@ -301,18 +351,37 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
                     onClose={handleClosePopover}
                   />
                 )}
+                {sentencePopoverState.text && sentencePopoverState.position && (
+                  <SentenceTranslationPopover
+                    text={sentencePopoverState.text}
+                    position={sentencePopoverState.position}
+                    onClose={handleCloseSentencePopover}
+                  />
+                )}
               </div>
-              {audioUrl && (
-                <button 
-                  className="voice-play-button-inline"
-                  onClick={handlePlayAudio}
-                  title={isPlaying ? 'Pause audio' : 'Play audio'}
-                >
-                  <span className="material-symbols-outlined">
-                    {isPlaying ? 'pause' : 'play_arrow'}
-                  </span>
-                </button>
-              )}
+              <div className="chat-message-actions">
+                {!isUser && content && (
+                  <button
+                    ref={translateButtonRef}
+                    className="chat-message-translate-button"
+                    onClick={handleTranslateClick}
+                    title="Translate message"
+                  >
+                    <span className="material-symbols-outlined google-icon">translate</span>
+                  </button>
+                )}
+                {audioUrl && (
+                  <button 
+                    className="voice-play-button-inline"
+                    onClick={handlePlayAudio}
+                    title={isPlaying ? 'Pause audio' : 'Play audio'}
+                  >
+                    <span className="material-symbols-outlined">
+                      {isPlaying ? 'pause' : 'play_arrow'}
+                    </span>
+                  </button>
+                )}
+              </div>
             </div>
             {audioUrl && (
               <audio

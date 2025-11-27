@@ -74,6 +74,39 @@
   flex: 1;
 }
 
+.chat-message-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-message-translate-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.chat-message-translate-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.chat-message-translate-button .google-icon {
+  font-size: 18px;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
 .chat-message-user .chat-message-text {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -152,6 +185,15 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.light-mode .chat-message-translate-button {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.light-mode .chat-message-translate-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.8);
+}
+
 .light-mode .chat-message-user .chat-message-text {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -206,6 +248,15 @@
   .voice-play-button-inline .material-symbols-outlined {
     font-size: 11px;
   }
+
+  .chat-message-translate-button {
+    width: 22px;
+    height: 22px;
+  }
+
+  .chat-message-translate-button .google-icon {
+    font-size: 16px;
+  }
 }
 
 /* Responsive Design - Mobile */
@@ -240,6 +291,15 @@
 
   .voice-play-button-inline .material-symbols-outlined {
     font-size: 10px;
+  }
+
+  .chat-message-translate-button {
+    width: 20px;
+    height: 20px;
+  }
+
+  .chat-message-translate-button .google-icon {
+    font-size: 14px;
   }
 
   .chat-message-user .chat-message-text {
