@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import WordTranslationPopover from './WordTranslationPopover'
 import './ChatMessage.css'
 
 const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = false, audioBlob = null, audioMimeType = null }) => {
@@ -6,6 +7,8 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
+  const [popoverState, setPopoverState] = useState({ word: null, position: null })
+  const contentRef = useRef(null)
 
   useEffect(() => {
     if (audioBlob) {
@@ -75,6 +78,20 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
     }
   }, [audioUrl])
 
+  // Close popover on scroll
+  useEffect(() => {
+    if (!popoverState.word) return
+
+    const handleScroll = () => {
+      setPopoverState({ word: null, position: null })
+    }
+
+    window.addEventListener('scroll', handleScroll, true)
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [popoverState.word])
+
   const formatTime = (date) => {
     if (!date) return ''
     const hours = date.getHours().toString().padStart(2, '0')
@@ -82,17 +99,91 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
     return `${hours}:${minutes}`
   }
 
+  const handleWordClick = (e, word) => {
+    if (isUser) return
+    
+    e.stopPropagation()
+    
+    // Clean the word (remove punctuation)
+    const cleanWord = word.replace(/[.,!?;:()\[\]{}'"`]/g, '').trim()
+    if (!cleanWord) return
+    
+    // Get the position of the clicked element relative to viewport
+    const rect = e.currentTarget.getBoundingClientRect()
+    const contentRect = contentRef.current?.getBoundingClientRect()
+    
+    if (!contentRect) return
+    
+    // Calculate position relative to the content container (for absolute positioning)
+    const popoverHeight = 50 // Approximate popover height
+    const popoverMaxWidth = 250 // Max width of popover
+    const wordCenterX = rect.left - contentRect.left + rect.width / 2
+    let x = wordCenterX
+    let y = rect.top - contentRect.top - popoverHeight - 8 // Position above the word with spacing
+    
+    // Adjust if popover would go off screen horizontally
+    const halfPopoverWidth = popoverMaxWidth / 2
+    if (x - halfPopoverWidth < 0) {
+      x = halfPopoverWidth
+    } else if (x + halfPopoverWidth > contentRect.width) {
+      x = contentRect.width - halfPopoverWidth
+    }
+    
+    // Adjust if popover would go off screen vertically (show below instead)
+    const showBelow = y < 0
+    if (showBelow) {
+      y = rect.bottom - contentRect.top + 8 // Position below the word with spacing
+    }
+    
+    const position = {
+      x: x, // Center of the word - popover will be centered using transform
+      y: y,
+      showBelow: showBelow
+    }
+    
+    setPopoverState({ word: cleanWord, position })
+  }
+
+  const handleClosePopover = () => {
+    setPopoverState({ word: null, position: null })
+  }
+
+  const renderWord = (word, wordIndex, lineIndex) => {
+    const trimmedWord = word.trim()
+    if (!trimmedWord) {
+      // Return whitespace as-is
+      return <span key={`${lineIndex}-${wordIndex}`}>{word}</span>
+    }
+    
+    if (isUser) {
+      return <span key={`${lineIndex}-${wordIndex}`}>{word}</span>
+    }
+    
+    return (
+      <span
+        key={`${lineIndex}-${wordIndex}`}
+        className="chat-message-word"
+        onClick={(e) => handleWordClick(e, trimmedWord)}
+        title="Click to translate"
+      >
+        {word}
+      </span>
+    )
+  }
+
   const formatContent = (text) => {
     if (!text) return ''
     
     // Split by newlines and process each line
     const lines = text.split('\n')
-    return lines.map((line, index) => {
+    return lines.map((line, lineIndex) => {
       // Check if line is a bullet point
       if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
+        // Split bullet line into words (preserve whitespace)
+        const words = line.split(/(\s+)/)
         return (
-          <div key={index} className="chat-message-bullet">
-            {line}
+          <div key={lineIndex} className="chat-message-bullet">
+            {words.map((word, wordIndex) => renderWord(word, wordIndex, lineIndex))}
           </div>
         )
       }
@@ -100,19 +191,39 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
       if (line.includes('**')) {
         const parts = line.split(/(\*\*.*?\*\*)/g)
         return (
-          <div key={index}>
+          <div key={lineIndex}>
             {parts.map((part, partIndex) => {
               if (part.startsWith('**') && part.endsWith('**')) {
                 const boldText = part.slice(2, -2)
-                return <strong key={partIndex}>{boldText}</strong>
+                // Split bold text into words
+                const words = boldText.split(/(\s+)/)
+                return (
+                  <strong key={partIndex}>
+                    {words.map((word, wordIndex) => renderWord(word, wordIndex, `${lineIndex}-${partIndex}`))}
+                  </strong>
+                )
               }
-              return <span key={partIndex}>{part}</span>
+              // Split regular text into words
+              const words = part.split(/(\s+)/)
+              return (
+                <span key={partIndex}>
+                  {words.map((word, wordIndex) => renderWord(word, wordIndex, `${lineIndex}-${partIndex}`))}
+                </span>
+              )
             })}
           </div>
         )
       }
-      // Regular line
-      return line ? <div key={index}>{line}</div> : <br key={index} />
+      // Regular line - split into words
+      if (line) {
+        const words = line.split(/(\s+)/)
+        return (
+          <div key={lineIndex}>
+            {words.map((word, wordIndex) => renderWord(word, wordIndex, lineIndex))}
+          </div>
+        )
+      }
+      return <br key={lineIndex} />
     })
   }
 
@@ -177,8 +288,19 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
         ) : (
           <>
             <div className="chat-message-text">
-              <div className="chat-message-text-content">
+              <div 
+                ref={contentRef}
+                className="chat-message-text-content"
+                style={{ position: 'relative' }}
+              >
                 {formatContent(content)}
+                {popoverState.word && popoverState.position && (
+                  <WordTranslationPopover
+                    word={popoverState.word}
+                    position={popoverState.position}
+                    onClose={handleClosePopover}
+                  />
+                )}
               </div>
               {audioUrl && (
                 <button 
