@@ -176,6 +176,49 @@ class AuthService {
   }
 
   /**
+   * Refresh access token using refresh token
+   * @param {string} refreshToken - Refresh token
+   * @returns {Promise<Object>} Refresh result with new session
+   */
+  async refreshToken(refreshToken) {
+    try {
+      if (!this.userClient) {
+        return {
+          success: false,
+          error: 'Authentication service not configured. Please set up Supabase credentials.'
+        };
+      }
+
+      if (!refreshToken) {
+        return {
+          success: false,
+          error: 'Refresh token is required'
+        };
+      }
+
+      const { data, error } = await this.userClient.auth.refreshSession({
+        refresh_token: refreshToken
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return {
+        success: true,
+        session: data.session,
+        user: data.user
+      };
+    } catch (error) {
+      console.error('[AuthService] Token refresh error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Get user by ID
    * @param {string} userId - User's ID
    * @returns {Promise<Object>} User data

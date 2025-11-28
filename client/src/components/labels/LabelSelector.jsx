@@ -4,7 +4,7 @@ import { getApiUrl } from '../../config/api'
 import './LabelSelector.css'
 
 const LabelSelector = ({ selectedLabels, setSelectedLabels, disabled = false }) => {
-  const { user, getAuthHeaders } = useAuth()
+  const { user, authenticatedFetch } = useAuth()
   const [labels, setLabels] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
@@ -45,11 +45,10 @@ const LabelSelector = ({ selectedLabels, setSelectedLabels, disabled = false }) 
 
     setIsLoading(true)
     try {
-      const response = await fetch(getApiUrl(`/api/srs/labels/${currentUserId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/api/srs/labels/${currentUserId}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })

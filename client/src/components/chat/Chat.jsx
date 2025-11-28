@@ -17,7 +17,7 @@ const Chat = ({
   onNavigateToUserManagement,
   onNavigateToManagement
 }) => {
-  const { getAuthHeaders } = useAuth()
+  const { authenticatedFetch } = useAuth()
   const { showError } = useToast()
 
   const createInitialAssistantMessage = () => ({
@@ -81,11 +81,10 @@ const Chat = ({
   const loadTemplates = async () => {
     setIsLoadingTemplates(true)
     try {
-      const response = await fetch(getApiUrl('/api/chat-templates'), {
+      const response = await authenticatedFetch(getApiUrl('/api/chat-templates'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         }
       })
 
@@ -108,11 +107,10 @@ const Chat = ({
   const loadModels = async () => {
     setIsLoadingModels(true)
     try {
-      const response = await fetch(getApiUrl('/api/llm/models'), {
+      const response = await authenticatedFetch(getApiUrl('/api/llm/models'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         }
       })
 
@@ -267,11 +265,10 @@ const Chat = ({
         payload.model = selectedModelId
       }
 
-      const response = await fetch(getApiUrl('/deepRemember/chat'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         body: JSON.stringify(payload)
       })
@@ -337,11 +334,8 @@ const Chat = ({
       formData.append('sttLanguage', sttLanguage)
     }
 
-      const response = await fetch(getApiUrl('/deepRemember/chat-voice'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/chat-voice'), {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders()
-        },
         body: formData
       })
 
@@ -470,11 +464,10 @@ ${conversationHistory}`
         payload.model = selectedModelId
       }
 
-      const response = await fetch(getApiUrl('/deepRemember/chat'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         body: JSON.stringify(payload)
       })

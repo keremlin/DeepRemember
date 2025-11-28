@@ -10,7 +10,7 @@ import './ManageCards.css'
 
 const ManageCards = ({ currentUserId, onCardDeleted }) => {
   const { showSuccess, showError } = useToast()
-  const { getAuthHeaders, user } = useAuth()
+  const { authenticatedFetch, user } = useAuth()
   const [allCards, setAllCards] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
@@ -67,11 +67,10 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     if (!userId) return
 
     try {
-      const response = await fetch(getApiUrl(`/api/srs/labels/${userId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/api/srs/labels/${userId}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })
@@ -99,11 +98,10 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     
     setIsLoading(true)
     try {
-      const response = await fetch(getApiUrl(`/deepRemember/all-cards/${currentUserId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/all-cards/${currentUserId}`), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })
@@ -137,11 +135,10 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     if (!cardId) return false
     
     try {
-      const response = await fetch(getApiUrl(`/deepRemember/delete-card/${currentUserId}/${cardId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/delete-card/${currentUserId}/${cardId}`), {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })

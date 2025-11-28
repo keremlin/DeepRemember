@@ -36,7 +36,7 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
   const wasPlayingBeforeSeekRef = useRef(false)
   const targetSeekTimeRef = useRef(null)
   const seekRetryCountRef = useRef(0)
-  const { getAuthHeaders } = useAuth()
+  const { authenticatedFetch } = useAuth()
 
   // Expose refreshPlaylist method to parent component
   useImperativeHandle(ref, () => ({
@@ -328,9 +328,9 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
         ? `answer in this format {"translation":"string", "word":"realWord"} , what is the translation of the word "${text}"`
         : `answer in this format {"translation":"string", "sentence":"realSentence"} , what is the translation of "${text}"`
       
-      const response = await fetch(getApiUrl('/deepRemember/translate'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/translate'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, type })
       })
       

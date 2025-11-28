@@ -10,7 +10,7 @@ const SampleSentence = ({
   word,
   showAnswer
 }) => {
-  const { getAuthHeaders } = useAuth()
+  const { authenticatedFetch } = useAuth()
   const [isPlaying, setIsPlaying] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
   const [audio, setAudio] = useState(null)
@@ -37,11 +37,10 @@ const SampleSentence = ({
       
       console.log('Fetching audio URL for:', { word, sentence })
       
-      const response = await fetch(getApiUrl(`/deepRemember/get-audio/${word.trim()}/${encodedSentence}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/get-audio/${word.trim()}/${encodedSentence}`), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         mode: 'cors'
       })
@@ -75,11 +74,10 @@ const SampleSentence = ({
     try {
       console.log('Creating audio for:', { text: sentence.trim(), word: word.trim() })
       
-      const response = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/convert-to-speech'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         mode: 'cors',
         body: JSON.stringify({ 

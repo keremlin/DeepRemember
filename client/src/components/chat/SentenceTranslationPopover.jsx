@@ -4,7 +4,7 @@ import { getApiUrl } from '../../config/api'
 import './SentenceTranslationPopover.css'
 
 const SentenceTranslationPopover = ({ text, position, onClose }) => {
-  const { getAuthHeaders } = useAuth()
+  const { authenticatedFetch } = useAuth()
   const [translation, setTranslation] = useState('Loading...')
   const [isLoading, setIsLoading] = useState(true)
   const popoverRef = useRef(null)
@@ -15,11 +15,10 @@ const SentenceTranslationPopover = ({ text, position, onClose }) => {
     const fetchTranslation = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch(getApiUrl('/deepRemember/translate'), {
+        const response = await authenticatedFetch(getApiUrl('/deepRemember/translate'), {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json', 
-            ...getAuthHeaders() 
           },
           body: JSON.stringify({ text, type: 'sentence' })
         })
@@ -36,7 +35,7 @@ const SentenceTranslationPopover = ({ text, position, onClose }) => {
     }
 
     fetchTranslation()
-  }, [text, getAuthHeaders])
+  }, [text, authenticatedFetch])
 
   // Close popover when clicking outside
   useEffect(() => {

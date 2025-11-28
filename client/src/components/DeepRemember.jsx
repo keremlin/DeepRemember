@@ -14,7 +14,7 @@ import './DeepRemember.css'
 
 const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMount = false, onNavigateToUserManagement, onNavigateToManagement, onNavigateToChat }) => {
   const { showSuccess, showError, showInfo } = useToast()
-  const { user, getAuthHeaders } = useAuth()
+  const { user, authenticatedFetch } = useAuth()
   
   // State management
   const [currentUserId, setCurrentUserId] = useState(user?.email || 'user123')
@@ -101,11 +101,10 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
     isLoadingRef.current = true
     
     try {
-      const response = await fetch(getApiUrl(`/deepRemember/stats/${currentUserId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/stats/${currentUserId}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })
@@ -139,11 +138,10 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
 
   const loadReviewCards = async (showAlert = true) => {
     try {
-      const response = await fetch(getApiUrl(`/deepRemember/review-cards/${currentUserId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/review-cards/${currentUserId}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })
@@ -187,11 +185,10 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
     const card = currentCards[currentCardIndex]
     
     try {
-      const response = await fetch(getApiUrl('/deepRemember/answer-card'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/answer-card'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({
@@ -230,11 +227,10 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
     if (!cardId) return false
     
     try {
-      const response = await fetch(getApiUrl(`/deepRemember/delete-card/${currentUserId}/${cardId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/delete-card/${currentUserId}/${cardId}`), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })

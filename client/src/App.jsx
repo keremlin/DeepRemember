@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Welcome from './components/welcome/Welcome'
 import DeepRemember from './components/DeepRemember'
 import PlayerPage from './components/player/PlayerPage'
@@ -6,12 +6,14 @@ import UserManagement from './components/users/UserManagement'
 import ManagementPage from './components/management/userManagement'
 import Chat from './components/chat/Chat'
 import { ToastProvider } from './components/ToastProvider'
-import { AuthProvider } from './components/security/AuthContext'
+import { AuthProvider, useAuth } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
 import AuthWrapper from './components/security/AuthWrapper'
 import './App.css'
 
-function App() {
+// Inner component that has access to AuthContext
+function AppContent() {
+  const { setNavigateToLogin, isAuthenticated } = useAuth();
   // Check if user is already authenticated
   const isAlreadyAuthenticated = () => {
     try {
@@ -25,6 +27,21 @@ function App() {
 
   const [currentView, setCurrentView] = useState(isAlreadyAuthenticated() ? 'welcome' : 'login')
   const [showCardsOnMount, setShowCardsOnMount] = useState(false)
+
+  // Set up navigation callback for login redirect
+  useEffect(() => {
+    const navigateToLogin = () => {
+      setCurrentView('login');
+    };
+    setNavigateToLogin(navigateToLogin);
+  }, [setNavigateToLogin]);
+
+  // Redirect to login when user becomes unauthenticated
+  useEffect(() => {
+    if (!isAuthenticated && currentView !== 'login') {
+      setCurrentView('login');
+    }
+  }, [isAuthenticated, currentView]);
 
   const navigateToDeepRemember = (showCards = false) => {
     setShowCardsOnMount(showCards)
@@ -52,73 +69,79 @@ function App() {
   }
 
   return (
+    <AuthWrapper onNavigateToWelcome={navigateToWelcome}>
+      <div className="App">
+        {currentView === 'login' ? (
+          <div style={{padding: '20px', textAlign: 'center'}}>
+            <h2>Please log in to continue</h2>
+            <p>The login modal should appear above this message.</p>
+          </div>
+        ) : currentView === 'welcome' ? (
+          <Welcome 
+            onNavigateToDeepRemember={navigateToDeepRemember}
+            onNavigateToPlayer={navigateToPlayer}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+            onNavigateToUserManagement={navigateToUserManagement}
+          />
+        ) : currentView === 'deepremember' ? (
+          <DeepRemember 
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            showCardsOnMount={showCardsOnMount}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+          />
+        ) : currentView === 'usermanagement' ? (
+          <UserManagement 
+            onUserSetup={() => {}}
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            onShowCards={() => navigateToDeepRemember(true)}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+          />
+        ) : currentView === 'management' ? (
+          <ManagementPage 
+            onUserSetup={() => {}}
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            onShowCards={() => navigateToDeepRemember(true)}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+          />
+        ) : currentView === 'chat' ? (
+          <Chat 
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            onShowCards={() => navigateToDeepRemember(true)}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+          />
+        ) : (
+          <PlayerPage 
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            onNavigateToDeepRemember={navigateToDeepRemember}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+          />
+        )}
+      </div>
+    </AuthWrapper>
+  )
+}
+
+function App() {
+  return (
     <ThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <AuthWrapper onNavigateToWelcome={navigateToWelcome}>
-            <div className="App">
-              {currentView === 'login' ? (
-                <div style={{padding: '20px', textAlign: 'center'}}>
-                  <h2>Please log in to continue</h2>
-                  <p>The login modal should appear above this message.</p>
-                </div>
-              ) : currentView === 'welcome' ? (
-                <Welcome 
-                  onNavigateToDeepRemember={navigateToDeepRemember}
-                  onNavigateToPlayer={navigateToPlayer}
-                  onNavigateToManagement={navigateToManagement}
-                  onNavigateToChat={navigateToChat}
-                  onNavigateToUserManagement={navigateToUserManagement}
-                />
-              ) : currentView === 'deepremember' ? (
-                <DeepRemember 
-                  onNavigateToWelcome={navigateToWelcome}
-                  onNavigateToPlayer={navigateToPlayer}
-                  showCardsOnMount={showCardsOnMount}
-                  onNavigateToUserManagement={navigateToUserManagement}
-                  onNavigateToManagement={navigateToManagement}
-                  onNavigateToChat={navigateToChat}
-                />
-              ) : currentView === 'usermanagement' ? (
-                <UserManagement 
-                  onUserSetup={() => {}}
-                  onNavigateToWelcome={navigateToWelcome}
-                  onNavigateToPlayer={navigateToPlayer}
-                  onShowCards={() => navigateToDeepRemember(true)}
-                  onNavigateToUserManagement={navigateToUserManagement}
-                  onNavigateToManagement={navigateToManagement}
-                  onNavigateToChat={navigateToChat}
-                />
-              ) : currentView === 'management' ? (
-                <ManagementPage 
-                  onUserSetup={() => {}}
-                  onNavigateToWelcome={navigateToWelcome}
-                  onNavigateToPlayer={navigateToPlayer}
-                  onShowCards={() => navigateToDeepRemember(true)}
-                  onNavigateToUserManagement={navigateToUserManagement}
-                  onNavigateToManagement={navigateToManagement}
-                  onNavigateToChat={navigateToChat}
-                />
-              ) : currentView === 'chat' ? (
-                <Chat 
-                  onNavigateToWelcome={navigateToWelcome}
-                  onNavigateToPlayer={navigateToPlayer}
-                  onShowCards={() => navigateToDeepRemember(true)}
-                  onNavigateToUserManagement={navigateToUserManagement}
-                  onNavigateToManagement={navigateToManagement}
-                />
-              ) : (
-                <PlayerPage 
-                  onNavigateToWelcome={navigateToWelcome}
-                  onNavigateToPlayer={navigateToPlayer}
-                  onNavigateToDeepRemember={navigateToDeepRemember}
-                  onNavigateToUserManagement={navigateToUserManagement}
-                  onNavigateToManagement={navigateToManagement}
-                  onNavigateToChat={navigateToChat}
-                />
-              )}
-            </div>
-          </AuthWrapper>
+          <AppContent />
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>

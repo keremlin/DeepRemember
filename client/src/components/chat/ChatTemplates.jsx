@@ -18,7 +18,7 @@ const ChatTemplates = ({
   onNavigateToChat
 }) => {
   const { showSuccess, showError } = useToast()
-  const { getAuthHeaders } = useAuth()
+  const { authenticatedFetch } = useAuth()
   const [templates, setTemplates] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -74,11 +74,10 @@ const ChatTemplates = ({
   const loadTemplates = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(getApiUrl('/api/chat-templates'), {
+      const response = await authenticatedFetch(getApiUrl('/api/chat-templates'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         }
       })
 
@@ -115,11 +114,10 @@ const ChatTemplates = ({
     setIsSaving(true)
 
     try {
-      const response = await fetch(getApiUrl('/api/chat-templates'), {
+      const response = await authenticatedFetch(getApiUrl('/api/chat-templates'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         body: JSON.stringify(formData)
       })
@@ -168,11 +166,10 @@ const ChatTemplates = ({
     setIsSaving(true)
 
     try {
-      const response = await fetch(getApiUrl(`/api/chat-templates/${editingTemplate.id}`), {
+      const response = await authenticatedFetch(getApiUrl(`/api/chat-templates/${editingTemplate.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         body: JSON.stringify(formData)
       })
@@ -208,11 +205,10 @@ const ChatTemplates = ({
 
     setIsDeleting(true)
     try {
-      const response = await fetch(getApiUrl(`/api/chat-templates/${deleteModalState.template.id}`), {
+      const response = await authenticatedFetch(getApiUrl(`/api/chat-templates/${deleteModalState.template.id}`), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         }
       })
 

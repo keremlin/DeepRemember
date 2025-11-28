@@ -399,4 +399,47 @@ router.post('/verify-token', async (req, res) => {
   }
 });
 
+/**
+ * @route POST /api/auth/refresh-token
+ * @desc Refresh access token using refresh token
+ * @access Public
+ */
+router.post('/refresh-token', async (req, res) => {
+  try {
+    const { refresh_token } = req.body;
+
+    if (!refresh_token) {
+      return res.status(400).json({
+        success: false,
+        error: 'Refresh token is required'
+      });
+    }
+
+    const result = await authService.refreshToken(refresh_token);
+
+    if (!result.success) {
+      return res.status(401).json({
+        success: false,
+        error: result.error
+      });
+    }
+
+    res.json({
+      success: true,
+      session: result.session,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        created_at: result.user.created_at
+      }
+    });
+  } catch (error) {
+    console.error('[AuthRoutes] Token refresh error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Token refresh failed'
+    });
+  }
+});
+
 module.exports = router;

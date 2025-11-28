@@ -8,7 +8,7 @@ import './AddList.css'
 
 const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
   const { showSuccess, showError, showWarning, showInfo } = useToast()
-  const { getAuthHeaders } = useAuth()
+  const { authenticatedFetch } = useAuth()
   
   // Form states
   const [inputText, setInputText] = useState('')
@@ -78,11 +78,10 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
     setProcessedItems(updatedItems)
 
     try {
-      const response = await fetch(getApiUrl('/deepRemember/translate-word'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/translate-word'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({ word: item.word })
@@ -158,11 +157,10 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
     try {
       for (const item of validItems) {
         try {
-          const response = await fetch(getApiUrl('/deepRemember/create-card'), {
+          const response = await authenticatedFetch(getApiUrl('/deepRemember/create-card'), {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
-              ...getAuthHeaders(),
             },
             mode: 'cors',
             body: JSON.stringify({
@@ -250,11 +248,10 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
     setProcessedItems(updatedItems)
 
     try {
-      const response = await fetch(getApiUrl('/deepRemember/translate-word'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/translate-word'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({ word: item.word })

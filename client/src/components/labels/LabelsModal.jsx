@@ -13,7 +13,7 @@ import './LabelsModal.css'
  */
 const LabelsModal = ({ isOpen, onClose }) => {
   const { showSuccess, showError } = useToast()
-  const { user, getAuthHeaders } = useAuth()
+  const { user, authenticatedFetch } = useAuth()
   const [labels, setLabels] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -56,11 +56,10 @@ const LabelsModal = ({ isOpen, onClose }) => {
 
     setIsLoading(true)
     try {
-      const response = await fetch(getApiUrl(`/api/srs/labels/${currentUserId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/api/srs/labels/${currentUserId}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })
@@ -103,11 +102,10 @@ const LabelsModal = ({ isOpen, onClose }) => {
 
     setIsCreating(true)
     try {
-      const response = await fetch(getApiUrl(`/api/srs/labels/${currentUserId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/api/srs/labels/${currentUserId}`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors',
         body: JSON.stringify({
@@ -158,11 +156,10 @@ const LabelsModal = ({ isOpen, onClose }) => {
     if (!labelId) return false
 
     try {
-      const response = await fetch(getApiUrl(`/api/srs/labels/${currentUserId}/${labelId}`), {
+      const response = await authenticatedFetch(getApiUrl(`/api/srs/labels/${currentUserId}/${labelId}`), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
         },
         mode: 'cors'
       })

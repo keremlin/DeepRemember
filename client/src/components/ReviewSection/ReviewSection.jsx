@@ -15,7 +15,7 @@ const ReviewSection = ({
   onDeleteCard,
   onEditCard
 }) => {
-  const { getAuthHeaders } = useAuth()
+  const { authenticatedFetch } = useAuth()
   const [pressedKey, setPressedKey] = useState(null)
   const [isPlayingWord, setIsPlayingWord] = useState(false)
   const [isCreatingWordAudio, setIsCreatingWordAudio] = useState(false)
@@ -52,11 +52,10 @@ const ReviewSection = ({
     setIsCreatingWordAudio(true)
     
     try {
-      const response = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/convert-to-speech'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         mode: 'cors',
         body: JSON.stringify({ 
@@ -111,11 +110,10 @@ const ReviewSection = ({
     
     try {
       const encodedWord = encodeURIComponent(currentCard.word.trim())
-      const response = await fetch(getApiUrl(`/deepRemember/get-audio/${currentCard.word.trim()}/${encodedWord}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/get-audio/${currentCard.word.trim()}/${encodedWord}`), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         mode: 'cors'
       })
@@ -155,11 +153,10 @@ const ReviewSection = ({
     if (!currentCard?.translation) return null
     
     try {
-      const response = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/convert-to-speech'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         mode: 'cors',
         body: JSON.stringify({ 
@@ -198,11 +195,10 @@ const ReviewSection = ({
       const encodedTranslation = encodeURIComponent(currentCard.translation.trim())
       const encodedWord = encodeURIComponent(currentCard.word?.trim() || currentCard.translation.trim())
       
-      const response = await fetch(getApiUrl(`/deepRemember/get-audio/${encodedWord}/${encodedTranslation}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/get-audio/${encodedWord}/${encodedTranslation}`), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         mode: 'cors'
       })
@@ -246,11 +242,10 @@ const ReviewSection = ({
       const encodedSentence = encodeURIComponent(sentence.trim())
       const encodedWord = encodeURIComponent(word.trim())
       
-      const response = await fetch(getApiUrl(`/deepRemember/get-audio/${encodedWord}/${encodedSentence}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/get-audio/${encodedWord}/${encodedSentence}`), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
         mode: 'cors'
       })
@@ -264,11 +259,10 @@ const ReviewSection = ({
       } else {
         // Create audio if it doesn't exist
         try {
-          const createResponse = await fetch(getApiUrl('/deepRemember/convert-to-speech'), {
+          const createResponse = await authenticatedFetch(getApiUrl('/deepRemember/convert-to-speech'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              ...getAuthHeaders()
             },
             mode: 'cors',
             body: JSON.stringify({ 
