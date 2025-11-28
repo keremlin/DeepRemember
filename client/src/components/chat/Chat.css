@@ -149,6 +149,10 @@
   margin-left: auto;
 }
 
+.chat-check-button {
+  align-self: flex-end;
+}
+
 .chat-header-content {
   display: flex;
   justify-content: space-between;
@@ -355,6 +359,11 @@
   }
 
   .chat-restart-button {
+    width: 100%;
+    align-self: center;
+  }
+
+  .chat-check-button {
     width: 100%;
     align-self: center;
   }

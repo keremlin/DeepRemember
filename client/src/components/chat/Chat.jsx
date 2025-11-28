@@ -4,6 +4,7 @@ import ChatInput from './ChatInput'
 import VoiceChatInput from './VoiceChatInput'
 import Button from '../Button'
 import Page from '../Page'
+import GrammarCheckModal from './GrammarCheckModal'
 import { useAuth } from '../security/AuthContext'
 import { useToast } from '../ToastProvider'
 import { getApiUrl } from '../../config/api'
@@ -39,6 +40,9 @@ const Chat = ({
   const [isLoadingModels, setIsLoadingModels] = useState(false)
   const [sttLanguage, setSttLanguage] = useState('de')
   const [playbackSpeed, setPlaybackSpeed] = useState(0.9) // Playback speed for voice responses (0.5-1.3)
+  const [isGrammarCheckModalOpen, setIsGrammarCheckModalOpen] = useState(false)
+  const [grammarCheckResult, setGrammarCheckResult] = useState('')
+  const [isGrammarCheckLoading, setIsGrammarCheckLoading] = useState(false)
 
   const messagesEndRef = useRef(null)
   const chatContainerRef = useRef(null)
@@ -390,6 +394,111 @@ const Chat = ({
     setChatMode(prev => prev === 'text' ? 'voice' : 'text')
   }
 
+  const handleGrammarCheck = async () => {
+    // Filter out voice messages and audio blobs, keep only text messages
+    const textMessages = messages.filter(msg => !msg.isVoice && !msg.audioBlob)
+
+    if (textMessages.length === 0) {
+      showError('No messages found to check.')
+      return
+    }
+
+    // Check if there are any user messages
+    const hasUserMessages = textMessages.some(msg => msg.role === 'user')
+    if (!hasUserMessages) {
+      showError('No user messages found to check.')
+      return
+    }
+
+    setIsGrammarCheckModalOpen(true)
+    setIsGrammarCheckLoading(true)
+    setGrammarCheckResult('')
+
+    try {
+      // Remove template messages from history
+      // Templates are usually JSON objects sent as user messages
+      const cleanedMessages = textMessages.filter(msg => {
+        // Check if message is a template (JSON format with template fields)
+        if (msg.role === 'user') {
+          try {
+            const parsed = JSON.parse(msg.content)
+            // Check if it has template-like structure
+            if (parsed && typeof parsed === 'object' && (
+              parsed.thema !== undefined ||
+              parsed.persons !== undefined ||
+              parsed.scenario !== undefined ||
+              parsed.questions_and_thema !== undefined ||
+              parsed.words_to_use !== undefined ||
+              parsed.words_not_to_use !== undefined ||
+              parsed.grammar_to_use !== undefined ||
+              parsed.level !== undefined
+            )) {
+              return false // This is a template, remove it
+            }
+          } catch (e) {
+            // Not JSON, keep it
+          }
+        }
+        return true // Keep all other messages
+      })
+
+      // Format messages as "Assistant: [content]" or "User: [content]"
+      const conversationHistory = cleanedMessages
+        .map(msg => {
+          const role = msg.role === 'user' ? 'User' : 'Assistant'
+          return `${role}: ${msg.content}`
+        })
+        .join('\n')
+
+      // Create the prompt with full conversation history
+      const prompt = `correct the sentences of User in term of grammer and correctness and spell and provide a sample sentence for that one by one this is the chat history : 
+
+Conversation History:
+
+${conversationHistory}`
+
+      // Prepare messages for API
+      const apiMessages = [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+
+      const payload = { messages: apiMessages }
+      if (selectedModelId) {
+        payload.model = selectedModelId
+      }
+
+      const response = await fetch(getApiUrl('/deepRemember/chat'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to check grammar')
+      }
+
+      if (data.success && data.response) {
+        setGrammarCheckResult(data.response)
+      } else {
+        throw new Error('Invalid response from server')
+      }
+    } catch (error) {
+      console.error('Grammar check error:', error)
+      showError(error.message || 'Failed to check grammar. Please try again.')
+      setGrammarCheckResult('Error: ' + (error.message || 'Failed to check grammar'))
+    } finally {
+      setIsGrammarCheckLoading(false)
+    }
+  }
+
   return (
     <Page
       onNavigateToWelcome={onNavigateToWelcome}
@@ -490,6 +599,16 @@ const Chat = ({
             >
               Restart Chat
             </Button>
+            <Button
+              onClick={handleGrammarCheck}
+              variant="primary"
+              size="small"
+              iconName="spellcheck"
+              className="chat-check-button"
+              disabled={isLoading || messages.filter(msg => msg.role === 'user').length === 0}
+            >
+              Check!
+            </Button>
           </div>
           <div className="chat-header-content">
             <div className="chat-header-title">
@@ -546,6 +665,13 @@ const Chat = ({
           />
         )}
       </div>
+      
+      <GrammarCheckModal
+        isOpen={isGrammarCheckModalOpen}
+        onClose={() => setIsGrammarCheckModalOpen(false)}
+        content={grammarCheckResult}
+        isLoading={isGrammarCheckLoading}
+      />
     </Page>
   )
 }

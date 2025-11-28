@@ -1,0 +1,286 @@
+/* GrammarCheckModal Component Styles - Dark Theme */
+
+.grammar-check-modal .modal-content {
+  padding: 0;
+}
+
+.grammar-check-content {
+  padding: 20px;
+  min-height: 200px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.grammar-check-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 20px;
+  min-height: 200px;
+}
+
+.grammar-check-loading-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.grammar-check-loading-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  animation: grammarCheckLoadingDot 1.4s ease-in-out infinite;
+}
+
+.grammar-check-loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.grammar-check-loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.grammar-check-loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes grammarCheckLoadingDot {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+.grammar-check-loading p {
+  color: #ccc;
+  font-size: 1rem;
+  margin: 0;
+  text-align: center;
+}
+
+.grammar-check-results {
+  width: 100%;
+}
+
+.grammar-check-text {
+  line-height: 1.6;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.grammar-check-heading {
+  color: #667eea;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 20px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.grammar-check-heading:first-child {
+  margin-top: 0;
+}
+
+.grammar-check-paragraph {
+  margin: 12px 0;
+  color: #fff;
+  line-height: 1.6;
+}
+
+.grammar-check-correction-line {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-left: 3px solid #667eea;
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.grammar-check-empty {
+  text-align: center;
+  color: #888;
+  padding: 40px 20px;
+  font-style: italic;
+}
+
+/* Custom scrollbar for grammar check content */
+.grammar-check-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.grammar-check-content::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+.grammar-check-content::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+.grammar-check-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Light Mode Styles */
+.light-mode .grammar-check-loading p {
+  color: #666;
+}
+
+.light-mode .grammar-check-text {
+  color: #333;
+}
+
+.light-mode .grammar-check-heading {
+  color: #667eea;
+  border-bottom-color: rgba(102, 126, 234, 0.2);
+}
+
+.light-mode .grammar-check-paragraph {
+  color: #333;
+}
+
+.light-mode .grammar-check-correction-line {
+  background: rgba(102, 126, 234, 0.05);
+  border-left-color: #667eea;
+  color: #333;
+}
+
+.light-mode .grammar-check-empty {
+  color: #999;
+}
+
+.light-mode .grammar-check-content::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.light-mode .grammar-check-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+}
+
+.light-mode .grammar-check-content::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}
+
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .grammar-check-content {
+    padding: 18px;
+    max-height: 65vh;
+  }
+
+  .grammar-check-heading {
+    font-size: 1.05rem;
+    margin: 18px 0 10px 0;
+  }
+
+  .grammar-check-paragraph {
+    font-size: 0.9rem;
+    margin: 10px 0;
+  }
+
+  .grammar-check-correction-line {
+    font-size: 0.85rem;
+    padding: 8px 10px;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .grammar-check-content {
+    padding: 15px;
+    max-height: 60vh;
+  }
+
+  .grammar-check-loading {
+    padding: 30px 15px;
+    min-height: 150px;
+  }
+
+  .grammar-check-loading-dots span {
+    width: 10px;
+    height: 10px;
+  }
+
+  .grammar-check-loading p {
+    font-size: 0.9rem;
+  }
+
+  .grammar-check-heading {
+    font-size: 1rem;
+    margin: 15px 0 10px 0;
+    padding-bottom: 6px;
+  }
+
+  .grammar-check-paragraph {
+    font-size: 0.85rem;
+    margin: 10px 0;
+  }
+
+  .grammar-check-correction-line {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+    margin: 6px 0;
+  }
+
+  .grammar-check-empty {
+    padding: 30px 15px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grammar-check-content {
+    padding: 12px;
+    max-height: 55vh;
+  }
+
+  .grammar-check-loading {
+    padding: 25px 12px;
+    min-height: 120px;
+    gap: 15px;
+  }
+
+  .grammar-check-loading-dots span {
+    width: 8px;
+    height: 8px;
+  }
+
+  .grammar-check-loading p {
+    font-size: 0.85rem;
+  }
+
+  .grammar-check-heading {
+    font-size: 0.95rem;
+    margin: 12px 0 8px 0;
+    padding-bottom: 5px;
+  }
+
+  .grammar-check-paragraph {
+    font-size: 0.8rem;
+    margin: 8px 0;
+  }
+
+  .grammar-check-correction-line {
+    font-size: 0.75rem;
+    padding: 6px 8px;
+    margin: 5px 0;
+  }
+
+  .grammar-check-empty {
+    padding: 25px 12px;
+    font-size: 0.85rem;
+  }
+}
+
