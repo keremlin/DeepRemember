@@ -3,6 +3,7 @@ import ReviewButt from './ReviewButt'
 import Samples from './Samples'
 import SampleSentenceCircle from './SampleSentenceCircle'
 import CardLabelList from '../labels/CardLabelList'
+import DueCardsCounter from './DueCardsCounter'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import './ReviewSection.css'
@@ -13,7 +14,8 @@ const ReviewSection = ({
   setShowAnswer, 
   answerCard,
   onDeleteCard,
-  onEditCard
+  onEditCard,
+  dueCardsCount
 }) => {
   const { authenticatedFetch } = useAuth()
   const [pressedKey, setPressedKey] = useState(null)
@@ -425,14 +427,17 @@ const ReviewSection = ({
       <h3>
         <span className="material-symbols-outlined">dictionary</span>
         Review Cards
-        <label className="auto-play-checkbox">
-          <input
-            type="checkbox"
-            checked={autoPlay}
-            onChange={(e) => setAutoPlay(e.target.checked)}
-          />
-          <span className="material-symbols-outlined google-icon">volume_up</span>
-        </label>
+        <div>
+          <label className="auto-play-checkbox">
+            <input
+              type="checkbox"
+              checked={autoPlay}
+              onChange={(e) => setAutoPlay(e.target.checked)}
+            />
+            <span className="material-symbols-outlined google-icon">volume_up</span>
+          </label>
+          <DueCardsCounter count={dueCardsCount} />
+        </div>
       </h3>
       <div className="srs-card current-card">
         <div className="card-content">

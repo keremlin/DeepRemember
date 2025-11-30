@@ -58,6 +58,7 @@ const DashboardView = ({
           answerCard={answerCard}
           onDeleteCard={onDeleteCard}
           onEditCard={onEditCard}
+          dueCardsCount={stats?.dueCards || 0}
         />
       )}
 

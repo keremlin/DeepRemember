@@ -1,0 +1,69 @@
+.due-cards-counter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.due-cards-label {
+  font-size: 1.2rem;
+  font-weight: 500;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.due-cards-number {
+  font-size: 1.2rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .due-cards-counter {
+    padding: 3px 6px;
+    margin-left: 6px;
+    gap: 3px;
+  }
+
+  .due-cards-label,
+  .due-cards-number {
+    font-size: 1.1rem;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .due-cards-counter {
+    padding: 2px 4px;
+    margin-left: 4px;
+    gap: 3px;
+  }
+
+  .due-cards-label,
+  .due-cards-number {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .due-cards-counter {
+    padding: 2px 3px;
+    margin-left: 3px;
+    gap: 2px;
+  }
+
+  .due-cards-label,
+  .due-cards-number {
+    font-size: 0.9rem;
+  }
+}
+

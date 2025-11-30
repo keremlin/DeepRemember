@@ -4,6 +4,7 @@ import DashboardView from './DashboardView'
 import ManageCards from './ManageCards/ManageCards'
 import EditCard from './ManageCards/EditCard'
 import HelpDeepRememberModal from './HelpDeepRememberModal'
+import CompletionModal from './ReviewSection/CompletionModal'
 import Page from './Page'
 import UserManage from './header/user/UserManage'
 import { useToast } from './ToastProvider'
@@ -42,11 +43,13 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
   const [isDeletingCard, setIsDeletingCard] = useState(false)
   const [isEditCardModalOpen, setIsEditCardModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
+  const [showCompletionModal, setShowCompletionModal] = useState(false)
   
   // Refs for loading states
   const lastNumberKeyRef = useRef(null)
   const lastNumberKeyTimeRef = useRef(null)
   const isLoadingRef = useRef(false)
+  const previousDueCardsRef = useRef(null)
 
   // Update user ID when user changes
   useEffect(() => {
@@ -116,6 +119,15 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
       const data = await response.json()
       
       if (data.success) {
+        const newDueCards = data.stats?.dueCards || 0
+        const previousDueCards = previousDueCardsRef.current
+        
+        // Check if due cards went from > 0 to 0 while in review mode
+        if (isReviewMode && previousDueCards !== null && previousDueCards > 0 && newDueCards === 0) {
+          setShowCompletionModal(true)
+        }
+        
+        previousDueCardsRef.current = newDueCards
         setStats(data.stats)
         // Load review cards without showing alerts for empty results
         await loadReviewCards(false)
@@ -320,6 +332,13 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
 
 
 
+  // Initialize previous due cards ref when stats change
+  useEffect(() => {
+    if (previousDueCardsRef.current === null && stats.dueCards !== undefined) {
+      previousDueCardsRef.current = stats.dueCards
+    }
+  }, [stats.dueCards])
+
   // Initialize on component mount
   useEffect(() => {
     // Only load user data once on mount
@@ -417,6 +436,11 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
         card={editingCard}
         currentUserId={currentUserId}
         onCardUpdated={handleCardUpdatedFromReview}
+      />
+
+      <CompletionModal
+        isOpen={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
       />
     </Page>
   )

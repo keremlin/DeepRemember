@@ -26,12 +26,18 @@
   background-clip: text;
 }
 
+.review-section h3 > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
 .auto-play-checkbox {
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  margin-left: auto;
   padding: 4px 8px;
   border-radius: 6px;
   transition: background-color 0.2s ease;
