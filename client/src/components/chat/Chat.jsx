@@ -7,6 +7,7 @@ import Page from '../Page'
 import GrammarCheckModal from './GrammarCheckModal'
 import { useAuth } from '../security/AuthContext'
 import { useToast } from '../ToastProvider'
+import { useUserConfig } from '../UserConfigContext'
 import { getApiUrl } from '../../config/api'
 import './Chat.css'
 
@@ -19,6 +20,7 @@ const Chat = ({
 }) => {
   const { authenticatedFetch } = useAuth()
   const { showError } = useToast()
+  const { getConfigValue } = useUserConfig()
 
   const createInitialAssistantMessage = () => ({
     id: Date.now(),
@@ -121,8 +123,9 @@ const Chat = ({
         const availableModels = data.models || []
         setModels(availableModels)
         
-        // Set default model: prefer "llama-3.3-70b-versatile", otherwise first available
-        const preferredModel = 'llama-3.3-70b-versatile'
+        // Get default model from user config, fallback to hardcoded default
+        const configDefaultModel = getConfigValue('default_llm_for_chat', '')
+        const preferredModel = configDefaultModel || 'llama-3.3-70b-versatile'
         const preferredModelExists = availableModels.some(model => model.id === preferredModel)
         
         setSelectedModelId(prev => {
@@ -130,7 +133,7 @@ const Chat = ({
           if (prev && availableModels.some(model => model.id === prev)) {
             return prev
           }
-          // Otherwise, prefer "llama-3.3-70b-versatile" if available
+          // Otherwise, prefer model from config (or hardcoded default) if available
           if (preferredModelExists) {
             return preferredModel
           }
