@@ -168,6 +168,25 @@ class SQLiteDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_chattemplates_level ON chattemplates(level);
     `;
 
+    const createUserConfigsTable = `
+      CREATE TABLE IF NOT EXISTS user_configs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        label TEXT NOT NULL,
+        value_type TEXT NOT NULL DEFAULT 'string',
+        value TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+      )
+    `;
+
+    const createUserConfigsIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_user_configs_user_id ON user_configs(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name);
+    `;
+
     try {
       this.db.exec(createUsersTable);
       this.db.exec(createCardsTable);
@@ -176,10 +195,12 @@ class SQLiteDatabase extends IDatabase {
       this.db.exec(createCardLabelsTable);
       this.db.exec(createChatTemplatesTable);
       this.db.exec(createUserChatTemplatesTable);
+      this.db.exec(createUserConfigsTable);
       this.db.exec(createIndexes);
       this.db.exec(createSentenceAnalysisIndexes);
       this.db.exec(createLabelIndexes);
       this.db.exec(createChatTemplateIndexes);
+      this.db.exec(createUserConfigsIndexes);
       console.log('[DB] Database tables created successfully');
     } catch (error) {
       console.error('[DB] Failed to create tables:', error);

@@ -13,6 +13,7 @@ const deepRememberRoutes = require('./routes/deepRemember');
 const srsRoutes = require('./routes/srs');
 const authRoutes = require('./routes/auth');
 const chatTemplatesRoutes = require('./routes/chatTemplates');
+const userConfigsRoutes = require('./routes/userConfigs');
 const llmRoutes = require('./routes/llm');
 const testRoutes = require('./testing/testRoutes');
 
@@ -86,6 +87,7 @@ app.use('/deepRemember', deepRememberRoutes);
 app.use('/api/srs', srsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/chat-templates', chatTemplatesRoutes);
+app.use('/api/user-configs', userConfigsRoutes);
 app.use('/api/llm', llmRoutes);
 app.use('/api/test', testRoutes);
 

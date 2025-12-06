@@ -8,6 +8,7 @@ import Chat from './components/chat/Chat'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider, useAuth } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
+import { UserConfigProvider } from './components/UserConfigContext'
 import AuthWrapper from './components/security/AuthWrapper'
 import './App.css'
 
@@ -141,7 +142,9 @@ function App() {
     <ThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <AppContent />
+          <UserConfigProvider>
+            <AppContent />
+          </UserConfigProvider>
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>

@@ -182,6 +182,25 @@ class SupabaseDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_chattemplates_level ON chattemplates(level);
     `;
 
+    const createUserConfigsTable = `
+      CREATE TABLE IF NOT EXISTS user_configs (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        label TEXT NOT NULL,
+        value_type TEXT NOT NULL DEFAULT 'string',
+        value TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+      )
+    `;
+
+    const createUserConfigsIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_user_configs_user_id ON user_configs(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name);
+    `;
+
     try {
       // Check if tables exist by attempting a simple query
       dbLog('[DB] Checking if tables exist...');
@@ -363,6 +382,18 @@ class SupabaseDatabase extends IDatabase {
           UNIQUE(user_id, template_id)
         )`,
         
+        `CREATE TABLE IF NOT EXISTS user_configs (
+          id SERIAL PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          label TEXT NOT NULL,
+          value_type TEXT NOT NULL DEFAULT 'string',
+          value TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        )`,
+        
         'CREATE INDEX IF NOT EXISTS idx_cards_user_id ON cards(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due)',
         'CREATE INDEX IF NOT EXISTS idx_cards_state ON cards(state)',
@@ -373,7 +404,9 @@ class SupabaseDatabase extends IDatabase {
         'CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id)',
         'CREATE INDEX IF NOT EXISTS idx_user_chattemplates_user_id ON user_chattemplates(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_user_chattemplates_template_id ON user_chattemplates(template_id)',
-        'CREATE INDEX IF NOT EXISTS idx_chattemplates_level ON chattemplates(level)'
+        'CREATE INDEX IF NOT EXISTS idx_chattemplates_level ON chattemplates(level)',
+        'CREATE INDEX IF NOT EXISTS idx_user_configs_user_id ON user_configs(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name)'
       ];
 
       let successCount = 0;
@@ -603,6 +636,19 @@ CREATE TABLE IF NOT EXISTS card_labels (
   UNIQUE(card_id, user_id, label_id)
 );
 
+-- User configurations table
+CREATE TABLE IF NOT EXISTS user_configs (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  label TEXT NOT NULL,
+  value_type TEXT NOT NULL DEFAULT 'string',
+  value TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_cards_user_id ON cards(user_id);
 CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due);
@@ -612,6 +658,8 @@ CREATE INDEX IF NOT EXISTS idx_labels_user_id ON labels(user_id);
 CREATE INDEX IF NOT EXISTS idx_labels_type ON labels(type);
 CREATE INDEX IF NOT EXISTS idx_card_labels_card_id ON card_labels(card_id, user_id);
 CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
+CREATE INDEX IF NOT EXISTS idx_user_configs_user_id ON user_configs(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name);
 `;
   }
 
