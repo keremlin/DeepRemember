@@ -136,6 +136,24 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           FOREIGN KEY (label_id) REFERENCES labels(id) ON DELETE CASCADE,
           UNIQUE(card_id, label_id)
         )`
+      },
+      {
+        name: 'word_base',
+        sql: `CREATE TABLE IF NOT EXISTS word_base (
+          id SERIAL PRIMARY KEY,
+          word TEXT NOT NULL,
+          translate TEXT,
+          sample_sentence TEXT,
+          group_alphabet_name TEXT NOT NULL,
+          type_of_word TEXT NOT NULL,
+          plural_sign TEXT,
+          article TEXT,
+          female_form TEXT,
+          meaning TEXT,
+          more_info TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )`
       }
     ];
 
@@ -436,14 +454,40 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
    */
   async executeViaRestAPI(sql, params = {}) {
     try {
-      // Replace parameter placeholders with actual values
+      // Replace parameter placeholders (?) with actual values from params object
       let processedSQL = sql;
+      const paramValues = Object.values(params);
+      let paramIndex = 0;
+      
+      // Replace ? placeholders with actual values
+      processedSQL = processedSQL.replace(/\?/g, () => {
+        if (paramIndex < paramValues.length) {
+          const value = paramValues[paramIndex++];
+          if (value === null || value === undefined) {
+            return 'NULL';
+          } else if (typeof value === 'string') {
+            // Escape single quotes in strings
+            const escaped = value.replace(/'/g, "''");
+            return `'${escaped}'`;
+          } else if (typeof value === 'number') {
+            return String(value);
+          } else {
+            return `'${String(value)}'`;
+          }
+        }
+        return 'NULL';
+      });
+      
+      // Also handle $1, $2 style parameters
       Object.keys(params).forEach(key => {
         const value = params[key];
-        const placeholder = key.startsWith('$') ? key : `$${key}`;
-        processedSQL = processedSQL.replace(new RegExp(placeholder, 'g'), 
-          typeof value === 'string' ? `'${value}'` : value
-        );
+        if (key.startsWith('$')) {
+          const placeholder = key;
+          processedSQL = processedSQL.replace(new RegExp(placeholder.replace('$', '\\$'), 'g'), 
+            value === null || value === undefined ? 'NULL' :
+            typeof value === 'string' ? `'${value.replace(/'/g, "''")}'` : value
+          );
+        }
       });
 
       // Use Supabase REST API with direct SQL query
@@ -885,6 +929,61 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       const { tableName, operation } = this.parseSQL(sql, params);
       dbLog('[SupabaseJS] Parsed SQL - tableName:', tableName, 'operation:', operation);
       
+      // Use direct insert for word_base table to avoid schema cache issues with quoted column names
+      if (tableName === 'word_base' && operation.toLowerCase() === 'insert') {
+        dbLog('[SupabaseJS] Using direct insert for word_base table');
+        try {
+          // Extract values from SQL and params
+          const values = this.extractValues(sql, params);
+          dbLog('[SupabaseJS] Extracted values for word_base:', Object.keys(values));
+          
+          // Use Supabase client insert with proper column names
+          const { data, error } = await this.client
+            .from('word_base')
+            .insert(values)
+            .select('id')
+            .single();
+          
+          if (error) {
+            console.error('[SupabaseJS] Insert error:', error);
+            throw error;
+          }
+          
+          const lastId = data && data.id ? data.id : null;
+          dbLog('[SupabaseJS] Insert successful, ID:', lastId);
+          return { changes: 1, lastInsertRowId: lastId };
+        } catch (error) {
+          console.error('[SupabaseJS] Direct insert failed:', error);
+          // Fallback to executeSQLDirectly
+          dbLog('[SupabaseJS] Falling back to executeSQLDirectly');
+          let processedSQL = sql.replace(/RETURNING\s+id/i, '');
+          const paramValues = Object.values(params);
+          let paramIndex = 0;
+          
+          processedSQL = processedSQL.replace(/\?/g, () => {
+            if (paramIndex < paramValues.length) {
+              const value = paramValues[paramIndex++];
+              if (value === null || value === undefined) {
+                return 'NULL';
+              } else if (typeof value === 'string') {
+                const escaped = value.replace(/'/g, "''");
+                return `'${escaped}'`;
+              } else if (typeof value === 'number') {
+                return String(value);
+              } else {
+                return `'${String(value).replace(/'/g, "''")}'`;
+              }
+            }
+            return 'NULL';
+          });
+          
+          await this.executeSQLDirectly(processedSQL + ' RETURNING id');
+          const lastIdResult = await this.query('SELECT lastval() as id', {});
+          const lastId = lastIdResult && lastIdResult[0] ? lastIdResult[0].id : null;
+          return { changes: 1, lastInsertRowId: lastId };
+        }
+      }
+      
       if (!tableName || tableName === 'unknown') {
         // Fallback to RPC for unrecognized queries
         dbLog('[SupabaseJS] TableName unknown, using executeComplexQuery');
@@ -1283,7 +1382,8 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       const columnsStr = insertMatch[2];
       const valuesStr = insertMatch[3];
       
-      const columns = columnsStr.split(',').map(col => col.trim());
+      // Strip quotes from column names (PostgreSQL quoted identifiers)
+      const columns = columnsStr.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
       const values = valuesStr.split(',').map(val => val.trim());
       
       const result = {};
@@ -1298,7 +1398,11 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           } else if (value === '?') {
             // Map by column name (the repository builds params with matching names)
             // e.g., columns: user_id, card_id, word, ... and params has those keys
-            if (Object.prototype.hasOwnProperty.call(params, column)) {
+            // Try both the column name as-is and without quotes
+            const columnKey = column.replace(/^"|"$/g, '');
+            if (Object.prototype.hasOwnProperty.call(params, columnKey)) {
+              paramValue = params[columnKey];
+            } else if (Object.prototype.hasOwnProperty.call(params, column)) {
               paramValue = params[column];
             } else {
               // Fallback: attempt numeric $n style based on 1-index position
@@ -1312,16 +1416,18 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           
           // Handle date/time fields properly
           if (paramValue !== null && paramValue !== undefined) {
-            if (this.isDateField(column)) {
-              result[column] = this.normalizeDateValue(paramValue);
-            } else if (this.isIntegerField(column)) {
+            // Use the column name without quotes for the result object
+            const resultColumnName = column.replace(/^"|"$/g, '');
+            if (this.isDateField(resultColumnName)) {
+              result[resultColumnName] = this.normalizeDateValue(paramValue);
+            } else if (this.isIntegerField(resultColumnName)) {
               const intVal = parseInt(paramValue, 10);
-              result[column] = Number.isFinite(intVal) ? intVal : 0;
-            } else if (this.isRealField(column)) {
+              result[resultColumnName] = Number.isFinite(intVal) ? intVal : 0;
+            } else if (this.isRealField(resultColumnName)) {
               const floatVal = parseFloat(paramValue);
-              result[column] = Number.isFinite(floatVal) ? floatVal : 0;
+              result[resultColumnName] = Number.isFinite(floatVal) ? floatVal : 0;
             } else {
-              result[column] = paramValue;
+              result[resultColumnName] = paramValue;
             }
           }
         }

@@ -187,6 +187,30 @@ class SQLiteDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name);
     `;
 
+    const createWordBaseTable = `
+      CREATE TABLE IF NOT EXISTS word_base (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        word TEXT NOT NULL,
+        translate TEXT,
+        sample_sentence TEXT,
+        group_alphabet_name TEXT NOT NULL,
+        type_of_word TEXT NOT NULL,
+        plural_sign TEXT,
+        article TEXT,
+        female_form TEXT,
+        meaning TEXT,
+        more_info TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    const createWordBaseIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_word_base_word ON word_base(word);
+      CREATE INDEX IF NOT EXISTS idx_word_base_group_alphabet_name ON word_base(group_alphabet_name);
+      CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word);
+    `;
+
     try {
       this.db.exec(createUsersTable);
       this.db.exec(createCardsTable);
@@ -196,11 +220,13 @@ class SQLiteDatabase extends IDatabase {
       this.db.exec(createChatTemplatesTable);
       this.db.exec(createUserChatTemplatesTable);
       this.db.exec(createUserConfigsTable);
+      this.db.exec(createWordBaseTable);
       this.db.exec(createIndexes);
       this.db.exec(createSentenceAnalysisIndexes);
       this.db.exec(createLabelIndexes);
       this.db.exec(createChatTemplateIndexes);
       this.db.exec(createUserConfigsIndexes);
+      this.db.exec(createWordBaseIndexes);
       console.log('[DB] Database tables created successfully');
     } catch (error) {
       console.error('[DB] Failed to create tables:', error);

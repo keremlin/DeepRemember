@@ -649,6 +649,23 @@ CREATE TABLE IF NOT EXISTS user_configs (
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
+-- Word base table
+CREATE TABLE IF NOT EXISTS word_base (
+  id SERIAL PRIMARY KEY,
+  word TEXT NOT NULL,
+  translate TEXT,
+  sample_sentence TEXT,
+  group_alphabet_name TEXT NOT NULL,
+  type_of_word TEXT NOT NULL,
+  plural_sign TEXT,
+  article TEXT,
+  female_form TEXT,
+  meaning TEXT,
+  more_info TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_cards_user_id ON cards(user_id);
 CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due);
@@ -660,6 +677,9 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_card_id ON card_labels(card_id, user_
 CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
 CREATE INDEX IF NOT EXISTS idx_user_configs_user_id ON user_configs(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name);
+CREATE INDEX IF NOT EXISTS idx_word_base_word ON word_base(word);
+CREATE INDEX IF NOT EXISTS idx_word_base_group_alphabet_name ON word_base(group_alphabet_name);
+CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word);
 `;
   }
 
