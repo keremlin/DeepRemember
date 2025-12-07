@@ -124,8 +124,7 @@ const Chat = ({
         setModels(availableModels)
         
         // Get default model from user config, fallback to hardcoded default
-        const configDefaultModel = getConfigValue('default_llm_for_chat', '')
-        const preferredModel = configDefaultModel || 'llama-3.3-70b-versatile'
+        const preferredModel = getConfigValue('default_llm_for_chat', '')
         const preferredModelExists = availableModels.some(model => model.id === preferredModel)
         
         setSelectedModelId(prev => {
