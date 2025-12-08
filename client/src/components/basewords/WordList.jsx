@@ -71,6 +71,12 @@ const WordList = ({
       })
 
       if (groupWords.length > 0) {
+        // Sort words alphabetically within each filtered group
+        groupWords.sort((a, b) => {
+          const wordA = (a.word || '').toLowerCase()
+          const wordB = (b.word || '').toLowerCase()
+          return wordA.localeCompare(wordB)
+        })
         filtered[group] = groupWords
         filteredGroups.push(group)
       }
@@ -232,6 +238,11 @@ const WordList = ({
               <ul className="word-nav-list">
                 {(searchTerm.trim() ? filteredAlphabetGroups : alphabetGroups).map(group => {
                   const wordsToShow = searchTerm.trim() ? filteredGroupedWords[group] : groupedWords[group]
+                  const sortedWords = wordsToShow ? [...wordsToShow].sort((a, b) => {
+                    const wordA = (a.word || '').toLowerCase().trim()
+                    const wordB = (b.word || '').toLowerCase().trim()
+                    return wordA.localeCompare(wordB)
+                  }) : []
                   return (
                     <li key={group} className="word-nav-item">
                       <a 
@@ -239,7 +250,7 @@ const WordList = ({
                         href={`#group-${group}`}
                       >
                         {group}
-                        <span className="word-count">({wordsToShow?.length || 0})</span>
+                        <span className="word-count">({sortedWords?.length || 0})</span>
                       </a>
                     </li>
                   )
@@ -251,6 +262,12 @@ const WordList = ({
             <div className="word-list-sections" ref={scrollContainerRef} data-bs-spy="scroll" data-bs-target="#word-nav" data-bs-offset="100">
               {(searchTerm.trim() ? filteredAlphabetGroups : alphabetGroups).map(group => {
                 const wordsToShow = searchTerm.trim() ? filteredGroupedWords[group] : groupedWords[group]
+                // Ensure words are sorted alphabetically by word field
+                const sortedWords = wordsToShow ? [...wordsToShow].sort((a, b) => {
+                  const wordA = (a.word || '').toLowerCase().trim()
+                  const wordB = (b.word || '').toLowerCase().trim()
+                  return wordA.localeCompare(wordB)
+                }) : []
                 return (
                   <section 
                     key={group} 
@@ -260,11 +277,11 @@ const WordList = ({
                     <h2 className="word-group-title">
                       <span className="material-symbols-outlined">label</span>
                       {group}
-                      <span className="word-group-count">({wordsToShow?.length || 0} words)</span>
+                      <span className="word-group-count">({sortedWords?.length || 0} words)</span>
                     </h2>
                     
                     <div className="word-items">
-                      {wordsToShow?.map(word => (
+                      {sortedWords?.map(word => (
                       <div key={word.id} className="word-item">
                         <div className="word-item-content">
                           <div className="word-item-main">

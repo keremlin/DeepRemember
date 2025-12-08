@@ -97,6 +97,15 @@ export const WordBaseProvider = ({ children }) => {
           grouped[group].push(word)
         })
         
+        // Sort words alphabetically within each group
+        Object.keys(grouped).forEach(group => {
+          grouped[group].sort((a, b) => {
+            const wordA = (a.word || '').toLowerCase()
+            const wordB = (b.word || '').toLowerCase()
+            return wordA.localeCompare(wordB)
+          })
+        })
+        
         // Sort groups alphabetically
         groups.sort()
         setAlphabetGroups(groups)
@@ -173,6 +182,12 @@ export const WordBaseProvider = ({ children }) => {
             })
           }
           newGrouped[newGroup].push(updatedWord)
+          // Sort words alphabetically within the group
+          newGrouped[newGroup].sort((a, b) => {
+            const wordA = (a.word || '').toLowerCase()
+            const wordB = (b.word || '').toLowerCase()
+            return wordA.localeCompare(wordB)
+          })
           
           return newGrouped
         })
@@ -184,6 +199,12 @@ export const WordBaseProvider = ({ children }) => {
             newGrouped[newGroup] = newGrouped[newGroup].map(w => 
               w.id === updatedWord.id ? updatedWord : w
             )
+            // Sort words alphabetically within the group after update
+            newGrouped[newGroup].sort((a, b) => {
+              const wordA = (a.word || '').toLowerCase()
+              const wordB = (b.word || '').toLowerCase()
+              return wordA.localeCompare(wordB)
+            })
           }
           return newGrouped
         })
@@ -253,6 +274,12 @@ export const WordBaseProvider = ({ children }) => {
           })
         }
         newGrouped[group].push(newWord)
+        // Sort words alphabetically within the group
+        newGrouped[group].sort((a, b) => {
+          const wordA = (a.word || '').toLowerCase()
+          const wordB = (b.word || '').toLowerCase()
+          return wordA.localeCompare(wordB)
+        })
         return newGrouped
       })
       
