@@ -16,7 +16,8 @@ const UserConfigurationManager = ({
   onShowCards,
   onNavigateToUserManagement,
   onNavigateToManagement,
-  onNavigateToChat
+  onNavigateToChat,
+  onNavigateToWordList
 }) => {
   const { showSuccess, showError } = useToast()
   const { authenticatedFetch, user } = useAuth()
@@ -269,6 +270,7 @@ const UserConfigurationManager = ({
         onNavigateToUserManagement={onNavigateToUserManagement}
         onNavigateToManagement={onNavigateToManagement}
         onNavigateToChat={onNavigateToChat}
+        onNavigateToWordList={onNavigateToWordList}
       >
         <div className="user-config-manager-container">
           <div className="user-config-card">

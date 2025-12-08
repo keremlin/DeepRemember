@@ -13,7 +13,7 @@ import { getApiUrl } from '../config/api'
 import AreYouSureModal from './AreYouSureModal'
 import './DeepRemember.css'
 
-const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMount = false, onNavigateToUserManagement, onNavigateToManagement, onNavigateToChat }) => {
+const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMount = false, onNavigateToUserManagement, onNavigateToManagement, onNavigateToChat, onNavigateToWordList }) => {
   const { showSuccess, showError, showInfo } = useToast()
   const { user, authenticatedFetch } = useAuth()
   
@@ -365,6 +365,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
       onNavigateToUserManagement={onNavigateToUserManagement}
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToChat={onNavigateToChat}
+      onNavigateToWordList={onNavigateToWordList}
       isReviewMode={isReviewMode}
     >
       <div className="deep-remember-container">

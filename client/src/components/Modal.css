@@ -14,6 +14,8 @@
   align-items: center;
   justify-content: center;
   animation: overlayFadeIn 0.3s ease-out;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 @keyframes overlayFadeIn {
@@ -33,11 +35,14 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   z-index: 1001;
   width: 90%;
+  max-width: 700px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   animation: modalSlideIn 0.3s ease-out;
   overflow: hidden;
+  margin: auto;
+  position: relative;
 }
 
 @keyframes modalSlideIn {
@@ -121,6 +126,19 @@
 
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Dark mode scrollbar for modal content */
+.dark-mode .modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .modal-content::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.5);
+}
+
+.dark-mode .modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.7);
 }
 
 /* Modal Footer */
@@ -491,8 +509,12 @@
 
 /* Class-based dark mode support */
 .dark-mode .modal {
-  background: #1a1a1a;
+  background: #1a1a1a !important;
   color: #fff;
+}
+
+.dark-mode .modal * {
+  color: inherit;
 }
 
 .dark-mode .modal-title {
@@ -500,22 +522,78 @@
 }
 
 .dark-mode .modal-header {
-  border-bottom-color: #333;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 .dark-mode .modal-footer {
-  border-top-color: #333;
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
 
 .dark-mode .modal-content {
-  color: #fff;
+  color: #fff !important;
+  background: transparent !important;
+}
+
+.dark-mode .modal-content * {
+  color: inherit;
+}
+
+/* Ensure all form elements inside modal get dark mode styling */
+.dark-mode .modal-content input[type="text"],
+.dark-mode .modal-content input[type="email"],
+.dark-mode .modal-content input[type="password"],
+.dark-mode .modal-content input[type="number"],
+.dark-mode .modal-content textarea,
+.dark-mode .modal-content select {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.dark-mode .modal-content input[type="text"]:focus,
+.dark-mode .modal-content input[type="email"]:focus,
+.dark-mode .modal-content input[type="password"]:focus,
+.dark-mode .modal-content input[type="number"]:focus,
+.dark-mode .modal-content textarea:focus,
+.dark-mode .modal-content select:focus {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: #667eea !important;
+  color: #fff !important;
+  outline: none !important;
+}
+
+.dark-mode .modal-content input::placeholder,
+.dark-mode .modal-content textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.dark-mode .modal-content select option {
+  background: #1a1a1a !important;
+  color: #fff !important;
+}
+
+/* Ensure form elements inside modal content get dark mode */
+.dark-mode .modal-content input,
+.dark-mode .modal-content textarea,
+.dark-mode .modal-content select {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.dark-mode .modal-content input:focus,
+.dark-mode .modal-content textarea:focus,
+.dark-mode .modal-content select:focus {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: #667eea !important;
+  color: #fff !important;
 }
 
 .dark-mode .modal-form input,
 .dark-mode .modal-form textarea,
 .dark-mode .modal-form select {
   background-color: #2a2a2a !important;
-  border-color: #444 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
   color: #fff !important;
 }
 
@@ -528,11 +606,58 @@
 }
 
 .dark-mode .modal-form label {
-  color: #fff !important;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .dark-mode .modal-content label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Dark mode support for edit-word-form (used in EditWordModal) */
+.dark-mode .modal .edit-word-form .form-group label,
+.dark-mode .edit-word-form .form-group label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.dark-mode .modal .edit-word-form .form-group input,
+.dark-mode .modal .edit-word-form .form-group textarea,
+.dark-mode .modal .edit-word-form .form-group select,
+.dark-mode .edit-word-form .form-group input,
+.dark-mode .edit-word-form .form-group textarea,
+.dark-mode .edit-word-form .form-group select {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
   color: #fff !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.dark-mode .modal .edit-word-form .form-group input:focus,
+.dark-mode .modal .edit-word-form .form-group textarea:focus,
+.dark-mode .modal .edit-word-form .form-group select:focus,
+.dark-mode .edit-word-form .form-group input:focus,
+.dark-mode .edit-word-form .form-group textarea:focus,
+.dark-mode .edit-word-form .form-group select:focus {
+  border-color: #667eea !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+.dark-mode .modal .edit-word-form .form-group input::placeholder,
+.dark-mode .modal .edit-word-form .form-group textarea::placeholder,
+.dark-mode .edit-word-form .form-group input::placeholder,
+.dark-mode .edit-word-form .form-group textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Dark mode select dropdown options */
+.dark-mode .modal .edit-word-form .form-group select option,
+.dark-mode .edit-word-form .form-group select option {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
 }
 
 .dark-mode .btn-modal-secondary {
@@ -588,5 +713,31 @@
 
 .light-mode .modal-content label {
   color: #333 !important;
+}
+
+/* Light mode support for edit-word-form (used in EditWordModal) */
+.light-mode .edit-word-form .form-group label {
+  color: rgba(0, 0, 0, 0.9) !important;
+}
+
+.light-mode .edit-word-form .form-group input,
+.light-mode .edit-word-form .form-group textarea,
+.light-mode .edit-word-form .form-group select {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+  color: #333 !important;
+}
+
+.light-mode .edit-word-form .form-group input:focus,
+.light-mode .edit-word-form .form-group textarea:focus,
+.light-mode .edit-word-form .form-group select:focus {
+  border-color: #667eea !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #333 !important;
+}
+
+.light-mode .edit-word-form .form-group input::placeholder,
+.light-mode .edit-word-form .form-group textarea::placeholder {
+  color: rgba(0, 0, 0, 0.5) !important;
 }
 

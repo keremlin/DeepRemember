@@ -9,7 +9,8 @@ const UserManagement = ({
   onShowCards,
   onNavigateToUserManagement,
   onNavigateToManagement,
-  onNavigateToChat
+  onNavigateToChat,
+  onNavigateToWordList
 }) => {
   return (
     <Page
@@ -22,6 +23,7 @@ const UserManagement = ({
       onNavigateToUserManagement={onNavigateToUserManagement}
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToChat={onNavigateToChat}
+      onNavigateToWordList={onNavigateToWordList}
     >
       <UserInfo onUserSetup={onUserSetup} />
     </Page>

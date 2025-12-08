@@ -5,10 +5,12 @@ import PlayerPage from './components/player/PlayerPage'
 import UserManagement from './components/users/UserManagement'
 import ManagementPage from './components/management/userManagement'
 import Chat from './components/chat/Chat'
+import WordList from './components/basewords/WordList'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider, useAuth } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
 import { UserConfigProvider } from './components/UserConfigContext'
+import { WordBaseProvider } from './components/basewords/WordBaseContext'
 import AuthWrapper from './components/security/AuthWrapper'
 import './App.css'
 
@@ -69,6 +71,10 @@ function AppContent() {
     setCurrentView('chat')
   }
 
+  const navigateToWordList = () => {
+    setCurrentView('wordlist')
+  }
+
   return (
     <AuthWrapper onNavigateToWelcome={navigateToWelcome}>
       <div className="App">
@@ -93,6 +99,7 @@ function AppContent() {
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
+            onNavigateToWordList={navigateToWordList}
           />
         ) : currentView === 'usermanagement' ? (
           <UserManagement 
@@ -103,6 +110,7 @@ function AppContent() {
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
+            onNavigateToWordList={navigateToWordList}
           />
         ) : currentView === 'management' ? (
           <ManagementPage 
@@ -113,6 +121,7 @@ function AppContent() {
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
+            onNavigateToWordList={navigateToWordList}
           />
         ) : currentView === 'chat' ? (
           <Chat 
@@ -121,6 +130,16 @@ function AppContent() {
             onShowCards={() => navigateToDeepRemember(true)}
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToManagement={navigateToManagement}
+            onNavigateToWordList={navigateToWordList}
+          />
+        ) : currentView === 'wordlist' ? (
+          <WordList 
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+            onNavigateToWordList={navigateToWordList}
           />
         ) : (
           <PlayerPage 
@@ -130,6 +149,7 @@ function AppContent() {
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
+            onNavigateToWordList={navigateToWordList}
           />
         )}
       </div>
@@ -143,7 +163,9 @@ function App() {
       <ToastProvider>
         <AuthProvider>
           <UserConfigProvider>
-            <AppContent />
+            <WordBaseProvider>
+              <AppContent />
+            </WordBaseProvider>
           </UserConfigProvider>
         </AuthProvider>
       </ToastProvider>

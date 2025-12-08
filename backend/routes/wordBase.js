@@ -33,6 +33,21 @@ async function initializeRepository() {
 // Initialize on startup
 initializeRepository();
 
+// Get total word count
+router.get('/count', async (req, res) => {
+  try {
+    if (!useDatabase || !wordBaseRepository) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    const count = await wordBaseRepository.getWordCount();
+    res.json({ success: true, count });
+  } catch (error) {
+    console.error('[WordBase] Get word count error:', error);
+    res.status(500).json({ error: 'Failed to get word count' });
+  }
+});
+
 // Get all words with optional filters
 // Query params: groupAlphabetName, type_of_word, search, limit, offset
 router.get('/', async (req, res) => {
@@ -87,6 +102,21 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Get all alphabet groups (lightweight - just group names)
+router.get('/groups', async (req, res) => {
+  try {
+    if (!useDatabase || !wordBaseRepository) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    const groups = await wordBaseRepository.getAllAlphabetGroups();
+    res.json({ success: true, groups, count: groups.length });
+  } catch (error) {
+    console.error('[WordBase] Get alphabet groups error:', error);
+    res.status(500).json({ error: 'Failed to get alphabet groups' });
+  }
+});
+
 // Get words by alphabet group
 router.get('/group/:groupAlphabetName', async (req, res) => {
   try {
@@ -94,10 +124,10 @@ router.get('/group/:groupAlphabetName', async (req, res) => {
       return res.status(503).json({ error: 'Database not available' });
     }
 
-    const groupAlphabetName = req.params.groupAlphabetName;
+    const groupAlphabetName = decodeURIComponent(req.params.groupAlphabetName);
     const words = await wordBaseRepository.getWordsByGroup(groupAlphabetName);
 
-    res.json({ success: true, words, count: words.length });
+    res.json({ success: true, words, count: words.length, group: groupAlphabetName });
   } catch (error) {
     console.error('[WordBase] Get words by group error:', error);
     res.status(500).json({ error: 'Failed to get words by group' });

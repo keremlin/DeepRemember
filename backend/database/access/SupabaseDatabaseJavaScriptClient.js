@@ -342,6 +342,66 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         }
       }
 
+      // Handle LIMIT and OFFSET from SQL
+      // First check params object for limit (most reliable)
+      let limitValue = params.limit || params.$limit;
+      
+      // If not in params, try to extract from SQL
+      if (limitValue === undefined || limitValue === null) {
+        const limitMatch = sql.match(/limit\s+(\d+)/i);
+        if (limitMatch) {
+          // Literal number in SQL
+          limitValue = parseInt(limitMatch[1], 10);
+        } else if (sql.match(/limit\s+\?/i)) {
+          // Placeholder ? - try to find by position
+          const paramValues = Object.values(params);
+          const limitIndex = sql.toLowerCase().indexOf('limit');
+          if (limitIndex !== -1) {
+            // Count ? placeholders before LIMIT to find the right param
+            const beforeLimit = sql.substring(0, limitIndex);
+            const questionMarks = (beforeLimit.match(/\?/g) || []).length;
+            if (paramValues[questionMarks] !== undefined) {
+              limitValue = paramValues[questionMarks];
+            }
+          }
+        }
+      }
+      
+      if (limitValue !== null && limitValue !== undefined) {
+        query = query.limit(limitValue);
+      } else {
+        // If no LIMIT specified, set a high limit to get all rows (Supabase default is 1000)
+        query = query.limit(3000);
+      }
+
+      // Handle OFFSET
+      let offsetValue = null;
+      const offsetMatch = sql.match(/offset\s+(\d+)/i);
+      if (offsetMatch) {
+        // Literal number in SQL
+        offsetValue = parseInt(offsetMatch[1], 10);
+      } else if (sql.match(/offset\s+\?/i)) {
+        // Placeholder ? - get from params
+        offsetValue = params.offset || params.$offset;
+        if (offsetValue === undefined) {
+          // Try to find offset in params by position
+          const paramValues = Object.values(params);
+          const offsetIndex = sql.toLowerCase().indexOf('offset');
+          if (offsetIndex !== -1) {
+            const beforeOffset = sql.substring(0, offsetIndex);
+            const questionMarks = (beforeOffset.match(/\?/g) || []).length;
+            if (paramValues[questionMarks] !== undefined) {
+              offsetValue = paramValues[questionMarks];
+            }
+          }
+        }
+      }
+      
+      if (offsetValue !== null && offsetValue !== undefined) {
+        const finalLimit = limitValue !== null && limitValue !== undefined ? limitValue : 3000;
+        query = query.range(offsetValue, offsetValue + finalLimit - 1);
+      }
+
       const { data, error, count } = await query;
       
       if (error) {

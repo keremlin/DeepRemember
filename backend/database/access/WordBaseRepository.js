@@ -90,48 +90,131 @@ class WordBaseRepository {
       }
 
       if (filters.search) {
-        conditions.push(`word LIKE ?`);
-        params.search = `%${filters.search}%`;
+        // Search across multiple fields: word, translate, sample_sentence, meaning, type_of_word
+        // Use ILIKE for case-insensitive search (PostgreSQL)
+        const searchTerm = `%${filters.search}%`;
+        conditions.push(`(
+          word ILIKE ? OR 
+          translate ILIKE ? OR 
+          sample_sentence ILIKE ? OR 
+          meaning ILIKE ? OR 
+          type_of_word ILIKE ?
+        )`);
+        // Store search term multiple times for each placeholder
+        // The executeViaRestAPI will replace ? in order using Object.values
+        params.search_1 = searchTerm;
+        params.search_2 = searchTerm;
+        params.search_3 = searchTerm;
+        params.search_4 = searchTerm;
+        params.search_5 = searchTerm;
       }
 
-      // Build SQL query
-      let sql = `SELECT * FROM word_base`;
+      // Build base SQL query
+      let baseSql = `SELECT * FROM word_base`;
       if (conditions.length > 0) {
-        sql += ` WHERE ${conditions.join(' AND ')}`;
+        baseSql += ` WHERE ${conditions.join(' AND ')}`;
       }
-      sql += ` ORDER BY word ASC`;
+      baseSql += ` ORDER BY word ASC`;
 
-      if (filters.limit) {
-        sql += ` LIMIT ?`;
-        params.limit = filters.limit;
+      // Supabase PostgREST has a hard limit of 1000 rows per request
+      // If limit > 1000 or no limit specified, we need to paginate
+      const maxBatchSize = 1000; // PostgREST hard limit
+      const requestedLimit = filters.limit;
+      const needsPagination = !requestedLimit || requestedLimit > maxBatchSize;
+
+      if (needsPagination) {
+        // Fetch all words using pagination
+        const allWords = [];
+        const batchSize = maxBatchSize;
+        let offset = filters.offset || 0;
+        let hasMore = true;
+        const targetLimit = requestedLimit || Infinity; // No limit means fetch all
+
+        while (hasMore && allWords.length < targetLimit) {
+          const sql = `${baseSql} LIMIT ? OFFSET ?`;
+          const queryParams = { ...params, limit: batchSize, offset: offset };
+          
+          const batch = await this.db.query(sql, queryParams);
+          const mappedBatch = (batch || []).map(this.mapWordToResponse);
+          
+          // If we have a target limit, only take what we need
+          if (requestedLimit && allWords.length + mappedBatch.length > requestedLimit) {
+            const remaining = requestedLimit - allWords.length;
+            allWords.push(...mappedBatch.slice(0, remaining));
+            hasMore = false;
+          } else {
+            allWords.push(...mappedBatch);
+          }
+          
+          // If we got fewer rows than requested, we've reached the end
+          if (mappedBatch.length < batchSize) {
+            hasMore = false;
+          } else {
+            offset += batchSize;
+          }
+        }
+
+        return allWords;
+      } else {
+        // Limit <= 1000, use direct query
+        let sql = baseSql;
+        const queryParams = { ...params };
+        
+        if (filters.limit) {
+          sql += ` LIMIT ?`;
+          queryParams.limit = filters.limit;
+        }
+        
+        if (filters.offset) {
+          sql += ` OFFSET ?`;
+          queryParams.offset = filters.offset;
+        }
+
+        const words = await this.db.query(sql, queryParams);
+        return (words || []).map(this.mapWordToResponse);
       }
-
-      if (filters.offset) {
-        sql += ` OFFSET ?`;
-        params.offset = filters.offset;
-      }
-
-      const words = await this.db.query(sql, params);
-
-      return (words || []).map(word => ({
-        id: word.id,
-        word: word.word,
-        translate: word.translate,
-        sample_sentence: word.sample_sentence,
-        groupAlphabetName: word.group_alphabet_name,
-        type_of_word: word.type_of_word,
-        plural_sign: word.plural_sign,
-        article: word.article,
-        female_form: word.female_form,
-        meaning: word.meaning,
-        more_info: word.more_info,
-        created_at: word.created_at,
-        updated_at: word.updated_at
-      }));
     } catch (error) {
       console.error('[WordBase-REPO] Get all words error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Get total word count
+   * @returns {Promise<number>} Total number of words
+   */
+  async getWordCount() {
+    try {
+      const result = await this.db.queryOne(
+        `SELECT COUNT(*) as count FROM word_base`,
+        {}
+      );
+      return result?.count || 0;
+    } catch (error) {
+      console.error('[WordBase-REPO] Get word count error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Map database word to response format
+   */
+  mapWordToResponse(word) {
+    return {
+      id: word.id,
+      word: word.word,
+      translate: word.translate,
+      sample_sentence: word.sample_sentence,
+      groupAlphabetName: word.group_alphabet_name,
+      type_of_word: word.type_of_word,
+      plural_sign: word.plural_sign,
+      article: word.article,
+      female_form: word.female_form,
+      meaning: word.meaning,
+      more_info: word.more_info,
+      created_at: word.created_at,
+      updated_at: word.updated_at
+    };
   }
 
   /**
@@ -167,6 +250,21 @@ class WordBaseRepository {
       };
     } catch (error) {
       console.error('[WordBase-REPO] Get word by ID error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all unique alphabet groups
+   * @returns {Promise<Array>} Array of unique alphabet group names
+   */
+  async getAllAlphabetGroups() {
+    try {
+      const sql = `SELECT DISTINCT group_alphabet_name FROM word_base ORDER BY group_alphabet_name ASC`;
+      const groups = await this.db.query(sql, {});
+      return (groups || []).map(g => g.group_alphabet_name || g.groupAlphabetName).filter(Boolean);
+    } catch (error) {
+      console.error('[WordBase-REPO] Get all alphabet groups error:', error);
       throw error;
     }
   }

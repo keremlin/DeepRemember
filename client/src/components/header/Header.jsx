@@ -12,7 +12,8 @@ const Header = ({
   onShowCards,
   onNavigateToUserManagement,
   onNavigateToManagement,
-  onNavigateToChat
+  onNavigateToChat,
+  onNavigateToWordList
 }) => {
   return (
     <>
@@ -31,6 +32,7 @@ const Header = ({
         onNavigateToUserManagement={onNavigateToUserManagement}
         onNavigateToManagement={onNavigateToManagement}
         onNavigateToChat={onNavigateToChat}
+        onNavigateToWordList={onNavigateToWordList}
       />
     </>
   )
