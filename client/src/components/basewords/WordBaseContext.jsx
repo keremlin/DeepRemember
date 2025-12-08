@@ -20,6 +20,7 @@ export const WordBaseProvider = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false)
   const [totalCount, setTotalCount] = useState(0) // Total word count from database
   const loadingPromiseRef = useRef(null) // Prevent multiple simultaneous loads
+  const countLoadingPromiseRef = useRef(null) // Prevent multiple simultaneous count loads
 
   // Load words from API in batches (Supabase limit is 1000 per request)
   const loadWords = useCallback(async (forceReload = false) => {
@@ -313,41 +314,54 @@ export const WordBaseProvider = ({ children }) => {
   }, [alphabetGroups])
 
   // Load total word count from database
-  const loadWordCount = useCallback(async () => {
-    try {
-      const response = await fetch(getApiUrl('/api/word-base/count/total'), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        mode: 'cors'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      
-      if (data.success && data.count !== undefined) {
-        setTotalCount(data.count)
-        return data.count
-      } else {
-        throw new Error(data.error || 'Failed to load word count')
-      }
-    } catch (error) {
-      console.error('Error loading word count:', error)
-      return 0
+  const loadWordCount = useCallback(async (forceReload = false) => {
+    // If already loading, return the existing promise
+    if (countLoadingPromiseRef.current && !forceReload) {
+      return countLoadingPromiseRef.current
     }
+
+    // Create the load promise
+    countLoadingPromiseRef.current = (async () => {
+      try {
+        const response = await fetch(getApiUrl('/api/word-base/count/total'), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors'
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        
+        if (data.success && data.count !== undefined) {
+          setTotalCount(data.count)
+          return data.count
+        } else {
+          throw new Error(data.error || 'Failed to load word count')
+        }
+      } catch (error) {
+        console.error('Error loading word count:', error)
+        return 0
+      } finally {
+        countLoadingPromiseRef.current = null
+      }
+    })()
+
+    return countLoadingPromiseRef.current
   }, [])
 
   // Load words on mount (only once)
   useEffect(() => {
     if (!isInitialized && !isLoading) {
       loadWords()
-      loadWordCount() // Also load the count
+      loadWordCount()
     }
-  }, [isInitialized, isLoading, loadWords, loadWordCount])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once on mount
 
   const value = {
     words,

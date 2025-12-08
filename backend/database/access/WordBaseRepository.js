@@ -139,6 +139,23 @@ class WordBaseRepository {
   }
 
   /**
+   * Get total word count
+   * @returns {Promise<number>} Total number of words
+   */
+  async getWordCount() {
+    try {
+      const result = await this.db.queryOne(
+        `SELECT COUNT(*) as count FROM word_base`,
+        {}
+      );
+      return result?.count || 0;
+    } catch (error) {
+      console.error('[WordBase-REPO] Get word count error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get a word by ID
    * @param {number} wordId - Word ID
    * @returns {Promise<Object|null>} Word or null if not found

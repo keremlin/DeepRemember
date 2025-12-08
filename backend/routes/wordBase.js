@@ -52,7 +52,13 @@ router.get('/', async (req, res) => {
     // Remove undefined filters
     Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
 
+    const startTime = Date.now();
     const words = await wordBaseRepository.getAllWords(filters);
+    const duration = Date.now() - startTime;
+
+    // Log when WordBaseContext loads words from database
+    const shortDate = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    console.log(`[WordBase] word base is fetched, ${shortDate}, ${words.length} words, ${duration}ms`);
 
     res.json({ success: true, words, count: words.length });
   } catch (error) {
@@ -301,7 +307,13 @@ router.get('/count/total', async (req, res) => {
       return res.status(503).json({ error: 'Database not available' });
     }
 
+    const startTime = Date.now();
     const count = await wordBaseRepository.getWordCount();
+    const duration = Date.now() - startTime;
+
+    // Log when WordBaseContext loads word count from database
+    const shortDate = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    console.log(`[WordBase] word base is fetched, ${shortDate}, ${count} words, ${duration}ms`);
 
     res.json({ success: true, count });
   } catch (error) {
