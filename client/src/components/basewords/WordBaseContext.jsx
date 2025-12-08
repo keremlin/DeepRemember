@@ -15,128 +15,13 @@ export const WordBaseProvider = ({ children }) => {
   const [words, setWords] = useState([])
   const [groupedWords, setGroupedWords] = useState({}) // Words grouped by groupAlphabetName
   const [alphabetGroups, setAlphabetGroups] = useState([]) // Sorted list of alphabet groups
-  const [loadedGroups, setLoadedGroups] = useState(new Set()) // Track which groups are loaded
-  const [loadingGroups, setLoadingGroups] = useState(new Set()) // Track which groups are currently loading
   const [wordsMap, setWordsMap] = useState({}) // Map for quick lookup by ID
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [totalCount, setTotalCount] = useState(0) // Total word count from database
   const loadingPromiseRef = useRef(null) // Prevent multiple simultaneous loads
-  const groupLoadingPromisesRef = useRef({}) // Prevent multiple simultaneous loads for same group
 
-  // Load alphabet groups list (lightweight - just group names)
-  const loadAlphabetGroups = useCallback(async () => {
-    try {
-      const response = await fetch(getApiUrl('/api/word-base/groups'), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        mode: 'cors'
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      
-      if (data.success && data.groups) {
-        const groups = data.groups || []
-        groups.sort()
-        setAlphabetGroups(groups)
-        return { success: true, groups }
-      } else {
-        throw new Error(data.error || 'Failed to load alphabet groups')
-      }
-    } catch (error) {
-      console.error('Error loading alphabet groups:', error)
-      setAlphabetGroups([])
-      return { success: false, error: error.message }
-    }
-  }, [])
-
-  // Load words for a specific alphabet group
-  const loadGroupWords = useCallback(async (groupName) => {
-    // If already loaded, return immediately
-    if (loadedGroups.has(groupName)) {
-      return { success: true, cached: true }
-    }
-
-    // If currently loading, return the existing promise
-    if (groupLoadingPromisesRef.current[groupName]) {
-      return groupLoadingPromisesRef.current[groupName]
-    }
-
-    // Create the load promise
-    const loadPromise = (async () => {
-      setLoadingGroups(prev => new Set(prev).add(groupName))
-      try {
-        const encodedGroup = encodeURIComponent(groupName)
-        const response = await fetch(getApiUrl(`/api/word-base/group/${encodedGroup}`), {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          mode: 'cors'
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const data = await response.json()
-        
-        if (data.success && data.words) {
-          const wordsList = data.words || []
-          
-          // Add words to the words array (avoid duplicates)
-          setWords(prevWords => {
-            const existingIds = new Set(prevWords.map(w => w.id))
-            const newWords = wordsList.filter(w => !existingIds.has(w.id))
-            return [...prevWords, ...newWords]
-          })
-          
-          // Update words map
-          setWordsMap(prevMap => {
-            const newMap = { ...prevMap }
-            wordsList.forEach(word => {
-              newMap[word.id] = word
-            })
-            return newMap
-          })
-          
-          // Add to grouped words
-          setGroupedWords(prevGrouped => {
-            const newGrouped = { ...prevGrouped }
-            newGrouped[groupName] = wordsList
-            return newGrouped
-          })
-          
-          // Mark group as loaded
-          setLoadedGroups(prev => new Set(prev).add(groupName))
-          
-          return { success: true, words: wordsList, count: wordsList.length }
-        } else {
-          throw new Error(data.error || 'Failed to load group words')
-        }
-      } catch (error) {
-        console.error(`Error loading words for group "${groupName}":`, error)
-        return { success: false, error: error.message }
-      } finally {
-        setLoadingGroups(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(groupName)
-          return newSet
-        })
-        delete groupLoadingPromisesRef.current[groupName]
-      }
-    })()
-
-    groupLoadingPromisesRef.current[groupName] = loadPromise
-    return loadPromise
-  }, [loadedGroups])
-
-  // Load words from API (legacy - for backward compatibility)
+  // Load words from API in batches (Supabase limit is 1000 per request)
   const loadWords = useCallback(async (forceReload = false) => {
     // If already loading, return the existing promise
     if (loadingPromiseRef.current && !forceReload) {
@@ -147,13 +32,83 @@ export const WordBaseProvider = ({ children }) => {
     loadingPromiseRef.current = (async () => {
       setIsLoading(true)
       try {
-        // First load alphabet groups
-        await loadAlphabetGroups()
+        const batchSize = 999 // Less than 1000 to avoid Supabase limit
+        const allWords = []
+        let offset = 0
+        let hasMore = true
+        let batchNumber = 0
+        const maxBatches = 3 // Load up to 3 batches
+
+        // Fetch words in batches
+        while (hasMore && batchNumber < maxBatches) {
+          const response = await fetch(
+            getApiUrl(`/api/word-base?limit=${batchSize}&offset=${offset}`),
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              mode: 'cors'
+            }
+          )
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const data = await response.json()
+          
+          if (data.success && data.words) {
+            const batchWords = data.words || []
+            allWords.push(...batchWords)
+            
+            // If we got fewer words than requested, we've reached the end
+            if (batchWords.length < batchSize) {
+              hasMore = false
+            } else {
+              offset += batchSize
+              batchNumber++
+            }
+          } else {
+            throw new Error(data.error || 'Failed to load words')
+          }
+        }
+
+        // Process all loaded words
+        setWords(allWords)
+        
+        // Create a map for quick lookup by ID
+        const map = {}
+        allWords.forEach(word => {
+          map[word.id] = word
+        })
+        setWordsMap(map)
+        
+        // Group words by groupAlphabetName
+        const grouped = {}
+        const groups = []
+        
+        allWords.forEach(word => {
+          const group = word.groupAlphabetName || word.group_alphabet_name || 'Unknown'
+          if (!grouped[group]) {
+            grouped[group] = []
+            groups.push(group)
+          }
+          grouped[group].push(word)
+        })
+        
+        // Sort groups alphabetically
+        groups.sort()
+        setAlphabetGroups(groups)
+        setGroupedWords(grouped)
         
         setIsInitialized(true)
-        return { success: true, count: 0 }
+        return { success: true, words: allWords, count: allWords.length }
       } catch (error) {
         console.error('Error loading words:', error)
+        setWords([])
+        setWordsMap({})
+        setGroupedWords({})
         setAlphabetGroups([])
         setIsInitialized(true)
         return { success: false, error: error.message }
@@ -164,7 +119,7 @@ export const WordBaseProvider = ({ children }) => {
     })()
 
     return loadingPromiseRef.current
-  }, [loadAlphabetGroups])
+  }, [])
 
   // Invalidate and reload words from backend
   const invalidateAndReload = useCallback(async () => {
@@ -330,22 +285,42 @@ export const WordBaseProvider = ({ children }) => {
     return alphabetGroups
   }, [alphabetGroups])
 
-  // Load alphabet groups on mount (only once)
+  // Load total word count from database
+  const loadWordCount = useCallback(async () => {
+    try {
+      const response = await fetch(getApiUrl('/api/word-base/count/total'), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        mode: 'cors'
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.success && data.count !== undefined) {
+        setTotalCount(data.count)
+        return data.count
+      } else {
+        throw new Error(data.error || 'Failed to load word count')
+      }
+    } catch (error) {
+      console.error('Error loading word count:', error)
+      return 0
+    }
+  }, [])
+
+  // Load words on mount (only once)
   useEffect(() => {
     if (!isInitialized && !isLoading) {
       loadWords()
+      loadWordCount() // Also load the count
     }
-  }, [isInitialized, isLoading, loadWords])
-
-  // Check if a group is loaded
-  const isGroupLoaded = useCallback((groupName) => {
-    return loadedGroups.has(groupName)
-  }, [loadedGroups])
-
-  // Check if a group is currently loading
-  const isGroupLoading = useCallback((groupName) => {
-    return loadingGroups.has(groupName)
-  }, [loadingGroups])
+  }, [isInitialized, isLoading, loadWords, loadWordCount])
 
   const value = {
     words,
@@ -354,13 +329,9 @@ export const WordBaseProvider = ({ children }) => {
     wordsMap,
     isLoading,
     isInitialized,
-    loadedGroups,
-    loadingGroups,
+    totalCount,
     loadWords,
-    loadAlphabetGroups,
-    loadGroupWords,
-    isGroupLoaded,
-    isGroupLoading,
+    loadWordCount,
     invalidateAndReload,
     updateWordInCache,
     removeWordFromCache,

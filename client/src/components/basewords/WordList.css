@@ -18,38 +18,21 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.word-list-header-actions {
+.word-list-controls {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 100%;
+  gap: 10px;
+  align-items: stretch;
 }
 
-@media (min-width: 768px) {
-  .word-list-header-actions {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-
-/* Search Container */
-.word-list-search-container {
+.word-list-search {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 100%;
 }
 
-@media (min-width: 768px) {
-  .word-list-search-container {
-    max-width: 400px;
-    flex: 1;
-  }
-}
-
-.word-list-search-icon {
+.word-list-search .search-icon {
   position: absolute;
   left: 12px;
   color: rgba(255, 255, 255, 0.5);
@@ -60,7 +43,7 @@
 
 .word-list-search-input {
   width: 100%;
-  padding: 10px 40px 10px 40px;
+  padding: 10px 15px 10px 40px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
@@ -80,43 +63,15 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
-.word-list-search-clear {
-  position: absolute;
-  right: 8px;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  z-index: 1;
-}
-
-.word-list-search-clear:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.word-list-search-clear .material-symbols-outlined {
-  font-size: 1.2rem;
-}
-
-/* Word Count */
 .word-list-count {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
   background: rgba(102, 126, 234, 0.1);
-  border: 1px solid rgba(102, 126, 234, 0.2);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.9);
   font-size: 0.9rem;
-  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .word-list-count .material-symbols-outlined {
@@ -124,59 +79,26 @@
   color: #667eea;
 }
 
-.word-list-count-text {
+.word-count-text {
   font-weight: 500;
 }
 
-/* Dark Mode Support for Search */
-.dark-mode .word-list-search-input {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
+/* Desktop: Controls in a row */
+@media (min-width: 768px) {
+  .word-list-controls {
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+  }
 
-.dark-mode .word-list-search-input:focus {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #667eea;
-}
+  .word-list-search {
+    flex: 1;
+    max-width: 400px;
+  }
 
-.dark-mode .word-list-search-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-/* Light Mode Support for Search */
-.light-mode .word-list-search-input {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.2);
-  color: #1a1a1a;
-}
-
-.light-mode .word-list-search-input:focus {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: #667eea;
-}
-
-.light-mode .word-list-search-input::placeholder {
-  color: rgba(0, 0, 0, 0.4);
-}
-
-.light-mode .word-list-search-icon {
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.light-mode .word-list-search-clear {
-  color: rgba(0, 0, 0, 0.5);
-}
-
-.light-mode .word-list-search-clear:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: rgba(0, 0, 0, 0.8);
-}
-
-.light-mode .word-list-count {
-  background: rgba(102, 126, 234, 0.1);
-  border-color: rgba(102, 126, 234, 0.2);
-  color: rgba(0, 0, 0, 0.9);
+  .word-list-count {
+    white-space: nowrap;
+  }
 }
 
 .word-list-title {
@@ -310,44 +232,6 @@
 .word-group-section {
   margin-bottom: 40px;
   scroll-margin-top: 100px;
-}
-
-.word-group-loading {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: rgba(102, 126, 234, 0.8);
-  font-size: 0.85rem;
-  font-weight: normal;
-}
-
-.word-group-loading .material-symbols-outlined {
-  font-size: 1rem;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.word-group-loading-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 40px 20px;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.95rem;
-}
-
-.word-group-loading-placeholder .material-symbols-outlined {
-  font-size: 1.5rem;
-  animation: spin 1s linear infinite;
-}
-
-.light-mode .word-group-loading-placeholder {
-  color: rgba(0, 0, 0, 0.5);
 }
 
 .word-group-title {
@@ -540,6 +424,52 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* Dark Mode Support for Search and Controls */
+.dark-mode .word-list-search-input {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+}
+
+.dark-mode .word-list-search-input:focus {
+  border-color: #667eea !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark-mode .word-list-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.dark-mode .word-list-count {
+  background: rgba(102, 126, 234, 0.1) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Light Mode Support for Search and Controls */
+.light-mode .word-list-search-input {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #1a1a1a !important;
+}
+
+.light-mode .word-list-search-input:focus {
+  border-color: #667eea !important;
+  background: #ffffff !important;
+}
+
+.light-mode .word-list-search-input::placeholder {
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.light-mode .word-list-count {
+  background: rgba(102, 126, 234, 0.1) !important;
+  color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.light-mode .word-list-search .search-icon {
+  color: rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Dark Mode Support for Edit Word Form */
