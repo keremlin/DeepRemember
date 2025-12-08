@@ -500,10 +500,114 @@ router.get('/get-audio/:word/:sentence', authMiddleware.verifyToken, async (req,
 });
 
 // Get translation and sample sentences from Ollama
+// Also handles auto-completion for word records
 router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
     try {
-        const { word } = req.body;
+        const { word, wordRecord } = req.body;
         
+        // Handle auto-completion request (wordRecord provided)
+        if (wordRecord) {
+            const wordToProcess = wordRecord.word || word;
+            
+            if (!wordToProcess) {
+                return res.status(400).json({ error: 'word is required in wordRecord' });
+            }
+
+            const prompt = `response in this format :  {
+    "word": "Ausbildung",
+    "translate": "translation of word in german",
+    "sample_sentence": "Ich habe eine ausbildung",
+    "groupAlphabetName": "A",
+    "type_of_word": "name",
+    "plural_sign": "-en",
+    "article": "die",
+    "female_form": null,
+    "meaning": null,
+    "more_info": null
+  } then find the word information and put them in the response, In german language.If there are no 3 sample sentence add more sentences in Level A2. If the word is a noun fill plural_sign, article and female_form. If this is a verb also add other form of verb in more_info show the Infinitiv,Präteritum and Partizip Perfekt form of the verb. Word to process: "${wordToProcess}"`;
+            
+            console.log('[DeepRemember] Sending auto-complete prompt to LLM:', prompt);
+            
+            const data = await llmClient.query(prompt, { stream: false });
+            console.log('[DeepRemember] Raw LLM response for auto-complete:', data.response);
+            
+            if (data.response) {
+                try {
+                    // Try to extract JSON from the response (handle multiline)
+                    let jsonMatch = data.response.match(/\{[\s\S]*\}/);
+                    if (!jsonMatch) {
+                        // Try to find JSON that might be wrapped in code blocks
+                        jsonMatch = data.response.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+                        if (jsonMatch) {
+                            jsonMatch = [jsonMatch[1]];
+                        }
+                    }
+                    if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        console.log('[DeepRemember] Parsed auto-complete response:', parsed);
+                        
+                        // Convert sample_sentence array to string (join with newlines)
+                        let sampleSentenceString = null;
+                        if (parsed.sample_sentence) {
+                            if (Array.isArray(parsed.sample_sentence)) {
+                                sampleSentenceString = parsed.sample_sentence.join('\n');
+                            } else {
+                                sampleSentenceString = String(parsed.sample_sentence);
+                            }
+                        }
+                        
+                        // Convert more_info object to string format (each property on a line)
+                        let moreInfoString = null;
+                        if (parsed.more_info) {
+                            if (typeof parsed.more_info === 'object' && parsed.more_info !== null && !Array.isArray(parsed.more_info)) {
+                                // Convert object to string with each property on a line
+                                moreInfoString = Object.entries(parsed.more_info)
+                                    .map(([key, value]) => `${key}: ${value}`)
+                                    .join('\n');
+                            } else if (Array.isArray(parsed.more_info)) {
+                                // Convert array to string (join with newlines)
+                                moreInfoString = parsed.more_info.join('\n');
+                            } else {
+                                // Already a string or other type, convert to string
+                                moreInfoString = String(parsed.more_info);
+                            }
+                        }
+                        
+                        // Validate and return the response
+                        const wordData = {
+                            word: parsed.word || wordToProcess,
+                            translate: parsed.translate || null,
+                            sample_sentence: sampleSentenceString,
+                            groupAlphabetName: parsed.groupAlphabetName || null,
+                            type_of_word: parsed.type_of_word || null,
+                            plural_sign: parsed.plural_sign || null,
+                            article: parsed.article || null,
+                            female_form: parsed.female_form || null,
+                            meaning: parsed.meaning || null,
+                            more_info: moreInfoString
+                        };
+                        
+                        return res.json({
+                            success: true,
+                            wordData: wordData
+                        });
+                    } else {
+                        throw new Error('No JSON found in LLM response');
+                    }
+                } catch (e) {
+                    console.error('[DeepRemember] JSON parse error for auto-complete:', e);
+                    console.error('[DeepRemember] Response that failed to parse:', data.response);
+                    return res.status(500).json({ 
+                        error: 'Failed to parse LLM response as JSON',
+                        details: e.message 
+                    });
+                }
+            } else {
+                return res.status(500).json({ error: 'No response from LLM' });
+            }
+        }
+        
+        // Handle original translation request (backward compatibility)
         if (!word) {
             return res.status(400).json({ error: 'word is required' });
         }

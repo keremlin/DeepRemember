@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useToast } from '../ToastProvider'
 import { getApiUrl } from '../../config/api'
 import { useWordBase } from './WordBaseContext'
+import { useAuth } from '../security/AuthContext'
 import Modal from '../Modal'
 import Button from '../Button'
 import './WordList.css'
@@ -9,6 +10,7 @@ import './WordList.css'
 const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
   const { showSuccess, showError } = useToast()
   const { updateWordInCache } = useWordBase()
+  const { authenticatedFetch } = useAuth()
   const [formData, setFormData] = useState({
     word: '',
     translate: '',
@@ -22,6 +24,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
     more_info: ''
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [isAutoCompleting, setIsAutoCompleting] = useState(false)
 
   // Update form data when word prop changes
   useEffect(() => {
@@ -50,11 +53,93 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
     }))
   }
 
+  // Handle auto-complete
+  const handleAutoComplete = async () => {
+    if (!formData.word.trim()) {
+      showError('Word is required for auto-complete!')
+      return
+    }
+
+    setIsAutoCompleting(true)
+    try {
+      // Send the current form data as JSON to the API
+      const wordRecord = {
+        word: formData.word || '',
+        translate: formData.translate || '',
+        sample_sentence: formData.sample_sentence || '',
+        groupAlphabetName: formData.groupAlphabetName || '',
+        type_of_word: formData.type_of_word || '',
+        plural_sign: formData.plural_sign || '',
+        article: formData.article || '',
+        female_form: formData.female_form || '',
+        meaning: formData.meaning || '',
+        more_info: formData.more_info || ''
+      }
+
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/translate-word'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        mode: 'cors',
+        body: JSON.stringify({ wordRecord })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.success && data.wordData) {
+        // Update form with LLM response, only filling empty fields
+        const fillIfEmpty = (current, newValue) => {
+          // Convert current to string and check if it has content
+          const currentStr = current ? (Array.isArray(current) ? current.join('\n') : String(current)).trim() : ''
+          return currentStr ? currentStr : (newValue || '')
+        }
+        
+        setFormData(prev => ({
+          word: fillIfEmpty(prev.word, data.wordData.word),
+          translate: fillIfEmpty(prev.translate, data.wordData.translate),
+          sample_sentence: fillIfEmpty(prev.sample_sentence, data.wordData.sample_sentence),
+          groupAlphabetName: fillIfEmpty(prev.groupAlphabetName, data.wordData.groupAlphabetName),
+          type_of_word: fillIfEmpty(prev.type_of_word, data.wordData.type_of_word),
+          plural_sign: fillIfEmpty(prev.plural_sign, data.wordData.plural_sign),
+          article: fillIfEmpty(prev.article, data.wordData.article),
+          female_form: fillIfEmpty(prev.female_form, data.wordData.female_form),
+          meaning: fillIfEmpty(prev.meaning, data.wordData.meaning),
+          more_info: fillIfEmpty(prev.more_info, data.wordData.more_info)
+        }))
+        showSuccess('Auto-complete completed successfully!')
+      } else {
+        throw new Error(data.error || 'Failed to auto-complete word')
+      }
+    } catch (error) {
+      console.error('Error auto-completing word:', error)
+      showError(`Failed to auto-complete word: ${error.message}`)
+    } finally {
+      setIsAutoCompleting(false)
+    }
+  }
+
+  // Helper function to safely convert value to string and trim
+  const safeTrim = (value) => {
+    if (value === null || value === undefined) return null
+    if (Array.isArray(value)) return value.join('\n').trim() || null
+    if (typeof value === 'object') return JSON.stringify(value).trim() || null
+    return String(value).trim() || null
+  }
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.word.trim() || !formData.groupAlphabetName.trim() || !formData.type_of_word.trim()) {
+    const trimmedWord = safeTrim(formData.word)
+    const trimmedGroupAlphabet = safeTrim(formData.groupAlphabetName)
+    const trimmedTypeOfWord = safeTrim(formData.type_of_word)
+    
+    if (!trimmedWord || !trimmedGroupAlphabet || !trimmedTypeOfWord) {
       showError('Word, group alphabet name, and type of word are required!')
       return
     }
@@ -73,16 +158,16 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
         },
         mode: 'cors',
         body: JSON.stringify({
-          word: formData.word.trim(),
-          translate: formData.translate.trim() || null,
-          sample_sentence: formData.sample_sentence.trim() || null,
-          groupAlphabetName: formData.groupAlphabetName.trim(),
-          type_of_word: formData.type_of_word.trim(),
-          plural_sign: formData.plural_sign.trim() || null,
-          article: formData.article.trim() || null,
-          female_form: formData.female_form.trim() || null,
-          meaning: formData.meaning.trim() || null,
-          more_info: formData.more_info.trim() || null
+          word: trimmedWord,
+          translate: safeTrim(formData.translate),
+          sample_sentence: safeTrim(formData.sample_sentence),
+          groupAlphabetName: trimmedGroupAlphabet,
+          type_of_word: trimmedTypeOfWord,
+          plural_sign: safeTrim(formData.plural_sign),
+          article: safeTrim(formData.article),
+          female_form: safeTrim(formData.female_form),
+          meaning: safeTrim(formData.meaning),
+          more_info: safeTrim(formData.more_info)
         })
       })
 
@@ -116,15 +201,24 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
         onClick={onClose}
         variant="secondary"
         size="medium"
-        disabled={isLoading}
+        disabled={isLoading || isAutoCompleting}
       >
         Cancel
+      </Button>
+      <Button
+        onClick={handleAutoComplete}
+        variant="secondary"
+        size="medium"
+        disabled={isLoading || isAutoCompleting}
+        iconName="auto_fix_high"
+      >
+        {isAutoCompleting ? 'Auto Completing...' : 'Auto Complete'}
       </Button>
       <Button
         onClick={handleSubmit}
         variant="primary"
         size="medium"
-        disabled={isLoading}
+        disabled={isLoading || isAutoCompleting}
         iconName="save"
       >
         {isLoading ? 'Saving...' : 'Save'}
@@ -150,7 +244,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
             value={formData.word}
             onChange={handleInputChange}
             required
-            disabled={isLoading}
+            disabled={isLoading || isAutoCompleting}
           />
         </div>
 
@@ -162,7 +256,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
             name="translate"
             value={formData.translate}
             onChange={handleInputChange}
-            disabled={isLoading}
+            disabled={isLoading || isAutoCompleting}
           />
         </div>
 
@@ -174,7 +268,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
             value={formData.sample_sentence}
             onChange={handleInputChange}
             rows="3"
-            disabled={isLoading}
+            disabled={isLoading || isAutoCompleting}
           />
         </div>
 
@@ -189,7 +283,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
               onChange={handleInputChange}
               required
               maxLength="1"
-              disabled={isLoading}
+              disabled={isLoading || isAutoCompleting}
             />
           </div>
 
@@ -201,7 +295,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
               value={formData.type_of_word}
               onChange={handleInputChange}
               required
-              disabled={isLoading}
+              disabled={isLoading || isAutoCompleting}
             >
               <option value="">Select type</option>
               <option value="noun">Noun</option>
@@ -225,7 +319,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
               name="article"
               value={formData.article}
               onChange={handleInputChange}
-              disabled={isLoading}
+              disabled={isLoading || isAutoCompleting}
             >
               <option value="">None</option>
               <option value="der">der</option>
@@ -242,7 +336,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
               name="plural_sign"
               value={formData.plural_sign}
               onChange={handleInputChange}
-              disabled={isLoading}
+              disabled={isLoading || isAutoCompleting}
             />
           </div>
         </div>
@@ -255,7 +349,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
             name="female_form"
             value={formData.female_form}
             onChange={handleInputChange}
-            disabled={isLoading}
+            disabled={isLoading || isAutoCompleting}
           />
         </div>
 
@@ -267,7 +361,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
             value={formData.meaning}
             onChange={handleInputChange}
             rows="2"
-            disabled={isLoading}
+            disabled={isLoading || isAutoCompleting}
           />
         </div>
 
@@ -279,7 +373,7 @@ const EditWordModal = ({ isOpen, onClose, word, onWordUpdated }) => {
             value={formData.more_info}
             onChange={handleInputChange}
             rows="2"
-            disabled={isLoading}
+            disabled={isLoading || isAutoCompleting}
           />
         </div>
       </form>
