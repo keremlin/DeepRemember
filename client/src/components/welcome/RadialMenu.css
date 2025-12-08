@@ -156,7 +156,7 @@
   transform: translateY(-50%);
 }
 
-.menu-item:nth-child(5) .menu-label { /* Lock Workstation - Bottom Right */
+.menu-item:nth-child(5) .menu-label { /* Words - Bottom Right */
   top: 80px;
   left: 80px;
   transform: translateX(-50%);

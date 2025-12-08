@@ -3,7 +3,7 @@ import { useAuth } from '../security/AuthContext'
 import AreYouSureModal from '../AreYouSureModal'
 import './RadialMenu.css'
 
-const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer, onNavigateToManagement, onNavigateToChat, onNavigateToUserManagement }) => {
+const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer, onNavigateToManagement, onNavigateToChat, onNavigateToUserManagement, onNavigateToWordList }) => {
   const [isOpen, setIsOpen] = useState(true)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -55,16 +55,12 @@ const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer, onNavigateTo
       action: () => console.log('User clicked')
     },
     {
-      id: 'lock-workstation',
+      id: 'word-list',
       icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <circle cx="12" cy="16" r="1"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
+        <span className="material-symbols-outlined">menu_book</span>
       ),
-      label: 'Lock Workstation',
-      action: () => console.log('Lock Workstation clicked')
+      label: 'Words',
+      action: () => console.log('Words clicked')
     },
     {
       id: 'logi-options',
@@ -137,6 +133,11 @@ const RadialMenu = ({ onNavigateToDeepRemember, onNavigateToPlayer, onNavigateTo
       // Navigate to User Management page
       if (onNavigateToUserManagement) {
         onNavigateToUserManagement()
+      }
+    } else if (item.id === 'word-list') {
+      // Navigate to Word List page
+      if (onNavigateToWordList) {
+        onNavigateToWordList()
       }
     } else {
       item.action()

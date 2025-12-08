@@ -90,6 +90,7 @@ function AppContent() {
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
             onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToWordList={navigateToWordList}
           />
         ) : currentView === 'deepremember' ? (
           <DeepRemember 
