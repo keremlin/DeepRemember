@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { useToast } from '../ToastProvider'
+import { useAuth } from '../security/AuthContext'
 import { getApiUrl } from '../../config/api'
+import LabelSelector from '../labels/LabelSelector'
 import './EditCard.css'
 
 const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
   const { showSuccess, showError } = useToast()
+  const { authenticatedFetch } = useAuth()
   const [formData, setFormData] = useState({
     word: '',
     translation: '',
     context: ''
   })
+  const [selectedLabels, setSelectedLabels] = useState([])
   const [isLoading, setIsLoading] = useState(false)
 
   // Update form data when card prop changes
@@ -20,6 +24,16 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
         translation: card.translation || '',
         context: card.context || ''
       })
+      
+      // Initialize selected labels from card's current labels (only user labels)
+      if (card.labels && Array.isArray(card.labels)) {
+        const userLabelIds = card.labels
+          .filter(label => label.type === 'user')
+          .map(label => label.id)
+        setSelectedLabels(userLabelIds)
+      } else {
+        setSelectedLabels([])
+      }
     }
   }, [card])
 
@@ -30,6 +44,53 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
       ...prev,
       [name]: value
     }))
+  }
+
+  // Sync labels: add new ones and remove removed ones
+  const syncLabels = async (currentLabelIds, newLabelIds) => {
+    const labelsToAdd = newLabelIds.filter(id => !currentLabelIds.includes(id))
+    const labelsToRemove = currentLabelIds.filter(id => !newLabelIds.includes(id))
+
+    // Add new labels
+    for (const labelId of labelsToAdd) {
+      try {
+        const response = await authenticatedFetch(
+          getApiUrl(`/api/srs/cards/${currentUserId}/${card.id}/labels`),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify({ labelId })
+          }
+        )
+
+        if (!response.ok) {
+          console.warn(`Failed to add label ${labelId} to card`)
+        }
+      } catch (error) {
+        console.error(`Error adding label ${labelId}:`, error)
+      }
+    }
+
+    // Remove labels
+    for (const labelId of labelsToRemove) {
+      try {
+        const response = await authenticatedFetch(
+          getApiUrl(`/api/srs/cards/${currentUserId}/${card.id}/labels/${labelId}`),
+          {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors'
+          }
+        )
+
+        if (!response.ok) {
+          console.warn(`Failed to remove label ${labelId} from card`)
+        }
+      } catch (error) {
+        console.error(`Error removing label ${labelId}:`, error)
+      }
+    }
   }
 
   // Handle form submission
@@ -48,6 +109,7 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
 
     setIsLoading(true)
     try {
+      // First update the card data
       const response = await fetch(getApiUrl(`/deepRemember/update-card/${currentUserId}/${card.id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -66,6 +128,13 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
       const data = await response.json()
       
       if (data.success) {
+        // Sync labels after card update
+        const currentUserLabelIds = (card.labels || [])
+          .filter(label => label.type === 'user')
+          .map(label => label.id)
+        
+        await syncLabels(currentUserLabelIds, selectedLabels)
+        
         showSuccess('Card updated successfully!')
         onCardUpdated()
         onClose()
@@ -151,6 +220,20 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
               rows="4"
               disabled={isLoading}
             />
+          </div>
+
+          {/* Label Selector */}
+          <div className="form-group">
+            <div className="label-selector-wrapper">
+              <label htmlFor="label-selector" style={{ marginBottom: '8px', display: 'block', fontWeight: '500', fontSize: '14px' }}>
+                User Labels (Optional)
+              </label>
+              <LabelSelector
+                selectedLabels={selectedLabels}
+                setSelectedLabels={setSelectedLabels}
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div className="form-actions">

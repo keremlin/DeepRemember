@@ -49,6 +49,33 @@ class DeepRememberRepository {
   }
 
   /**
+   * Check if a card with the same word and translation already exists for a user
+   */
+  async checkDuplicateCard(userId, word, translation) {
+    try {
+      const normalizedWord = word.trim().toLowerCase();
+      const normalizedTranslation = (translation || '').trim().toLowerCase();
+      
+      const existingCard = await this.db.queryOne(
+        `SELECT card_id, word, translation FROM cards 
+         WHERE user_id = ? 
+         AND LOWER(TRIM(word)) = ? 
+         AND LOWER(TRIM(COALESCE(translation, ''))) = ?`,
+        { 
+          user_id: userId,
+          word: normalizedWord,
+          translation: normalizedTranslation
+        }
+      );
+
+      return existingCard || null;
+    } catch (error) {
+      console.error('[SRS-REPO] Check duplicate card error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a new card
    */
   async createCard(userId, cardData) {

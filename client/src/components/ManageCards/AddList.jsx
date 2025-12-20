@@ -11,18 +11,124 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
   const { authenticatedFetch } = useAuth()
   
   // Form states
+  const [inputMode, setInputMode] = useState('on-line') // 'on-line' or 'json'
   const [inputText, setInputText] = useState('')
   const [processedItems, setProcessedItems] = useState([])
   const [selectedLabels, setSelectedLabels] = useState([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [allLabels, setAllLabels] = useState([]) // All labels (system + user) for name-to-ID lookup
   
   // Processing states
   const [currentProcessingIndex, setCurrentProcessingIndex] = useState(-1)
   const [processingProgress, setProcessingProgress] = useState(0)
 
+  // Load all labels (system + user) for name-to-ID conversion
+  useEffect(() => {
+    if (currentUserId && isOpen) {
+      loadAllLabels()
+    }
+  }, [currentUserId, isOpen])
+
+  const loadAllLabels = async () => {
+    if (!currentUserId) return
+
+    try {
+      const response = await authenticatedFetch(getApiUrl(`/api/srs/labels/${currentUserId}`), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Store all labels (both system and user) for name-to-ID lookup
+        setAllLabels(data.labels || [])
+      }
+    } catch (error) {
+      console.error('Error loading labels:', error)
+      setAllLabels([])
+    }
+  }
+
+  // Convert label name to label ID
+  const getLabelIdByName = (labelName) => {
+    if (!labelName) return null
+    const label = allLabels.find(l => l.name === labelName)
+    return label ? label.id : null
+  }
+
+  // Process JSON input
+  const processJsonInput = () => {
+    if (!inputText.trim()) {
+      showWarning('Please enter JSON data')
+      return
+    }
+
+    try {
+      const jsonData = JSON.parse(inputText)
+      
+      if (!Array.isArray(jsonData)) {
+        showError('JSON must be an array of objects')
+        return
+      }
+
+      if (jsonData.length === 0) {
+        showWarning('JSON array is empty')
+        return
+      }
+
+      // Map JSON objects to processed items format
+      const initialItems = jsonData.map((item, index) => ({
+        id: index,
+        word: item.word || '',
+        translation: item.translation || '',
+        sampleSentence: item.context || '',
+        isWord: true, // Default to word, can be determined from word length if needed
+        isProcessing: false,
+        hasError: false,
+        errorMessage: '',
+        // Store original label from JSON if present
+        jsonLabel: item.label || null
+      }))
+
+      // Filter out items with missing required fields
+      const validItems = initialItems.filter(item => 
+        item.word.trim() && item.translation.trim()
+      )
+
+      if (validItems.length === 0) {
+        showError('No valid items found in JSON. Each object must have "word" and "translation" fields.')
+        return
+      }
+
+      if (validItems.length < initialItems.length) {
+        showWarning(`${initialItems.length - validItems.length} items were skipped due to missing required fields`)
+      }
+
+      setProcessedItems(validItems)
+      showSuccess(`Loaded ${validItems.length} items from JSON!`)
+    } catch (error) {
+      console.error('Error parsing JSON:', error)
+      showError(`Invalid JSON format: ${error.message}`)
+    }
+  }
+
   // Process the input text to extract words/sentences
   const processInputText = () => {
+    if (inputMode === 'json') {
+      processJsonInput()
+      return
+    }
+
+    // Original on-line processing
     if (!inputText.trim()) {
       showWarning('Please enter some words or sentences')
       return
@@ -157,6 +263,21 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
     try {
       for (const item of validItems) {
         try {
+          // Merge JSON label (if present) with selected labels
+          // Convert label names to IDs
+          let labelsToUse = [...selectedLabels] // selectedLabels are already IDs
+          
+          if (item.jsonLabel) {
+            // Convert JSON label name to ID
+            const jsonLabelId = getLabelIdByName(item.jsonLabel)
+            if (jsonLabelId && !labelsToUse.includes(jsonLabelId)) {
+              labelsToUse.push(jsonLabelId)
+            } else if (!jsonLabelId) {
+              // Label name not found - log warning but continue
+              console.warn(`Label "${item.jsonLabel}" not found in available labels for item: ${item.word}`)
+            }
+          }
+
           const response = await authenticatedFetch(getApiUrl('/deepRemember/create-card'), {
             method: 'POST',
             headers: { 
@@ -168,7 +289,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
               translation: item.translation,
               context: item.sampleSentence,
               type: item.isWord ? 'word' : 'sentence', // Use isWord to determine type
-              labels: selectedLabels // Add selected labels to all cards
+              labels: labelsToUse // Array of label IDs
             })
           })
           
@@ -212,6 +333,7 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
 
   // Handle modal close
   const handleClose = () => {
+    setInputMode('on-line')
     setInputText('')
     setProcessedItems([])
     setSelectedLabels([])
@@ -318,14 +440,47 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
         <div className="add-list-content">
           {/* Input Section */}
           <div className="input-section">
+            <div style={{ marginBottom: '15px' }}>
+              <label htmlFor="input-mode-select" style={{ marginBottom: '8px', display: 'block', fontWeight: '500', fontSize: '14px' }}>
+                <strong>Input Mode:</strong>
+              </label>
+              <select
+                id="input-mode-select"
+                value={inputMode}
+                onChange={(e) => {
+                  setInputMode(e.target.value)
+                  setInputText('')
+                  setProcessedItems([])
+                }}
+                disabled={isProcessing || isSaving}
+                style={{
+                  padding: '8px 12px',
+                  fontSize: '14px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  width: '100%',
+                  maxWidth: '300px'
+                }}
+              >
+                <option value="on-line">Enter as on-line</option>
+                <option value="json">Enter as JSON</option>
+              </select>
+            </div>
+            
             <label htmlFor="words-input">
-              <strong>Enter words or sentences (one per line):</strong>
+              <strong>
+                {inputMode === 'json' 
+                  ? 'Enter JSON array (like work_data.json format):' 
+                  : 'Enter words or sentences (one per line):'}
+              </strong>
             </label>
             <textarea
               id="words-input"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Enter words or sentences, one per line:&#10;Haus&#10;Auto&#10;Ich gehe nach Hause.&#10;Das ist ein schönes Buch."
+              placeholder={inputMode === 'json' 
+                ? '[\n  {\n    "word": "das Problem",\n    "translation": "problem",\n    "context": "Es gibt einen Fehler.",\n    "label": "work"\n  },\n  {\n    "word": "testen",\n    "translation": "test",\n    "context": "Ich muss das noch testen.",\n    "label": "work"\n  }\n]'
+                : "Enter words or sentences, one per line:&#10;Haus&#10;Auto&#10;Ich gehe nach Hause.&#10;Das ist ein schönes Buch."}
               rows={8}
               disabled={isProcessing || isSaving}
             />
@@ -351,6 +506,10 @@ const AddList = ({ isOpen, onClose, currentUserId, onCardsCreated }) => {
                 {isProcessing ? (
                   <>
                     <span className="material-symbols-outlined">refresh</span> Processing...
+                  </>
+                ) : inputMode === 'json' ? (
+                  <>
+                    <span className="material-symbols-outlined">code</span> Load JSON
                   </>
                 ) : (
                   <>

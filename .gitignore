@@ -34,7 +34,7 @@ build/
 
 # Uploaded files (your "files/" dir)
 files/
-
+PDF/
 
 # OS-specific
 .DS_Store
