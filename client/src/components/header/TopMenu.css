@@ -161,17 +161,22 @@
 /* Responsive Design - Mobile */
 @media (max-width: 768px) {
   .top-menu {
-    padding: 0 15px;
-    height: 55px;
+    padding: 0 10px;
+    height: 60px;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
   
   .top-menu-container {
-    gap: 15px;
+    gap: 12px;
+    min-width: max-content;
+    padding-right: 10px;
   }
   
   .top-menu-item {
-    padding: 0 5px;
-    min-width: 50px;
+    padding: 0 8px;
+    min-width: 55px;
+    flex-shrink: 0;
   }
   
   .top-menu-icon {
@@ -179,11 +184,12 @@
   }
   
   .top-menu-icon .material-symbols-outlined {
-    font-size: 20px;
+    font-size: 22px;
   }
   
   .top-menu-label {
     font-size: 10px;
+    white-space: nowrap;
   }
   
   .top-menu-scroll-button {
@@ -194,17 +200,22 @@
 
 @media (max-width: 480px) {
   .top-menu {
-    padding: 0 10px;
-    height: 50px;
+    padding: 0 8px;
+    height: 58px;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
   
   .top-menu-container {
     gap: 10px;
+    min-width: max-content;
+    padding-right: 8px;
   }
   
   .top-menu-item {
-    padding: 0 4px;
-    min-width: 45px;
+    padding: 0 6px;
+    min-width: 50px;
+    flex-shrink: 0;
   }
   
   .top-menu-icon {
@@ -212,16 +223,18 @@
   }
   
   .top-menu-icon .material-symbols-outlined {
-    font-size: 18px;
+    font-size: 20px;
   }
   
   .top-menu-label {
     font-size: 9px;
+    white-space: nowrap;
   }
   
   .top-menu-scroll-button {
     width: 45px;
     height: 45px;
+    flex-shrink: 0;
   }
   
   .top-menu-scroll-button span {

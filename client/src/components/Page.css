@@ -34,18 +34,32 @@
 
 /* Responsive Design - Mobile */
 @media (max-width: 768px) {
+  .page-container {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
   .page-body {
-    padding: 15px;
+    padding: 12px;
     max-width: 100%;
     width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 }
 
 @media (max-width: 480px) {
+  .page-container {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
   .page-body {
     padding: 10px;
     max-width: 100%;
     width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 }
 
@@ -71,6 +85,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    -webkit-overflow-scrolling: touch;
   }
   
   .page-container.review-mode .page-body > * {
@@ -85,6 +100,7 @@
   .page-container.review-mode .page-body {
     height: calc(100vh - 120px); /* Smaller header on very small screens */
     min-height: calc(100vh - 120px);
+    -webkit-overflow-scrolling: touch;
   }
 }
 

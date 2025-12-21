@@ -240,23 +240,38 @@
 
 /* Responsive Design - Mobile */
 @media (max-width: 768px) {
+  .stats-section {
+    gap: 15px;
+  }
+  
   .stats-section .srs-card {
     padding: 18px;
+    border-radius: 12px;
   }
   
   .stats-header {
     margin-bottom: 15px;
     padding-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   
   .stats-header h3 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .stats-header h3 .material-symbols-outlined {
+    font-size: 1.2rem;
+    margin-right: 6px;
   }
   
   .help-btn {
     width: 32px;
     height: 32px;
     font-size: 1.1rem;
+    flex-shrink: 0;
   }
   
   .stats-grid {
@@ -265,16 +280,19 @@
   }
   
   .stat-item {
-    padding: 15px;
+    padding: 16px 12px;
+    border-radius: 10px;
   }
   
   .stat-number {
     font-size: 2rem;
     margin-bottom: 6px;
+    line-height: 1.2;
   }
   
   .stat-label {
     font-size: 0.85rem;
+    line-height: 1.3;
   }
   
   .label-stats-section {
@@ -294,10 +312,12 @@
   
   .label-stat-item {
     padding: 12px;
+    border-radius: 8px;
   }
   
   .label-stat-number {
     font-size: 1.5rem;
+    line-height: 1.2;
   }
   
   .label-name {
@@ -307,53 +327,74 @@
   .create-card-button {
     margin-bottom: 15px;
     gap: 12px;
+    flex-direction: column;
+    width: 100%;
   }
   
   .btn-upload-modal {
     width: 100%;
-    max-width: 300px;
+    max-width: 100%;
+    min-height: 44px; /* Better touch target */
   }
 }
 
 @media (max-width: 480px) {
+  .stats-section {
+    gap: 12px;
+  }
+  
   .stats-section .srs-card {
     padding: 15px;
+    border-radius: 10px;
   }
   
   .stats-header {
     flex-direction: row;
-    gap: 12px;
+    gap: 10px;
     text-align: left;
     align-items: center;
     margin-bottom: 12px;
     padding-bottom: 10px;
+    flex-wrap: wrap;
   }
   
   .stats-header h3 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .stats-header h3 .material-symbols-outlined {
+    font-size: 1.1rem;
+    margin-right: 5px;
   }
   
   .help-btn {
     width: 30px;
     height: 30px;
     font-size: 1rem;
+    flex-shrink: 0;
   }
   
   .stats-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px;
+    gap: 8px;
   }
   
   .stat-item {
-    padding: 15px;
+    padding: 14px 10px;
+    border-radius: 8px;
   }
   
   .stat-number {
     font-size: 1.8rem;
+    margin-bottom: 5px;
+    line-height: 1.2;
   }
   
   .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
   }
   
   .label-stats-section {
@@ -362,7 +403,7 @@
   }
   
   .label-stats-section h4 {
-    font-size: 1rem;
+    font-size: 0.95rem;
     margin-bottom: 10px;
   }
   
@@ -373,25 +414,40 @@
   
   .label-stat-item {
     padding: 10px;
+    border-radius: 8px;
+  }
+  
+  .label-stat-header {
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+  
+  .label-color-indicator {
+    width: 10px;
+    height: 10px;
   }
   
   .label-stat-number {
     font-size: 1.4rem;
+    line-height: 1.2;
   }
   
   .label-name {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
   
   .create-card-button {
     margin-bottom: 12px;
     gap: 10px;
     flex-direction: column;
+    width: 100%;
   }
   
   .btn-upload-modal {
     width: 100%;
-    max-width: none;
+    max-width: 100%;
+    min-height: 44px; /* Better touch target */
+    font-size: 14px;
   }
 }
 

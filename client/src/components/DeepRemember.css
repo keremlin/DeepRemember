@@ -680,18 +680,24 @@
 /* Responsive design - Mobile */
 @media (max-width: 768px) {
   .deep-remember-container {
-    border-radius: 15px;
+    border-radius: 12px;
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .content {
-    padding: 7px 5px;
+    padding: 8px;
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .srs-container {
@@ -700,11 +706,17 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .srs-card {
-    padding: 7px;
+    padding: 12px;
     margin: 5px 0;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .word-display {
@@ -800,17 +812,24 @@
 }
 
 @media (max-width: 480px) {
+  .deep-remember-container {
+    border-radius: 10px;
+  }
+  
   .content {
-    padding: 5px 3px;
+    padding: 6px;
+    overflow-x: hidden;
   }
   
   .srs-container {
-    padding: 3px;
+    padding: 4px;
+    overflow-x: hidden;
   }
   
   .srs-card {
-    padding: 5px;
-    margin: 3px 0;
+    padding: 10px;
+    margin: 4px 0;
+    overflow-x: hidden;
   }
   
   .word-display {

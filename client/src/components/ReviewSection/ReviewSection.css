@@ -194,6 +194,7 @@
   flex-shrink: 0;
 }
 
+
 .word-display strong {
   font-size: 1.8rem;
   color: #fff;
@@ -429,6 +430,38 @@
   
   .word-with-audio {
     gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .word-with-audio .card-label-list {
+    position: static;
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+    order: 3;
+  }
+  
+  .word-center-container {
+    order: 1;
+    width: 100%;
+  }
+  
+  .word-center-container.has-side-actions {
+    padding-left: 0;
+  }
+  
+  .word-side-actions {
+    position: static;
+    transform: none;
+    order: 0;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  
+  .word-audio-button {
+    order: 2;
   }
   
   .word-with-audio strong {
@@ -517,6 +550,38 @@
   
   .word-with-audio {
     gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .word-with-audio .card-label-list {
+    position: static;
+    width: 100%;
+    justify-content: center;
+    margin-top: 6px;
+    order: 3;
+  }
+  
+  .word-center-container {
+    order: 1;
+    width: 100%;
+  }
+  
+  .word-center-container.has-side-actions {
+    padding-left: 0;
+  }
+  
+  .word-side-actions {
+    position: static;
+    transform: none;
+    order: 0;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  
+  .word-audio-button {
+    order: 2;
   }
   
   .word-with-audio strong {
