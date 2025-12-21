@@ -17,6 +17,7 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
   const [subtitleText, setSubtitleText] = useState('')
   const [currentSubtitleIndex, setCurrentSubtitleIndex] = useState(-1)
   const [tracks, setTracks] = useState([])
+  const [playlistData, setPlaylistData] = useState([]) // Store full playlist data with subtitle info
   const [showPlaylist, setShowPlaylist] = useState(true)
   const [showSubtitleList, setShowSubtitleList] = useState(true)
   const [subtitleTracks, setSubtitleTracks] = useState([])
@@ -56,10 +57,15 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
       
       if (response.ok) {
         const data = await response.json()
-        const audioFiles = data.playlist.map(item => item.media).filter(file => 
-          file.endsWith('.mp3') || file.endsWith('.wav') || file.endsWith('.m4a')
-        )
-        setTracks(audioFiles)
+        const audioFiles = data.playlist
+          .filter(item => 
+            item.media.endsWith('.mp3') || 
+            item.media.endsWith('.wav') || 
+            item.media.endsWith('.m4a')
+          )
+        setPlaylistData(audioFiles)
+        const trackNames = audioFiles.map(item => item.media)
+        setTracks(trackNames)
       }
     } catch (error) {
       // Silently handle errors
@@ -362,6 +368,60 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
     }
   }
 
+  const handleDeleteFile = async (e, trackItem) => {
+    e.stopPropagation() // Prevent track selection when clicking delete
+    
+    if (!window.confirm(`Are you sure you want to delete "${trackItem.media}"${trackItem.subtitle ? ' and its subtitle file' : ''}?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(getApiUrl('/delete-files'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          media: trackItem.media,
+          subtitle: trackItem.subtitle || null
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          showSuccess(`File${result.deleted.subtitle ? 's' : ''} deleted successfully`)
+          
+          // If the deleted track was currently playing, stop it
+          if (currentTrack === trackItem.media) {
+            if (audioRef.current) {
+              audioRef.current.pause()
+              audioRef.current.src = ''
+            }
+            setCurrentTrack(null)
+            setIsPlaying(false)
+            setCurrentTime(0)
+            setDuration(0)
+            setSubtitleText('')
+            setSubtitleTracks([])
+            setCurrentSubtitleIndex(-1)
+          }
+          
+          // Reload the playlist
+          await loadTracks()
+        } else {
+          showError('Failed to delete file(s)')
+        }
+      } else {
+        const error = await response.json()
+        showError(error.error || 'Failed to delete file(s)')
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error)
+      showError('Error deleting file(s)')
+    }
+  }
+
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration)
@@ -619,15 +679,22 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
           <div className="playlist-list">
             {isLoading ? (
               <p>Loading tracks...</p>
-            ) : tracks.length > 0 ? (
-              tracks.map((track, index) => (
+            ) : playlistData.length > 0 ? (
+              playlistData.map((trackItem, index) => (
                 <div
                   key={index}
-                  className={`playlist-item ${currentTrack === track ? 'active' : ''}`}
-                  onClick={() => handleTrackSelect(track)}
+                  className={`playlist-item ${currentTrack === trackItem.media ? 'active' : ''}`}
+                  onClick={() => handleTrackSelect(trackItem.media)}
                 >
                   <span className="track-number">{index + 1}</span>
-                  <span className="track-name">{track}</span>
+                  <span className="track-name">{trackItem.media}</span>
+                  <button
+                    className="delete-track-btn"
+                    onClick={(e) => handleDeleteFile(e, trackItem)}
+                    title="Delete file"
+                  >
+                    <span className="material-symbols-outlined">delete</span>
+                  </button>
                 </div>
               ))
             ) : (

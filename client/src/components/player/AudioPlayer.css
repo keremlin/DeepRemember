@@ -390,6 +390,30 @@
   color: #fff;
 }
 
+.playlist-item .delete-track-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.playlist-item .delete-track-btn:hover {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff4444;
+}
+
+.playlist-item .delete-track-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
 /* Subtitle List */
 .subtitle-list {
   height: 300px;
@@ -930,6 +954,15 @@
 .light-mode .playlist-item.active {
   background: rgba(102, 126, 234, 0.15);
   border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .playlist-item .delete-track-btn {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.light-mode .playlist-item .delete-track-btn:hover {
+  background: rgba(255, 0, 0, 0.15);
+  color: #cc0000;
 }
 
 .light-mode .track-number {
