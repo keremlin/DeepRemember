@@ -93,7 +93,11 @@ router.post('/', authMiddleware.verifyToken, async (req, res) => {
       words_to_use,
       words_not_to_use,
       grammar_to_use,
-      level
+      level,
+      communication_style,
+      learning_goal,
+      ai_role,
+      conversation_rules
     } = req.body;
 
     // Validate level if provided
@@ -109,7 +113,11 @@ router.post('/', authMiddleware.verifyToken, async (req, res) => {
       words_to_use: words_to_use || null,
       words_not_to_use: words_not_to_use || null,
       grammar_to_use: grammar_to_use || null,
-      level: level || null
+      level: level || null,
+      communication_style: communication_style || null,
+      learning_goal: learning_goal || null,
+      ai_role: ai_role || null,
+      conversation_rules: conversation_rules || null
     };
 
     const template = await chatTemplateRepository.createTemplateForUser(userId, templateData);
@@ -147,7 +155,11 @@ router.put('/:id', authMiddleware.verifyToken, async (req, res) => {
       words_to_use,
       words_not_to_use,
       grammar_to_use,
-      level
+      level,
+      communication_style,
+      learning_goal,
+      ai_role,
+      conversation_rules
     } = req.body;
 
     // Validate level if provided
@@ -163,7 +175,11 @@ router.put('/:id', authMiddleware.verifyToken, async (req, res) => {
       words_to_use: words_to_use !== undefined ? words_to_use : null,
       words_not_to_use: words_not_to_use !== undefined ? words_not_to_use : null,
       grammar_to_use: grammar_to_use !== undefined ? grammar_to_use : null,
-      level: level !== undefined ? level : null
+      level: level !== undefined ? level : null,
+      communication_style: communication_style !== undefined ? communication_style : null,
+      learning_goal: learning_goal !== undefined ? learning_goal : null,
+      ai_role: ai_role !== undefined ? ai_role : null,
+      conversation_rules: conversation_rules !== undefined ? conversation_rules : null
     };
 
     const success = await chatTemplateRepository.updateTemplate(templateId, templateData);

@@ -938,7 +938,7 @@ function isTemplateMessage(content) {
   try {
     const parsed = JSON.parse(content);
     // Check if it has template-like structure (has at least one template field)
-    const templateFields = ['thema', 'persons', 'scenario', 'questions_and_thema', 'words_to_use', 'words_not_to_use', 'grammar_to_use', 'level'];
+    const templateFields = ['thema', 'persons', 'scenario', 'questions_and_thema', 'words_to_use', 'words_not_to_use', 'grammar_to_use', 'level', 'communication_style', 'learning_goal', 'ai_role', 'conversation_rules'];
     return templateFields.some(field => parsed.hasOwnProperty(field));
   } catch (e) {
     return false;
@@ -958,6 +958,17 @@ function formatTemplateAsPrompt(templateJson) {
   if (template.words_not_to_use) prompt += `Words not to use: ${template.words_not_to_use}\n`;
   if (template.grammar_to_use) prompt += `Grammar to use: ${template.grammar_to_use}\n`;
   if (template.level) prompt += `Level: ${template.level}\n`;
+  if (template.communication_style) prompt += `Communication Style: ${template.communication_style}\n`;
+  if (template.learning_goal) prompt += `Learning Goal: ${template.learning_goal}\n`;
+  if (template.ai_role) prompt += `AI Role: ${template.ai_role}\n`;
+  if (template.conversation_rules) {
+    const rules = Array.isArray(template.conversation_rules) 
+      ? template.conversation_rules 
+      : (typeof template.conversation_rules === 'string' ? [template.conversation_rules] : []);
+    if (rules.length > 0) {
+      prompt += `Conversation Rules:\n${rules.map(rule => `- ${rule}`).join('\n')}\n`;
+    }
+  }
   
   return prompt.trim();
 }

@@ -378,6 +378,7 @@ class GoogleDrive extends IFileSystem {
 
   /**
    * Asynchronously write data to a file
+   * Logic: Check local first, then Google Drive, then create if not found
    */
   async writeFile(filePath, data, options = {}) {
     await this.initialize();
@@ -401,6 +402,61 @@ class GoogleDrive extends IFileSystem {
         }
       }
       
+      // Step 1: Check if file exists locally
+      if (this.config.fallbackToLocal) {
+        const fs = require('fs');
+        const localPath = path.join(this.config.localFallbackPath, filePath);
+        
+        if (fs.existsSync(localPath)) {
+          console.log(`[GOOGLE_DRIVE] File exists locally: ${filePath}, using local file`);
+          // Return the file ID if we can find it, otherwise return local path
+          // Try to get file ID from Google Drive for consistency
+          const existingFileId = await this.findFile(fileName, parentId);
+          return existingFileId || localPath;
+        }
+      }
+      
+      // Step 2: Check if file exists in Google Drive
+      const existingFileId = await this.findFile(fileName, parentId);
+      
+      if (existingFileId) {
+        console.log(`[GOOGLE_DRIVE] File exists in Google Drive: ${filePath}, downloading to local`);
+        
+        try {
+          // Download file from Google Drive
+          const response = await this.drive.files.get({
+            fileId: existingFileId,
+            alt: 'media'
+          }, {
+            responseType: 'arraybuffer'
+          });
+          
+          const fileData = Buffer.from(response.data);
+          
+          // Save to local fallback
+          if (this.config.fallbackToLocal) {
+            const fs = require('fs');
+            const localPath = path.join(this.config.localFallbackPath, filePath);
+            const dirPath = path.dirname(localPath);
+            
+            // Ensure directory exists
+            fs.mkdirSync(dirPath, { recursive: true });
+            
+            // Write to local
+            fs.writeFileSync(localPath, fileData);
+            console.log(`[GOOGLE_DRIVE] Downloaded and saved locally: ${localPath}`);
+          }
+          
+          return existingFileId;
+        } catch (downloadError) {
+          console.warn(`[GOOGLE_DRIVE] Failed to download file from Google Drive: ${downloadError.message}`);
+          // Continue to create new file if download fails
+        }
+      }
+      
+      // Step 3: File doesn't exist anywhere - create it
+      console.log(`[GOOGLE_DRIVE] File not found, creating new file: ${filePath}`);
+      
       // Convert data to buffer if needed
       const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data, options.encoding || 'utf8');
       
@@ -410,39 +466,39 @@ class GoogleDrive extends IFileSystem {
       stream.push(buffer);
       stream.push(null); // End the stream
       
-      // Check if file already exists
-      const existingFileId = await this.findFile(fileName, parentId);
-      
+      // Create file in Google Drive
       const metadata = {
         name: fileName,
         parents: [parentId]
       };
       
-      let response;
-      if (existingFileId) {
-        // Update existing file
-        response = await this.drive.files.update({
-          fileId: existingFileId,
-          requestBody: metadata,
-          media: {
-            mimeType: options.mimeType || 'text/plain',
-            body: stream
-          }
-        });
-      } else {
-        // Create new file
-        response = await this.drive.files.create({
-          requestBody: metadata,
-          media: {
-            mimeType: options.mimeType || 'text/plain',
-            body: stream
-          },
-          fields: 'id'
-        });
+      const response = await this.drive.files.create({
+        requestBody: metadata,
+        media: {
+          mimeType: options.mimeType || 'text/plain',
+          body: stream
+        },
+        fields: 'id'
+      });
+      
+      const fileId = response.data.id;
+      
+      // Also save to local fallback
+      if (this.config.fallbackToLocal) {
+        const fs = require('fs');
+        const localPath = path.join(this.config.localFallbackPath, filePath);
+        const dirPath = path.dirname(localPath);
+        
+        // Ensure directory exists
+        fs.mkdirSync(dirPath, { recursive: true });
+        
+        // Write to local
+        fs.writeFileSync(localPath, buffer);
+        console.log(`[GOOGLE_DRIVE] Created file and saved locally: ${localPath}`);
       }
       
-      console.log(`[GOOGLE_DRIVE] File written: ${filePath}`);
-      return response.data.id;
+      console.log(`[GOOGLE_DRIVE] File created: ${filePath}`);
+      return fileId;
     } catch (error) {
       console.error(`[GOOGLE_DRIVE] Error writing file ${filePath}:`, error);
       throw error;

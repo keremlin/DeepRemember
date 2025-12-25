@@ -159,6 +159,10 @@ class SupabaseDatabase extends IDatabase {
         words_not_to_use TEXT,
         grammar_to_use TEXT,
         level TEXT CHECK (level IN ('A1', 'A2', 'B1', 'B2')),
+        communication_style TEXT,
+        learning_goal TEXT,
+        ai_role TEXT,
+        conversation_rules TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
@@ -368,6 +372,10 @@ class SupabaseDatabase extends IDatabase {
           words_not_to_use TEXT,
           grammar_to_use TEXT,
           level TEXT CHECK (level IN ('A1', 'A2', 'B1', 'B2')),
+          communication_style TEXT,
+          learning_goal TEXT,
+          ai_role TEXT,
+          conversation_rules TEXT,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         )`,

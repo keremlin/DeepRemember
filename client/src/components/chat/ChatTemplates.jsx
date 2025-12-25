@@ -39,7 +39,11 @@ const ChatTemplates = ({
     words_to_use: '',
     words_not_to_use: '',
     grammar_to_use: '',
-    level: ''
+    level: '',
+    communication_style: '',
+    learning_goal: '',
+    ai_role: '',
+    conversation_rules: []
   })
 
   // Load templates on mount
@@ -58,7 +62,11 @@ const ChatTemplates = ({
         words_to_use: '',
         words_not_to_use: '',
         grammar_to_use: '',
-        level: ''
+        level: '',
+        communication_style: '',
+        learning_goal: '',
+        ai_role: '',
+        conversation_rules: []
       })
       setEditingTemplate(null)
     }
@@ -154,7 +162,13 @@ const ChatTemplates = ({
       words_to_use: template.words_to_use || '',
       words_not_to_use: template.words_not_to_use || '',
       grammar_to_use: template.grammar_to_use || '',
-      level: template.level || ''
+      level: template.level || '',
+      communication_style: template.communication_style || '',
+      learning_goal: template.learning_goal || '',
+      ai_role: template.ai_role || '',
+      conversation_rules: Array.isArray(template.conversation_rules) 
+        ? template.conversation_rules 
+        : (template.conversation_rules ? [template.conversation_rules] : [])
     })
     setShowEditModal(true)
   }
@@ -258,7 +272,13 @@ const ChatTemplates = ({
         words_to_use: parsed.words_to_use || parsed.wordsToUse || parsed.words_to_use || '',
         words_not_to_use: parsed.words_not_to_use || parsed.wordsNotToUse || parsed.words_not_to_use || '',
         grammar_to_use: parsed.grammar_to_use || parsed.grammarToUse || parsed.grammar || '',
-        level: parsed.level || ''
+        level: parsed.level || '',
+        communication_style: parsed.communication_style || parsed.communicationStyle || '',
+        learning_goal: parsed.learning_goal || parsed.learningGoal || '',
+        ai_role: parsed.ai_role || parsed.aiRole || '',
+        conversation_rules: Array.isArray(parsed.conversation_rules) 
+          ? parsed.conversation_rules 
+          : (parsed.conversation_rules ? [parsed.conversation_rules] : [])
       }
 
       // Validate level if provided
@@ -286,7 +306,16 @@ const ChatTemplates = ({
     words_to_use: "hotel, reservation, check-in, attraction, museum",
     words_not_to_use: "slang, informal expressions",
     grammar_to_use: "Present tense, questions with 'how' and 'what'",
-    level: "A2"
+    level: "A2",
+    communication_style: "professional, clear, cooperative",
+    learning_goal: "Practice everyday conversations in a travel context, focusing on hotel check-in and asking for directions.",
+    ai_role: "Act as a helpful hotel receptionist and language trainer. Respond professionally, gently correct mistakes, and suggest more natural English formulations.",
+    conversation_rules: [
+      "Use short and clear sentences",
+      "Use common travel-related terms",
+      "Correct grammar after each message",
+      "Offer an improved alternative formulation when appropriate"
+    ]
   }
 
   const renderTemplateForm = (onSubmit, submitLabel) => (
@@ -397,6 +426,69 @@ const ChatTemplates = ({
           <option value="B1">B1</option>
           <option value="B2">B2</option>
         </select>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="communication_style">Communication Style:</label>
+        <textarea
+          id="communication_style"
+          name="communication_style"
+          value={formData.communication_style}
+          onChange={handleInputChange}
+          placeholder="e.g., professional, clear, cooperative"
+          rows="2"
+          disabled={isSaving}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="learning_goal">Learning Goal:</label>
+        <textarea
+          id="learning_goal"
+          name="learning_goal"
+          value={formData.learning_goal}
+          onChange={handleInputChange}
+          placeholder="Describe the learning objective for this conversation"
+          rows="3"
+          disabled={isSaving}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="ai_role">AI Role:</label>
+        <textarea
+          id="ai_role"
+          name="ai_role"
+          value={formData.ai_role}
+          onChange={handleInputChange}
+          placeholder="Describe how the AI should act and respond"
+          rows="3"
+          disabled={isSaving}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="conversation_rules">Conversation Rules (one per line):</label>
+        <textarea
+          id="conversation_rules"
+          name="conversation_rules"
+          value={Array.isArray(formData.conversation_rules) 
+            ? formData.conversation_rules.join('\n') 
+            : formData.conversation_rules || ''}
+          onChange={(e) => {
+            const lines = e.target.value.split('\n').filter(line => line.trim() !== '');
+            setFormData(prev => ({
+              ...prev,
+              conversation_rules: lines
+            }));
+          }}
+          placeholder="Enter conversation rules, one per line"
+          rows="4"
+          disabled={isSaving}
+        />
+        <small style={{ display: 'block', marginTop: '4px', color: '#888' }}>
+          Each line will be treated as a separate rule
+        </small>
       </div>
 
       <div className="form-actions">

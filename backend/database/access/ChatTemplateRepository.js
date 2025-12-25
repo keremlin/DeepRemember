@@ -21,11 +21,19 @@ class ChatTemplateRepository {
   async createTemplate(templateData) {
     try {
       // Use RETURNING id for PostgreSQL/Supabase compatibility
+      // Handle conversation_rules as JSON string if it's an array
+      const conversationRulesValue = templateData.conversation_rules 
+        ? (Array.isArray(templateData.conversation_rules) 
+            ? JSON.stringify(templateData.conversation_rules) 
+            : templateData.conversation_rules)
+        : null;
+
       const result = await this.db.execute(
         `INSERT INTO chattemplates (
           thema, persons, scenario, questions_and_thema, 
-          words_to_use, words_not_to_use, grammar_to_use, level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+          words_to_use, words_not_to_use, grammar_to_use, level,
+          communication_style, learning_goal, ai_role, conversation_rules
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
         {
           thema: templateData.thema || null,
           persons: templateData.persons || null,
@@ -34,7 +42,11 @@ class ChatTemplateRepository {
           words_to_use: templateData.words_to_use || null,
           words_not_to_use: templateData.words_not_to_use || null,
           grammar_to_use: templateData.grammar_to_use || null,
-          level: templateData.level || null
+          level: templateData.level || null,
+          communication_style: templateData.communication_style || null,
+          learning_goal: templateData.learning_goal || null,
+          ai_role: templateData.ai_role || null,
+          conversation_rules: conversationRulesValue
         }
       );
 
@@ -90,19 +102,35 @@ class ChatTemplateRepository {
         idParams
       );
 
-      return (templates || []).map(template => ({
-        id: template.id,
-        thema: template.thema,
-        persons: template.persons,
-        scenario: template.scenario,
-        questions_and_thema: template.questions_and_thema,
-        words_to_use: template.words_to_use,
-        words_not_to_use: template.words_not_to_use,
-        grammar_to_use: template.grammar_to_use,
-        level: template.level,
-        created_at: template.created_at,
-        updated_at: template.updated_at
-      }));
+      return (templates || []).map(template => {
+        // Parse conversation_rules if it's a JSON string
+        let conversationRules = template.conversation_rules;
+        if (conversationRules && typeof conversationRules === 'string') {
+          try {
+            conversationRules = JSON.parse(conversationRules);
+          } catch (e) {
+            // If parsing fails, keep as string
+          }
+        }
+
+        return {
+          id: template.id,
+          thema: template.thema,
+          persons: template.persons,
+          scenario: template.scenario,
+          questions_and_thema: template.questions_and_thema,
+          words_to_use: template.words_to_use,
+          words_not_to_use: template.words_not_to_use,
+          grammar_to_use: template.grammar_to_use,
+          level: template.level,
+          communication_style: template.communication_style,
+          learning_goal: template.learning_goal,
+          ai_role: template.ai_role,
+          conversation_rules: conversationRules,
+          created_at: template.created_at,
+          updated_at: template.updated_at
+        };
+      });
     } catch (error) {
       console.error('[ChatTemplate-REPO] Get user templates error:', error);
       throw error;
@@ -123,6 +151,16 @@ class ChatTemplateRepository {
         return null;
       }
 
+      // Parse conversation_rules if it's a JSON string
+      let conversationRules = template.conversation_rules;
+      if (conversationRules && typeof conversationRules === 'string') {
+        try {
+          conversationRules = JSON.parse(conversationRules);
+        } catch (e) {
+          // If parsing fails, keep as string
+        }
+      }
+
       return {
         id: template.id,
         thema: template.thema,
@@ -133,6 +171,10 @@ class ChatTemplateRepository {
         words_not_to_use: template.words_not_to_use,
         grammar_to_use: template.grammar_to_use,
         level: template.level,
+        communication_style: template.communication_style,
+        learning_goal: template.learning_goal,
+        ai_role: template.ai_role,
+        conversation_rules: conversationRules,
         created_at: template.created_at,
         updated_at: template.updated_at
       };
@@ -147,11 +189,19 @@ class ChatTemplateRepository {
    */
   async updateTemplate(templateId, templateData) {
     try {
+      // Handle conversation_rules as JSON string if it's an array
+      const conversationRulesValue = templateData.conversation_rules 
+        ? (Array.isArray(templateData.conversation_rules) 
+            ? JSON.stringify(templateData.conversation_rules) 
+            : templateData.conversation_rules)
+        : null;
+
       const result = await this.db.execute(
         `UPDATE chattemplates SET 
           thema = ?, persons = ?, scenario = ?, questions_and_thema = ?,
           words_to_use = ?, words_not_to_use = ?, grammar_to_use = ?,
-          level = ?, updated_at = CURRENT_TIMESTAMP
+          level = ?, communication_style = ?, learning_goal = ?, 
+          ai_role = ?, conversation_rules = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?`,
         {
           thema: templateData.thema || null,
@@ -162,6 +212,10 @@ class ChatTemplateRepository {
           words_not_to_use: templateData.words_not_to_use || null,
           grammar_to_use: templateData.grammar_to_use || null,
           level: templateData.level || null,
+          communication_style: templateData.communication_style || null,
+          learning_goal: templateData.learning_goal || null,
+          ai_role: templateData.ai_role || null,
+          conversation_rules: conversationRulesValue,
           id: templateId
         }
       );

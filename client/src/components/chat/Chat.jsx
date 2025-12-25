@@ -171,7 +171,13 @@ const Chat = ({
       words_to_use: template.words_to_use || '',
       words_not_to_use: template.words_not_to_use || '',
       grammar_to_use: template.grammar_to_use || '',
-      level: template.level || ''
+      level: template.level || '',
+      communication_style: template.communication_style || '',
+      learning_goal: template.learning_goal || '',
+      ai_role: template.ai_role || '',
+      conversation_rules: Array.isArray(template.conversation_rules) 
+        ? template.conversation_rules 
+        : (template.conversation_rules ? [template.conversation_rules] : [])
     }
 
     await handleSendMessage(JSON.stringify(templateJson, null, 2), {
@@ -428,7 +434,11 @@ const Chat = ({
               parsed.words_to_use !== undefined ||
               parsed.words_not_to_use !== undefined ||
               parsed.grammar_to_use !== undefined ||
-              parsed.level !== undefined
+              parsed.level !== undefined ||
+              parsed.communication_style !== undefined ||
+              parsed.learning_goal !== undefined ||
+              parsed.ai_role !== undefined ||
+              parsed.conversation_rules !== undefined
             )) {
               return false // This is a template, remove it
             }
