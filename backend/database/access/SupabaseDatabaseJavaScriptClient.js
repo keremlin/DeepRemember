@@ -310,6 +310,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       }
       
       let query = this.client.from(tableName);
+      const sqlLower = sql.toLowerCase().trim();
       
       switch (operation.toLowerCase()) {
         case 'select':
@@ -320,7 +321,11 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           }
           break;
         case 'count':
-          // Handle COUNT queries using count: 'exact'
+          // If COUNT query has LIKE clause, handle it in trySimpleQuery instead
+          if (sqlLower.includes('like')) {
+            return await this.executeComplexQuery(sql, params);
+          }
+          // Handle simple COUNT queries using count: 'exact'
           query = query.select('*', { count: 'exact', head: true });
           break;
         case 'insert':
@@ -452,9 +457,15 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       return false;
     }
     
-    // Simple COUNT queries should NOT be complex
-    if (sqlLower.startsWith('select count(*) as count from cards where user_id = ?')) {
-      return false; // Handle these in trySimpleQuery
+    // Simple COUNT queries without LIKE should NOT be complex (handled by parseSQL)
+    // COUNT queries WITH LIKE should be complex (handled by trySimpleQuery)
+    if (sqlLower.startsWith('select count(*) as count from cards where user_id = ?') && !sqlLower.includes('word like ?')) {
+      return false; // Handle these in parseSQL path
+    }
+    
+    // COUNT queries with LIKE should be handled by trySimpleQuery
+    if (sqlLower.startsWith('select count(*) as count from cards where user_id = ?') && sqlLower.includes('word like ?')) {
+      return true; // Force through executeComplexQuery -> trySimpleQuery
     }
     
     // Simple SELECT with ORDER BY should NOT be complex
@@ -690,8 +701,89 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     try {
       const sqlLower = sql.toLowerCase().trim();
       
-      // Handle COUNT queries
-      if (sqlLower.includes('count(*)') && sqlLower.includes('from')) {
+      // Handle COUNT stats on cards table FIRST (total, due, by state, with search)
+      // This MUST run before the generic COUNT handler to catch cards queries with LIKE
+      if (sqlLower.startsWith('select') && sqlLower.includes('count') && sqlLower.includes('from cards')) {
+        // Parse the specific query patterns from DeepRememberRepository
+        if (sqlLower.includes('where user_id = ?')) {
+          const paramValues = Object.values(params);
+          const userId = params.user_id || params.$1 || params.param0 || paramValues[0];
+          
+          // Total cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ?
+          // OR with search: SELECT COUNT(*) as count FROM cards WHERE user_id = ? AND word LIKE ?
+          const hasSearchInCount = sqlLower.includes('word like ?');
+          const hasOtherAnd = sqlLower.includes('and') && !hasSearchInCount;
+          
+          // Handle simple count (no AND) or count with search (has word LIKE)
+          // Skip if it has other AND conditions (due, state, etc.) - those are handled below
+          if (!hasOtherAnd) {
+            if (userId) {
+              let countQuery = this.client
+                .from('cards')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+              
+              // Handle LIKE clause for word search
+              if (hasSearchInCount) {
+                // Search pattern is param1 (second parameter after user_id)
+                const searchPattern = params.param1 || params.search || params.$2 || paramValues[1];
+                if (searchPattern && typeof searchPattern === 'string') {
+                  countQuery = countQuery.ilike('word', searchPattern);
+                  console.log('[SupabaseDB] COUNT query with search:', searchPattern);
+                } else {
+                  console.log('[SupabaseDB] COUNT query - search pattern not found. Params:', params, 'Values:', paramValues);
+                }
+              }
+              
+              const { count, error } = await countQuery;
+              if (error) {
+                console.error('[SupabaseDB] COUNT query error:', error);
+                throw error;
+              }
+              
+              console.log('[SupabaseDB] COUNT result:', count, 'for userId:', userId, 'hasSearch:', hasSearchInCount);
+              return [{ count: count || 0 }];
+            }
+          }
+          // Due cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ? AND due <= ?
+          else if (sqlLower.includes('due <= ?')) {
+            const userId = params.user_id || params.$1;
+            const dueTime = params.due || params.$2;
+            
+            if (userId && dueTime) {
+              const dueIso = typeof dueTime === 'string' ? dueTime : new Date(dueTime).toISOString();
+              const { count, error } = await this.client
+                .from('cards')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .or(`due.lte.${dueIso},next_review.lte.${dueIso}`);
+              if (error) throw error;
+              
+              return [{ count: count || 0 }];
+            }
+          }
+          // State cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ? AND state = 0/1/2
+          else if (sqlLower.includes('state =')) {
+            const userId = params.user_id || params.$1;
+            const stateMatch = sqlLower.match(/state\s*=\s*(\d+)/i);
+            
+            if (userId && stateMatch) {
+              const stateValue = parseInt(stateMatch[1], 10);
+              const { count, error } = await this.client
+                .from('cards')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .eq('state', stateValue);
+              if (error) throw error;
+              
+              return [{ count: count || 0 }];
+            }
+          }
+        }
+      }
+      
+      // Handle generic COUNT queries (but skip cards queries - handled above)
+      if (sqlLower.includes('count(*)') && sqlLower.includes('from') && !sqlLower.includes('from cards')) {
         const tableMatch = sqlLower.match(/from\s+(\w+)/);
         if (tableMatch) {
           const tableName = tableMatch[1];
@@ -752,12 +844,25 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         }
       }
 
-      // Handle simple SELECT with WHERE and ORDER BY
+      // Handle simple SELECT with WHERE and ORDER BY (with optional LIKE search, LIMIT, OFFSET)
       if (sqlLower.startsWith('select') && sqlLower.includes('from cards') && sqlLower.includes('where user_id = ?') && sqlLower.includes('order by')) {
-        const userId = params.user_id || params.$1 || Object.values(params)[0];
+        // Extract parameters in order: user_id, search (if LIKE), limit, offset
+        const paramValues = Object.values(params);
+        const userId = params.user_id || params.$1 || params.param0 || paramValues[0];
         
         if (userId) {
           let query = this.client.from('cards').select('*').eq('user_id', userId);
+          
+          // Extract and handle LIKE clause for word search
+          if (sqlLower.includes('word like ?')) {
+            // Search pattern is the second parameter (param1 or paramValues[1])
+            const searchPattern = params.param1 || params.search || params.$2 || paramValues[1];
+            
+            if (searchPattern && typeof searchPattern === 'string') {
+              // Supabase ilike expects the pattern with % wildcards
+              query = query.ilike('word', searchPattern);
+            }
+          }
           
           // Extract ORDER BY
           const orderMatch = sql.match(/order\s+by\s+(\w+)\s+(asc|desc)/i);
@@ -767,6 +872,32 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
             query = query.order(column, { ascending: direction === 'asc' });
           }
           
+          // Extract LIMIT and OFFSET
+          // Parameter order: [0] = user_id, [1] = search (if exists), [2] = limit, [3] = offset
+          let limitValue = null;
+          const hasSearch = sqlLower.includes('word like ?');
+          
+          if (sqlLower.includes('limit ?')) {
+            // Limit is param2 if search exists, otherwise param1
+            const limitIndex = hasSearch ? 2 : 1;
+            limitValue = params[`param${limitIndex}`] || params.limit || paramValues[limitIndex];
+            if (limitValue !== undefined && limitValue !== null) {
+              limitValue = parseInt(limitValue, 10);
+              query = query.limit(limitValue);
+            }
+          }
+          
+          if (sqlLower.includes('offset ?')) {
+            // Offset is param3 if search exists, otherwise param2
+            const offsetIndex = hasSearch ? 3 : 2;
+            const offsetValue = params[`param${offsetIndex}`] || params.offset || paramValues[offsetIndex];
+            if (offsetValue !== undefined && offsetValue !== null) {
+              const offset = parseInt(offsetValue, 10);
+              const limit = limitValue || 1000;
+              query = query.range(offset, offset + limit - 1);
+            }
+          }
+          
           const { data, error } = await query;
           if (error) throw error;
           
@@ -774,63 +905,6 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         }
       }
       
-      // Handle COUNT stats on cards table (total, due, by state)
-      if (sqlLower.startsWith('select') && sqlLower.includes('count') && sqlLower.includes('from cards')) {
-        
-        
-        // Parse the specific query patterns from DeepRememberRepository
-        if (sqlLower.includes('where user_id = ?')) {
-          // Total cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ?
-          if (!sqlLower.includes('and')) {
-            const userId = params.user_id || params.$1;
-            
-            if (userId) {
-              const { count, error } = await this.client
-                .from('cards')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', userId);
-              if (error) throw error;
-              
-              return [{ count: count || 0 }];
-            }
-          }
-          // Due cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ? AND due <= ?
-          else if (sqlLower.includes('due <= ?')) {
-            const userId = params.user_id || params.$1;
-            const dueTime = params.due || params.$2;
-            
-            if (userId && dueTime) {
-              const dueIso = typeof dueTime === 'string' ? dueTime : new Date(dueTime).toISOString();
-              const { count, error } = await this.client
-                .from('cards')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', userId)
-                .or(`due.lte.${dueIso},next_review.lte.${dueIso}`);
-              if (error) throw error;
-              
-              return [{ count: count || 0 }];
-            }
-          }
-          // State cards: SELECT COUNT(*) as count FROM cards WHERE user_id = ? AND state = 0/1/2
-          else if (sqlLower.includes('state =')) {
-            const userId = params.user_id || params.$1;
-            const stateMatch = sqlLower.match(/state\s*=\s*(\d+)/i);
-            
-            if (userId && stateMatch) {
-              const stateValue = parseInt(stateMatch[1], 10);
-              const { count, error } = await this.client
-                .from('cards')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', userId)
-                .eq('state', stateValue);
-              if (error) throw error;
-              
-              return [{ count: count || 0 }];
-            }
-          }
-        }
-      }
-
       // Handle label counts specifically
       if (sqlLower.includes('from labels') && sqlLower.includes('left join card_labels')) {
         // Build an approximate using two queries and merge in memory

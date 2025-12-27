@@ -1264,31 +1264,86 @@ router.post('/chat-voice', authMiddleware.verifyToken, voiceChatUpload.single('a
 });
 
 // Get all cards for a user (not just due cards)
+// Supports pagination with query parameters: limit, offset
+// Supports sorting with query parameters: orderBy (default: 'word'), orderDir (default: 'ASC')
+// Supports search with query parameter: search (filters by word using LIKE pattern)
 router.get('/all-cards/:userId', authMiddleware.verifyToken, authMiddleware.checkResourceOwnership('userId'), async (req, res) => {
   try {
     const { userId } = req.params;
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : undefined;
+    const offset = req.query.offset ? parseInt(req.query.offset, 10) : undefined;
+    const orderBy = req.query.orderBy || 'word';
+    const orderDir = req.query.orderDir || 'ASC';
+    const search = req.query.search ? req.query.search.trim() : '';
+    
+    console.log('[DeepRemember] Get all cards - search:', search, 'limit:', limit, 'offset:', offset);
     
     if (useDatabase && deepRememberRepository) {
-      // Use database
-      const allCards = await deepRememberRepository.getUserCards(userId);
-      
-      res.json({
-        success: true,
-        cards: allCards,
-        total: allCards.length
+      // Use database with pagination and search
+      const result = await deepRememberRepository.getUserCards(userId, {
+        limit,
+        offset,
+        orderBy,
+        orderDir,
+        search: search || undefined // Pass undefined instead of empty string
       });
+      
+      // Handle backward compatibility (when no pagination params, returns array)
+      if (Array.isArray(result)) {
+        res.json({
+          success: true,
+          cards: result,
+          total: result.length
+        });
+      } else {
+        res.json({
+          success: true,
+          cards: result.cards,
+          total: result.total,
+          limit: result.limit,
+          offset: result.offset,
+          hasMore: result.hasMore
+        });
+      }
     } else {
       // Use memory storage
       if (!userCards.has(userId)) {
-        return res.json({ cards: [] });
+        return res.json({ 
+          success: true,
+          cards: [],
+          total: 0
+        });
       }
       
-      const cards = userCards.get(userId);
+      let cards = userCards.get(userId);
+      
+      // Filter by search term if provided
+      if (search && search.trim()) {
+        const searchLower = search.trim().toLowerCase();
+        cards = cards.filter(card => 
+          (card.word || '').toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Sort alphabetically by word
+      cards = [...cards].sort((a, b) => {
+        const wordA = (a.word || '').toLowerCase();
+        const wordB = (b.word || '').toLowerCase();
+        return orderDir === 'DESC' ? wordB.localeCompare(wordA) : wordA.localeCompare(wordB);
+      });
+      
+      const total = cards.length;
+      const startIndex = offset || 0;
+      const endIndex = limit ? startIndex + limit : cards.length;
+      const paginatedCards = cards.slice(startIndex, endIndex);
       
       res.json({
         success: true,
-        cards: cards,
-        total: cards.length
+        cards: paginatedCards,
+        total: total,
+        limit: limit || null,
+        offset: offset || 0,
+        hasMore: endIndex < total
       });
     }
   } catch (error) {

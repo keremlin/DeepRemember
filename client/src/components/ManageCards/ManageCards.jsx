@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useToast } from '../ToastProvider'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl } from '../../config/api'
@@ -6,13 +6,22 @@ import EditCard from './EditCard'
 import AddList from './AddList'
 import CardLabelList from '../labels/CardLabelList'
 import AreYouSureModal from '../AreYouSureModal'
+import SearchComponent from './SearchComponent'
 import './ManageCards.css'
+
+const CARDS_PER_PAGE = 40
 
 const ManageCards = ({ currentUserId, onCardDeleted }) => {
   const { showSuccess, showError } = useToast()
   const { authenticatedFetch, user } = useAuth()
   const [allCards, setAllCards] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [currentOffset, setCurrentOffset] = useState(0)
+  const [totalCards, setTotalCards] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const scrollContainerRef = useRef(null)
   const [editingCard, setEditingCard] = useState(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isAddListOpen, setIsAddListOpen] = useState(false)
@@ -92,13 +101,30 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     }
   }
 
-  // Load all cards
-  const loadAllCards = async (showAlert = true) => {
+  // Load cards with pagination
+  const loadCards = async (offset = 0, append = false, showAlert = true, search = '') => {
     if (!currentUserId) return
     
-    setIsLoading(true)
+    if (append) {
+      setIsLoadingMore(true)
+    } else {
+      setIsLoading(true)
+      setCurrentOffset(0)
+    }
+    
     try {
-      const response = await authenticatedFetch(getApiUrl(`/deepRemember/all-cards/${currentUserId}`), {
+      const url = new URL(getApiUrl(`/deepRemember/all-cards/${currentUserId}`))
+      url.searchParams.set('limit', CARDS_PER_PAGE.toString())
+      url.searchParams.set('offset', offset.toString())
+      url.searchParams.set('orderBy', 'word')
+      url.searchParams.set('orderDir', 'ASC')
+      
+      // Add search parameter if provided
+      if (search && search.trim()) {
+        url.searchParams.set('search', search.trim())
+      }
+      
+      const response = await authenticatedFetch(url.toString(), {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
@@ -113,21 +139,62 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
       const data = await response.json()
       
       if (data.success) {
-        setAllCards(data.cards || [])
-        if (data.cards && data.cards.length === 0 && showAlert) {
-          showError('No cards found!')
+        if (append) {
+          setAllCards(prevCards => [...prevCards, ...(data.cards || [])])
+        } else {
+          setAllCards(data.cards || [])
+        }
+        setTotalCards(data.total || 0)
+        setHasMore(data.hasMore !== undefined ? data.hasMore : (data.cards && data.cards.length === CARDS_PER_PAGE))
+        setCurrentOffset(offset + (data.cards?.length || 0))
+        
+        if (!append && data.cards && data.cards.length === 0 && showAlert) {
+          if (search && search.trim()) {
+            showError(`No cards found matching "${search}"!`)
+          } else {
+            showError('No cards found!')
+          }
         }
       } else {
         throw new Error(data.error || 'Failed to load cards')
       }
     } catch (error) {
-      console.error('Error loading all cards:', error)
+      console.error('Error loading cards:', error)
       if (showAlert) {
-        showError(`Failed to load all cards: ${error.message}`)
+        showError(`Failed to load cards: ${error.message}`)
       }
     } finally {
-      setIsLoading(false)
+      if (append) {
+        setIsLoadingMore(false)
+      } else {
+        setIsLoading(false)
+      }
     }
+  }
+
+  // Load more cards (for infinite scroll)
+  const loadMoreCards = useCallback(async () => {
+    if (isLoadingMore || !hasMore || !currentUserId) return
+    
+    await loadCards(currentOffset, true, false, searchQuery)
+  }, [currentOffset, hasMore, isLoadingMore, currentUserId, searchQuery])
+
+  // Reset and load all cards from beginning (for refresh)
+  const loadAllCards = async (showAlert = true) => {
+    setAllCards([])
+    setCurrentOffset(0)
+    setHasMore(true)
+    await loadCards(0, false, showAlert, searchQuery)
+  }
+
+  // Handle search
+  const handleSearch = (query) => {
+    const trimmedQuery = query.trim()
+    setSearchQuery(trimmedQuery)
+    setAllCards([])
+    setCurrentOffset(0)
+    setHasMore(true)
+    loadCards(0, false, false, trimmedQuery)
   }
 
   // Delete card
@@ -223,7 +290,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
   }
 
   const handleCardUpdated = async () => {
-    // Reload cards after successful update
+    // Reload cards from beginning after successful update
     await loadAllCards(false)
     // Notify parent component
     if (onCardDeleted) {
@@ -257,6 +324,25 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
     }
   }, [currentUserId])
 
+  // Infinite scroll handler
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container
+      // Load more when user is within 200px of the bottom
+      if (scrollHeight - scrollTop - clientHeight < 200 && hasMore && !isLoadingMore && !isLoading) {
+        loadMoreCards()
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll)
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+    }
+  }, [hasMore, isLoadingMore, isLoading, loadMoreCards])
+
   if (!currentUserId) {
     return (
       <div className="manage-cards-container">
@@ -276,6 +362,12 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
         <div className="cards-header">
           <h3><span className="material-symbols-outlined">menu_book</span> All My Cards</h3>
           <div className="header-actions">
+            <SearchComponent 
+              onSearch={handleSearch} 
+              totalResults={searchQuery ? totalCards : null}
+              isSearching={isLoading && searchQuery !== ''}
+              searchQuery={searchQuery}
+            />
             <div 
               className="btn-add-list-wrapper"
               onMouseEnter={() => setShowLabelTooltip(true)}
@@ -316,7 +408,7 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
           </div>
         </div>
         
-        {isLoading ? (
+        {isLoading && allCards.length === 0 ? (
           <div className="loading-message">
             <p>Loading cards...</p>
           </div>
@@ -325,7 +417,10 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
             <p>No cards found. Create your first card to get started!</p>
           </div>
         ) : (
-          <div className="all-cards">
+          <div 
+            className="all-cards" 
+            ref={scrollContainerRef}
+          >
             {allCards.map((card, index) => (
               <div 
                 key={card.id || index} 
@@ -369,6 +464,16 @@ const ManageCards = ({ currentUserId, onCardDeleted }) => {
                 </div>
               </div>
             ))}
+            {isLoadingMore && (
+              <div className="loading-more-message">
+                <p>Loading more cards...</p>
+              </div>
+            )}
+            {!hasMore && allCards.length > 0 && (
+              <div className="no-more-cards-message">
+                <p>All cards loaded ({totalCards} total)</p>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -117,13 +117,83 @@ class DeepRememberRepository {
 
   /**
    * Get all cards for a user
+   * @param {string} userId - User ID
+   * @param {Object} options - Optional pagination and sorting options
+   * @param {number} options.limit - Maximum number of cards to return
+   * @param {number} options.offset - Number of cards to skip
+   * @param {string} options.orderBy - Column to order by (default: 'word')
+   * @param {string} options.orderDir - Order direction 'ASC' or 'DESC' (default: 'ASC')
+   * @param {string} options.search - Search term to filter cards by word (uses LIKE pattern)
+   * @returns {Promise<Object>} Object with cards array and total count
    */
-  async getUserCards(userId) {
+  async getUserCards(userId, options = {}) {
     try {
-      const cards = await this.db.query(
-        'SELECT * FROM cards WHERE user_id = ? ORDER BY created_at ASC',
-        { user_id: userId }
-      );
+      const { limit, offset, orderBy = 'word', orderDir = 'ASC', search } = options;
+      
+      // Debug logging
+      dbLog('[SRS-REPO] getUserCards called with:', { userId, limit, offset, orderBy, orderDir, search });
+      
+      // Validate orderBy to prevent SQL injection
+      const allowedOrderBy = ['word', 'created_at', 'due', 'state'];
+      const safeOrderBy = allowedOrderBy.includes(orderBy) ? orderBy : 'word';
+      const safeOrderDir = orderDir.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      
+      // Build WHERE clause with optional search
+      let whereClause = 'WHERE user_id = ?';
+      const queryParams = [userId]; // Use array to ensure correct parameter order
+      
+      if (search && search.trim()) {
+        const searchPattern = `%${search.trim()}%`;
+        whereClause += ' AND word LIKE ?';
+        queryParams.push(searchPattern);
+        dbLog('[SRS-REPO] Adding search filter:', searchPattern);
+      }
+      
+      // Build query with optional pagination
+      let query = `SELECT * FROM cards ${whereClause} ORDER BY ${safeOrderBy} ${safeOrderDir}`;
+      
+      if (limit !== undefined && limit !== null) {
+        query += ' LIMIT ?';
+        queryParams.push(limit);
+      }
+      
+      if (offset !== undefined && offset !== null && limit !== undefined && limit !== null) {
+        query += ' OFFSET ?';
+        queryParams.push(offset);
+      }
+      
+      // Convert array to object for database query method (maintaining order)
+      const params = {};
+      queryParams.forEach((value, index) => {
+        params[`param${index}`] = value;
+      });
+      
+      dbLog('[SRS-REPO] Query:', query);
+      dbLog('[SRS-REPO] Params array:', queryParams);
+      dbLog('[SRS-REPO] Params object:', params);
+      
+      const cards = await this.db.query(query, params);
+      dbLog('[SRS-REPO] Cards returned:', cards.length);
+      
+      // Get total count for pagination (with same search filter)
+      // Always get count when pagination or search is enabled
+      let totalCount = 0;
+      if (limit !== undefined || offset !== undefined || (search && search.trim())) {
+        const countQuery = `SELECT COUNT(*) as count FROM cards ${whereClause}`;
+        const countParamsArray = [userId];
+        if (search && search.trim()) {
+          countParamsArray.push(`%${search.trim()}%`);
+        }
+        
+        // Convert array to object for database query method
+        const countParams = {};
+        countParamsArray.forEach((value, index) => {
+          countParams[`param${index}`] = value;
+        });
+        
+        const countResult = await this.db.queryOne(countQuery, countParams);
+        totalCount = countResult?.count || 0;
+      }
 
       // Get labels for each card
       const cardsWithLabels = await Promise.all(
@@ -149,7 +219,19 @@ class DeepRememberRepository {
         })
       );
 
-      return cardsWithLabels;
+      // If no pagination, return just the array for backward compatibility
+      if (limit === undefined && offset === undefined) {
+        return cardsWithLabels;
+      }
+      
+      // Return paginated result with total count
+      return {
+        cards: cardsWithLabels,
+        total: totalCount,
+        limit: limit || null,
+        offset: offset || 0,
+        hasMore: offset + cardsWithLabels.length < totalCount
+      };
     } catch (error) {
       console.error('[SRS-REPO] Get user cards error:', error);
       throw error;
