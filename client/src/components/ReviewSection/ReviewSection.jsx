@@ -339,6 +339,15 @@ const ReviewSection = ({
       return
     }
     
+    // "0" key to play word audio - works anytime when card is loaded
+    if (event.key === '0' && currentCard?.word) {
+      event.preventDefault()
+      setPressedKey('0') // Track pressed key for shining effect
+      setTimeout(() => setPressedKey(null), 300) // Clear after 300ms
+      playWordAudio()
+      return
+    }
+    
     // Rating shortcuts (Z, X, C, V, B) - only work when answer is shown
     if (showAnswer && currentCard) {
       let rating = 0
@@ -481,8 +490,9 @@ const ReviewSection = ({
                       title={
                         isCreatingWordAudio 
                           ? 'Creating audio...' 
-                          : 'Play word audio'
+                          : 'Play word audio (Press 0)'
                       }
+                      pressedKey={pressedKey}
                     />
                   </div>
                 )}

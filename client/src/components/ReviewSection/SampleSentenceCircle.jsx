@@ -10,7 +10,11 @@ const SampleSentenceCircle = ({
   pressedKey = null,
   index = null
 }) => {
-  const isShining = pressedKey && index !== null && pressedKey === (index + 1).toString()
+  // Shining effect for number type (1-9) or play type with "0" key
+  const isShining = pressedKey && (
+    (type === 'number' && index !== null && pressedKey === (index + 1).toString()) ||
+    (type === 'play' && pressedKey === '0')
+  )
   
   return (
     <button 
