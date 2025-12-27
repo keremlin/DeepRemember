@@ -12,6 +12,7 @@ import './WordList.css'
 const WordList = ({
   onNavigateToWelcome,
   onNavigateToPlayer,
+  onShowCards,
   onNavigateToUserManagement,
   onNavigateToManagement,
   onNavigateToChat,
@@ -179,6 +180,7 @@ const WordList = ({
     <Page
       onNavigateToWelcome={onNavigateToWelcome}
       onNavigateToPlayer={onNavigateToPlayer}
+      onShowCards={onShowCards}
       onNavigateToUserManagement={onNavigateToUserManagement}
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToChat={onNavigateToChat}

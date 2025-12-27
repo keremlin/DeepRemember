@@ -137,6 +137,7 @@ function AppContent() {
           <WordList 
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
+            onShowCards={() => navigateToDeepRemember(true)}
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
