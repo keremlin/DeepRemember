@@ -127,7 +127,43 @@ class GoogleDrive extends IFileSystem {
           access_token: this.config.accessToken,
           refresh_token: this.config.refreshToken
         });
+      } else if (this.config.refreshToken) {
+        // If we only have refresh token, set it and let it refresh
+        this.oauth2Client.setCredentials({
+          refresh_token: this.config.refreshToken
+        });
       }
+
+      // Listen for token refresh events to capture new access tokens
+      this.oauth2Client.on('tokens', (tokens) => {
+        if (tokens.access_token) {
+          // Update the stored access token
+          this.config.accessToken = tokens.access_token;
+          // Update environment variable
+          if (process.env.GOOGLE_ACCESS_TOKEN !== undefined) {
+            process.env.GOOGLE_ACCESS_TOKEN = tokens.access_token;
+          }
+          // Persist to .env file
+          this.persistTokensToEnv({
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token || this.config.refreshToken
+          });
+          console.log('[GOOGLE_DRIVE] Access token refreshed automatically');
+        }
+        if (tokens.refresh_token) {
+          // Update refresh token if provided (rare, but possible)
+          this.config.refreshToken = tokens.refresh_token;
+          if (process.env.GOOGLE_REFRESH_TOKEN !== undefined) {
+            process.env.GOOGLE_REFRESH_TOKEN = tokens.refresh_token;
+          }
+          // Persist to .env file
+          this.persistTokensToEnv({
+            access_token: this.config.accessToken,
+            refresh_token: tokens.refresh_token
+          });
+          console.log('[GOOGLE_DRIVE] Refresh token updated');
+        }
+      });
 
       // Create Drive API instance
       this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
@@ -136,10 +172,75 @@ class GoogleDrive extends IFileSystem {
       await this.ensureBasePath();
 
       this.isInitialized = true;
-      console.log('[GOOGLE_DRIVE] Initialized successfully');
+      console.log('[GOOGLE_DRIVE] Initialized successfully with automatic token refresh');
     } catch (error) {
       console.error('[GOOGLE_DRIVE] Initialization failed:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Persist tokens to .env file
+   * @private
+   */
+  persistTokensToEnv(tokens) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Find .env file (check common locations)
+      const envPaths = [
+        path.join(process.cwd(), '.env'),
+        path.join(__dirname, '..', '..', '.env'),
+        path.join(__dirname, '..', '.env')
+      ];
+      
+      let envPath = null;
+      for (const candidatePath of envPaths) {
+        if (fs.existsSync(candidatePath)) {
+          envPath = candidatePath;
+          break;
+        }
+      }
+      
+      if (!envPath) {
+        console.warn('[GOOGLE_DRIVE] .env file not found, skipping token persistence');
+        return;
+      }
+      
+      // Read .env file
+      let envContent = fs.readFileSync(envPath, 'utf8');
+      
+      // Update or add GOOGLE_ACCESS_TOKEN
+      if (tokens.access_token) {
+        if (envContent.includes('GOOGLE_ACCESS_TOKEN=')) {
+          envContent = envContent.replace(
+            /GOOGLE_ACCESS_TOKEN=.*/g,
+            `GOOGLE_ACCESS_TOKEN=${tokens.access_token}`
+          );
+        } else {
+          envContent += `\nGOOGLE_ACCESS_TOKEN=${tokens.access_token}\n`;
+        }
+      }
+      
+      // Update or add GOOGLE_REFRESH_TOKEN
+      if (tokens.refresh_token) {
+        if (envContent.includes('GOOGLE_REFRESH_TOKEN=')) {
+          envContent = envContent.replace(
+            /GOOGLE_REFRESH_TOKEN=.*/g,
+            `GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`
+          );
+        } else {
+          envContent += `\nGOOGLE_REFRESH_TOKEN=${tokens.refresh_token}\n`;
+        }
+      }
+      
+      // Write back to .env file
+      fs.writeFileSync(envPath, envContent, 'utf8');
+      console.log('[GOOGLE_DRIVE] Tokens persisted to .env file');
+    } catch (error) {
+      console.error('[GOOGLE_DRIVE] Failed to persist tokens to .env:', error.message);
+      // Don't throw - token refresh still works in memory
     }
   }
 
@@ -164,13 +265,13 @@ class GoogleDrive extends IFileSystem {
    * Find or create a folder by name in the specified parent folder
    */
   async findOrCreateFolder(folderName, parentId) {
-    try {
-      // Check cache first
-      const cacheKey = `${parentId}/${folderName}`;
-      if (this.folderCache.has(cacheKey)) {
-        return this.folderCache.get(cacheKey);
-      }
+    // Check cache first
+    const cacheKey = `${parentId}/${folderName}`;
+    if (this.folderCache.has(cacheKey)) {
+      return this.folderCache.get(cacheKey);
+    }
 
+    return await this.executeWithTokenRefresh(async () => {
       // Search for existing folder
       const response = await this.drive.files.list({
         q: `name='${folderName}' and parents in '${parentId}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
@@ -196,10 +297,10 @@ class GoogleDrive extends IFileSystem {
       const folderId = folderResponse.data.id;
       this.folderCache.set(cacheKey, folderId);
       return folderId;
-    } catch (error) {
+    }, `findOrCreateFolder(${folderName})`).catch(error => {
       console.error(`[GOOGLE_DRIVE] Error finding/creating folder ${folderName}:`, error);
       throw error;
-    }
+    });
   }
 
   /**
@@ -240,17 +341,17 @@ class GoogleDrive extends IFileSystem {
    * Find a file by name in the specified parent folder
    */
   async findFile(fileName, parentId) {
-    try {
+    return await this.executeWithTokenRefresh(async () => {
       const response = await this.drive.files.list({
         q: `name='${fileName}' and parents in '${parentId}' and trashed=false`,
         fields: 'files(id, name, mimeType)'
       });
 
       return response.data.files.length > 0 ? response.data.files[0].id : null;
-    } catch (error) {
+    }, `findFile(${fileName})`).catch(error => {
       console.error(`[GOOGLE_DRIVE] Error finding file ${fileName}:`, error);
       throw error;
-    }
+    });
   }
 
   /**
@@ -423,15 +524,17 @@ class GoogleDrive extends IFileSystem {
         console.log(`[GOOGLE_DRIVE] File exists in Google Drive: ${filePath}, downloading to local`);
         
         try {
-          // Download file from Google Drive
-          const response = await this.drive.files.get({
-            fileId: existingFileId,
-            alt: 'media'
-          }, {
-            responseType: 'arraybuffer'
-          });
-          
-          const fileData = Buffer.from(response.data);
+          // Download file from Google Drive with token refresh handling
+          const fileData = await this.executeWithTokenRefresh(async () => {
+            const response = await this.drive.files.get({
+              fileId: existingFileId,
+              alt: 'media'
+            }, {
+              responseType: 'arraybuffer'
+            });
+            
+            return Buffer.from(response.data);
+          }, `writeFile.download(${filePath})`);
           
           // Save to local fallback
           if (this.config.fallbackToLocal) {
@@ -466,22 +569,24 @@ class GoogleDrive extends IFileSystem {
       stream.push(buffer);
       stream.push(null); // End the stream
       
-      // Create file in Google Drive
-      const metadata = {
-        name: fileName,
-        parents: [parentId]
-      };
-      
-      const response = await this.drive.files.create({
-        requestBody: metadata,
-        media: {
-          mimeType: options.mimeType || 'text/plain',
-          body: stream
-        },
-        fields: 'id'
-      });
-      
-      const fileId = response.data.id;
+      // Create file in Google Drive with token refresh handling
+      const fileId = await this.executeWithTokenRefresh(async () => {
+        const metadata = {
+          name: fileName,
+          parents: [parentId]
+        };
+        
+        const response = await this.drive.files.create({
+          requestBody: metadata,
+          media: {
+            mimeType: options.mimeType || 'text/plain',
+            body: stream
+          },
+          fields: 'id'
+        });
+        
+        return response.data.id;
+      }, `writeFile.create(${filePath})`);
       
       // Also save to local fallback
       if (this.config.fallbackToLocal) {
@@ -526,10 +631,10 @@ class GoogleDrive extends IFileSystem {
   async readdirAsync(dirPath, options = {}) {
     await this.initialize();
     
-    try {
-      // Resolve target folder ID (handles '', '.', '/', and nested folders)
-      const folderId = await this.resolveFolderId(dirPath);
-      
+    // Resolve target folder ID (handles '', '.', '/', and nested folders)
+    const folderId = await this.resolveFolderId(dirPath);
+    
+    return await this.executeWithTokenRefresh(async () => {
       const response = await this.drive.files.list({
         q: `parents in '${folderId}' and trashed=false`,
         fields: 'files(id, name, mimeType)',
@@ -543,10 +648,10 @@ class GoogleDrive extends IFileSystem {
       }));
       
       return files.map(file => file.name);
-    } catch (error) {
+    }, `readdirAsync(${dirPath})`).catch(error => {
       console.error(`[GOOGLE_DRIVE] Error reading directory ${dirPath}:`, error);
       throw error;
-    }
+    });
   }
 
   /**
@@ -564,22 +669,22 @@ class GoogleDrive extends IFileSystem {
   async unlinkAsync(filePath) {
     await this.initialize();
     
-    try {
-      const fileId = await this.pathToFileId(filePath);
-      
-      if (!fileId) {
-        throw new Error(`File not found: ${filePath}`);
-      }
-      
+    const fileId = await this.pathToFileId(filePath);
+    
+    if (!fileId) {
+      throw new Error(`File not found: ${filePath}`);
+    }
+    
+    return await this.executeWithTokenRefresh(async () => {
       await this.drive.files.delete({
         fileId: fileId
       });
       
       console.log(`[GOOGLE_DRIVE] File deleted: ${filePath}`);
-    } catch (error) {
+    }, `unlinkAsync(${filePath})`).catch(error => {
       console.error(`[GOOGLE_DRIVE] Error deleting file ${filePath}:`, error);
       throw error;
-    }
+    });
   }
 
   /**
@@ -606,22 +711,29 @@ class GoogleDrive extends IFileSystem {
             return;
           }
           
-          const response = await this.drive.files.get({
-            fileId: fileId,
-            alt: 'media'
-          }, {
-            responseType: 'stream'
-          });
-          
-          response.data.on('data', (chunk) => {
-            stream.push(chunk);
-          });
-          
-          response.data.on('end', () => {
-            stream.push(null);
-          });
-          
-          response.data.on('error', (error) => {
+          // Use executeWithTokenRefresh for the API call
+          await this.executeWithTokenRefresh(async () => {
+            const response = await this.drive.files.get({
+              fileId: fileId,
+              alt: 'media'
+            }, {
+              responseType: 'stream'
+            });
+            
+            response.data.on('data', (chunk) => {
+              stream.push(chunk);
+            });
+            
+            response.data.on('end', () => {
+              stream.push(null);
+            });
+            
+            response.data.on('error', (error) => {
+              stream.emit('error', error);
+            });
+            
+            return response;
+          }, `createReadStream(${filePath})`).catch(error => {
             stream.emit('error', error);
           });
           
@@ -704,13 +816,73 @@ class GoogleDrive extends IFileSystem {
    */
   async refreshToken() {
     if (!this.oauth2Client) {
-      throw new Error('OAuth2 client not initialized');
+      await this.initialize();
     }
     
-    const { credentials } = await this.oauth2Client.refreshAccessToken();
-    this.oauth2Client.setCredentials(credentials);
+    if (!this.config.refreshToken) {
+      throw new Error('No refresh token available. Please re-authenticate using getAuthUrl()');
+    }
     
-    return credentials;
+    try {
+      const { credentials } = await this.oauth2Client.refreshAccessToken();
+      this.oauth2Client.setCredentials(credentials);
+      
+      // Update stored tokens
+      if (credentials.access_token) {
+        this.config.accessToken = credentials.access_token;
+        if (process.env.GOOGLE_ACCESS_TOKEN !== undefined) {
+          process.env.GOOGLE_ACCESS_TOKEN = credentials.access_token;
+        }
+      }
+      
+      // Persist to .env file
+      this.persistTokensToEnv({
+        access_token: credentials.access_token,
+        refresh_token: credentials.refresh_token || this.config.refreshToken
+      });
+      
+      console.log('[GOOGLE_DRIVE] Access token refreshed manually');
+      return credentials;
+    } catch (error) {
+      console.error('[GOOGLE_DRIVE] Failed to refresh access token:', error.message);
+      const authUrl = this.getAuthUrl();
+      throw new Error(`Token refresh failed. Please re-authenticate: ${authUrl}`);
+    }
+  }
+
+  /**
+   * Execute a Google Drive API operation with automatic token refresh on 401 errors
+   * @private
+   * @param {Function} operation - The API operation to execute (should return a Promise)
+   * @param {string} operationName - Name of the operation for logging
+   * @returns {Promise} - Result of the operation
+   */
+  async executeWithTokenRefresh(operation, operationName) {
+    try {
+      return await operation();
+    } catch (error) {
+      // Handle token expiration - try to refresh and retry once
+      const isAuthError = error.code === 401 || 
+                         (error.message && error.message.includes('Invalid Credentials')) ||
+                         (error.response && error.response.status === 401);
+      
+      if (isAuthError) {
+        try {
+          console.log(`[GOOGLE_DRIVE] Access token expired for ${operationName}, attempting to refresh...`);
+          await this.refreshToken();
+          
+          // Retry the operation
+          console.log(`[GOOGLE_DRIVE] Token refreshed successfully, retrying ${operationName}...`);
+          return await operation();
+        } catch (refreshError) {
+          console.error(`[GOOGLE_DRIVE] Token refresh failed for ${operationName}:`, refreshError.message);
+          throw new Error(`Authentication failed. Please re-authenticate: ${this.getAuthUrl()}`);
+        }
+      }
+      
+      // Re-throw non-authentication errors
+      throw error;
+    }
   }
 }
 
