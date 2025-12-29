@@ -4,6 +4,7 @@ import Samples from './Samples'
 import SampleSentenceCircle from './SampleSentenceCircle'
 import CardLabelList from '../labels/CardLabelList'
 import DueCardsCounter from './DueCardsCounter'
+import ActivityTimer from '../ActivityTimer/ActivityTimer'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import './ReviewSection.css'
@@ -431,6 +432,7 @@ const ReviewSection = ({
     }
   }, [showAnswer])
 
+
   return (
     <div className="srs-card review-section">
       <h3>
@@ -448,6 +450,11 @@ const ReviewSection = ({
           <DueCardsCounter count={dueCardsCount} />
         </div>
       </h3>
+      <ActivityTimer 
+        activity="review_card"
+        shouldStart={!!currentCard}
+        shouldEnd={!currentCard}
+      />
       <div className="srs-card current-card">
         <div className="card-content">
           <div className="word-display">

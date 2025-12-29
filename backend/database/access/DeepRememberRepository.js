@@ -908,6 +908,237 @@ class DeepRememberRepository {
       throw error;
     }
   }
+
+  /**
+   * Start a new timer session for a user
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} Timer session object
+   */
+  async startTimerSession(userId, activity = 'review_card') {
+    try {
+      await this.createUser(userId);
+      
+      const startDatetime = new Date().toISOString();
+      
+      const result = await this.db.execute(
+        'INSERT INTO spend_time (user_id, start_datetime, length_seconds, activity) VALUES (?, ?, ?, ?)',
+        {
+          user_id: userId,
+          start_datetime: startDatetime,
+          length_seconds: 0,
+          activity: activity
+        }
+      );
+
+      return {
+        id: result.lastInsertRowId,
+        user_id: userId,
+        start_datetime: startDatetime,
+        length_seconds: 0,
+        activity: activity
+      };
+    } catch (error) {
+      console.error('[SRS-REPO] Start timer session error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save/pause a timer session
+   * @param {string} userId - User ID
+   * @param {number|string} sessionId - Session ID
+   * @param {number} lengthSeconds - Length in seconds
+   * @returns {Promise<Object>} Updated timer session
+   */
+  async saveTimerSession(userId, sessionId, lengthSeconds) {
+    try {
+      const endDatetime = new Date().toISOString();
+      
+      // Ensure sessionId is a number (PostgreSQL SERIAL is integer)
+      const sessionIdNum = typeof sessionId === 'string' ? parseInt(sessionId, 10) : sessionId;
+      
+      dbLog('[SRS-REPO] Saving timer session:', { 
+        userId, 
+        sessionId, 
+        sessionIdNum,
+        lengthSeconds, 
+        endDatetime,
+        lengthSecondsType: typeof lengthSeconds
+      });
+      
+      // First verify the session exists
+      const existingSession = await this.db.queryOne(
+        'SELECT * FROM spend_time WHERE id = ? AND user_id = ?',
+        {
+          id: sessionIdNum,
+          user_id: userId
+        }
+      );
+      
+      if (!existingSession) {
+        throw new Error(`Session ${sessionIdNum} not found for user ${userId}`);
+      }
+      
+      dbLog('[SRS-REPO] Existing session found:', existingSession);
+      
+      const result = await this.db.execute(
+        'UPDATE spend_time SET end_datetime = ?, length_seconds = ? WHERE id = ? AND user_id = ?',
+        {
+          end_datetime: endDatetime,
+          length_seconds: lengthSeconds,
+          id: sessionIdNum,
+          user_id: userId
+        }
+      );
+
+      dbLog('[SRS-REPO] Update result:', result);
+      
+      if (result.changes === 0) {
+        throw new Error(`No rows updated. Session ${sessionIdNum} may not exist or user mismatch.`);
+      }
+
+      const session = await this.db.queryOne(
+        'SELECT * FROM spend_time WHERE id = ? AND user_id = ?',
+        {
+          id: sessionIdNum,
+          user_id: userId
+        }
+      );
+
+      dbLog('[SRS-REPO] Retrieved session after update:', session);
+
+      if (!session) {
+        throw new Error(`Session ${sessionIdNum} not found after update`);
+      }
+
+      return session;
+    } catch (error) {
+      console.error('[SRS-REPO] Save timer session error:', error);
+      console.error('[SRS-REPO] Error details:', {
+        userId,
+        sessionId,
+        lengthSeconds,
+        errorMessage: error.message,
+        errorStack: error.stack
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get today's total time spent for a user (in seconds)
+   * @param {string} userId - User ID
+   * @param {string} activity - Activity type (optional, filters by activity if provided)
+   * @returns {Promise<number>} Total seconds spent today
+   */
+  async getTodayTotalTime(userId, activity = null) {
+    try {
+      // Get today's date at midnight in UTC
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const todayStart = today.toISOString();
+      
+      // Also get tomorrow's start for range query
+      const tomorrow = new Date(today);
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+      const tomorrowStart = tomorrow.toISOString();
+      
+      // Get all completed sessions today and sum them manually
+      // This works around Supabase's issue with aggregate queries returning empty arrays
+      let query = `SELECT length_seconds, start_datetime 
+         FROM spend_time 
+         WHERE user_id = ? 
+         AND start_datetime >= ?
+         AND start_datetime < ?
+         AND end_datetime IS NOT NULL`;
+      const params = {
+        user_id: userId,
+        start_datetime: todayStart,
+        tomorrow_start: tomorrowStart
+      };
+      
+      if (activity) {
+        query += ` AND activity = ?`;
+        params.activity = activity;
+      }
+      
+      const todaySessionsResult = await this.db.query(query, params);
+      
+      // Filter to only include sessions that actually started today (safety check)
+      const todayOnly = Array.isArray(todaySessionsResult) 
+        ? todaySessionsResult.filter(session => {
+            if (!session.start_datetime) return false;
+            const sessionDate = new Date(session.start_datetime);
+            const todayDate = new Date(todayStart);
+            return sessionDate >= todayDate && sessionDate < new Date(tomorrowStart);
+          })
+        : [];
+      
+      // Sum up the length_seconds manually
+      let totalSeconds = 0;
+      if (todayOnly.length > 0) {
+        totalSeconds = todayOnly.reduce((sum, session) => {
+          const seconds = parseInt(session.length_seconds || 0, 10);
+          return sum + (isNaN(seconds) ? 0 : seconds);
+        }, 0);
+      }
+
+      // Get active session and add its elapsed time
+      const activeSession = await this.getActiveTimerSession(userId, activity);
+      if (activeSession && activeSession.start_datetime) {
+        const sessionStart = new Date(activeSession.start_datetime);
+        const todayStartDate = new Date(todayStart);
+        
+        // Only count if the active session started today
+        if (sessionStart >= todayStartDate) {
+          const now = new Date();
+          const elapsed = Math.floor((now - sessionStart) / 1000);
+          totalSeconds += elapsed;
+        }
+      }
+      
+      return totalSeconds;
+    } catch (error) {
+      console.error('[SRS-REPO] Get today total time error:', error);
+      console.error('[SRS-REPO] Error stack:', error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Get active timer session for a user (if any)
+   * @param {string} userId - User ID
+   * @param {string} activity - Activity type (optional, filters by activity if provided)
+   * @returns {Promise<Object|null>} Active session or null
+   */
+  async getActiveTimerSession(userId, activity = null) {
+    try {
+      let query = `SELECT * FROM spend_time 
+         WHERE user_id = ? 
+         AND (end_datetime IS NULL OR end_datetime = '')`;
+      const params = { user_id: userId };
+      
+      if (activity) {
+        query += ` AND activity = ?`;
+        params.activity = activity;
+      }
+      
+      query += ` ORDER BY start_datetime DESC LIMIT 1`;
+      
+      const session = await this.db.queryOne(query, params);
+
+      // Double-check that end_datetime is actually NULL (some DBs might return empty string)
+      if (session && session.end_datetime !== null && session.end_datetime !== '') {
+        dbLog('[SRS-REPO] Found session with end_datetime, ignoring:', session);
+        return null;
+      }
+
+      return session || null;
+    } catch (error) {
+      console.error('[SRS-REPO] Get active timer session error:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = DeepRememberRepository;

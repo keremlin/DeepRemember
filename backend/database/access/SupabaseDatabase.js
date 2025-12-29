@@ -402,6 +402,17 @@ class SupabaseDatabase extends IDatabase {
           FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
         )`,
         
+        `CREATE TABLE IF NOT EXISTS spend_time (
+          id SERIAL PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          start_datetime TIMESTAMP WITH TIME ZONE NOT NULL,
+          end_datetime TIMESTAMP WITH TIME ZONE,
+          length_seconds INTEGER NOT NULL DEFAULT 0,
+          activity TEXT DEFAULT 'review_card',
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        )`,
+        
         'CREATE INDEX IF NOT EXISTS idx_cards_user_id ON cards(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due)',
         'CREATE INDEX IF NOT EXISTS idx_cards_state ON cards(state)',
@@ -414,7 +425,10 @@ class SupabaseDatabase extends IDatabase {
         'CREATE INDEX IF NOT EXISTS idx_user_chattemplates_template_id ON user_chattemplates(template_id)',
         'CREATE INDEX IF NOT EXISTS idx_chattemplates_level ON chattemplates(level)',
         'CREATE INDEX IF NOT EXISTS idx_user_configs_user_id ON user_configs(user_id)',
-        'CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name)'
+        'CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name)',
+        'CREATE INDEX IF NOT EXISTS idx_spend_time_user_id ON spend_time(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_spend_time_start_datetime ON spend_time(start_datetime)',
+        'CREATE INDEX IF NOT EXISTS idx_spend_time_user_date ON spend_time(user_id, start_datetime)'
       ];
 
       let successCount = 0;
@@ -657,6 +671,18 @@ CREATE TABLE IF NOT EXISTS user_configs (
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
+-- Spend time table for tracking review sessions
+CREATE TABLE IF NOT EXISTS spend_time (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  start_datetime TIMESTAMP WITH TIME ZONE NOT NULL,
+  end_datetime TIMESTAMP WITH TIME ZONE,
+  length_seconds INTEGER NOT NULL DEFAULT 0,
+  activity TEXT DEFAULT 'review_card',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 -- Word base table
 CREATE TABLE IF NOT EXISTS word_base (
   id SERIAL PRIMARY KEY,
@@ -685,6 +711,9 @@ CREATE INDEX IF NOT EXISTS idx_card_labels_card_id ON card_labels(card_id, user_
 CREATE INDEX IF NOT EXISTS idx_card_labels_label_id ON card_labels(label_id);
 CREATE INDEX IF NOT EXISTS idx_user_configs_user_id ON user_configs(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name);
+CREATE INDEX IF NOT EXISTS idx_spend_time_user_id ON spend_time(user_id);
+CREATE INDEX IF NOT EXISTS idx_spend_time_start_datetime ON spend_time(start_datetime);
+CREATE INDEX IF NOT EXISTS idx_spend_time_user_date ON spend_time(user_id, start_datetime);
 CREATE INDEX IF NOT EXISTS idx_word_base_word ON word_base(word);
 CREATE INDEX IF NOT EXISTS idx_word_base_group_alphabet_name ON word_base(group_alphabet_name);
 CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word);
@@ -781,7 +810,25 @@ CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word)
 
     // Log the exact query being executed
     const paramsArray = Array.isArray(params) ? params : Object.values(params || {});
-    dbLog('[DB-SQL]', sql, '| PARAMS:', paramsArray.length > 0 ? paramsArray : 'none');
+    
+    // Create a readable version of the SQL with parameter values for debugging
+    let debugSql = sql;
+    paramsArray.forEach((param, index) => {
+      const placeholder = `$${index + 1}`;
+      let value;
+      if (param === null || param === undefined) {
+        value = 'NULL';
+      } else if (typeof param === 'string') {
+        value = `'${param.replace(/'/g, "''")}'`;
+      } else {
+        value = String(param);
+      }
+      debugSql = debugSql.replace(new RegExp(`\\${placeholder}\\b`, 'g'), value);
+    });
+    
+    dbLog('[DB-SQL] Final SQL Query:', debugSql);
+    dbLog('[DB-SQL] Parameterized SQL:', sql);
+    dbLog('[DB-SQL] Parameters:', paramsArray);
     dbLog('[DB-SQL] connecting to PostgreSQL...');
 
     const { Client } = require('pg');
