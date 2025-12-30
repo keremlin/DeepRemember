@@ -93,6 +93,41 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
     }
   }
 
+  // Lightweight function to update stats only
+  const loadStats = async () => {
+    try {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/stats/${currentUserId}`), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        const newDueCards = data.stats?.dueCards || 0
+        const previousDueCards = previousDueCardsRef.current
+        
+        // Check if due cards went from > 0 to 0 while in review mode
+        if (isReviewMode && previousDueCards !== null && previousDueCards > 0 && newDueCards === 0) {
+          setShowCompletionModal(true)
+        }
+        
+        previousDueCardsRef.current = newDueCards
+        setStats(data.stats)
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error)
+      // Silently fail for stats updates to avoid interrupting the review flow
+    }
+  }
+
   // API calls
   const loadUserData = async () => {
     // Prevent multiple simultaneous calls
@@ -218,6 +253,9 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
       if (data.success) {
         setCurrentCardIndex(currentCardIndex + 1)
         setShowAnswer(false)
+        
+        // Update stats after each card is answered to refresh dueCardsCount
+        loadStats()
         
         if (currentCardIndex + 1 >= currentCards.length) {
           showSuccess('All cards reviewed!')

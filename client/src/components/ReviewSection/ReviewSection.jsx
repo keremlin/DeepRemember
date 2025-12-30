@@ -4,6 +4,7 @@ import Samples from './Samples'
 import SampleSentenceCircle from './SampleSentenceCircle'
 import CardLabelList from '../labels/CardLabelList'
 import DueCardsCounter from './DueCardsCounter'
+import AutoplayCard from './AutoplayCard'
 import ActivityTimer from '../ActivityTimer/ActivityTimer'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl, getApiBaseUrl } from '../../config/api'
@@ -439,14 +440,7 @@ const ReviewSection = ({
         <span className="material-symbols-outlined">dictionary</span>
         Review Cards
         <div>
-          <label className="auto-play-checkbox">
-            <input
-              type="checkbox"
-              checked={autoPlay}
-              onChange={(e) => setAutoPlay(e.target.checked)}
-            />
-            <span className="material-symbols-outlined google-icon">volume_up</span>
-          </label>
+          <AutoplayCard autoPlay={autoPlay} setAutoPlay={setAutoPlay} />
           <DueCardsCounter count={dueCardsCount} />
         </div>
       </h3>

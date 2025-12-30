@@ -1,69 +1,156 @@
-.due-cards-counter {
+.due-cards-counter-card {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  padding: 13px 10px 10px;
+  min-width: 52px;
+  margin-top: 4px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  margin-left: 8px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.due-cards-label {
-  font-size: 1.2rem;
-  font-weight: 500;
+.due-cards-counter-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.due-cards-icon-container {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 21px;
+  height: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  border-radius: 5px;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.due-cards-icon-container .due-cards-icon {
+  font-size: 13px;
+  font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+  display: block;
+}
+
+.due-cards-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-top: 5px;
 }
 
 .due-cards-number {
-  font-size: 1.2rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff !important;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+}
+
+.due-cards-label {
+  font-size: 0.45rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7) !important;
+  text-transform: lowercase;
+  line-height: 1.2;
+  background: none !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.7) !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
 }
 
 /* Responsive Design - Tablet */
 @media (max-width: 1024px) {
-  .due-cards-counter {
-    padding: 3px 6px;
-    margin-left: 6px;
-    gap: 3px;
+  .due-cards-counter-card {
+    padding: 12px 9px 9px;
+    min-width: 49px;
   }
 
-  .due-cards-label,
+  .due-cards-icon-container {
+    width: 18px;
+    height: 18px;
+    top: -9px;
+  }
+
+  .due-cards-icon-container .due-cards-icon {
+    font-size: 12px;
+  }
+
   .due-cards-number {
-    font-size: 1.1rem;
+    font-size: 0.8rem;
+  }
+
+  .due-cards-label {
+    font-size: 0.42rem;
   }
 }
 
 /* Responsive Design - Mobile */
 @media (max-width: 768px) {
-  .due-cards-counter {
-    padding: 2px 4px;
-    margin-left: 4px;
-    gap: 3px;
+  .due-cards-counter-card {
+    padding: 10px 8px 8px;
+    min-width: 46px;
   }
 
-  .due-cards-label,
+  .due-cards-icon-container {
+    width: 17px;
+    height: 17px;
+    top: -8px;
+  }
+
+  .due-cards-icon-container .due-cards-icon {
+    font-size: 10px;
+  }
+
   .due-cards-number {
-    font-size: 1rem;
+    font-size: 0.7rem;
+  }
+
+  .due-cards-label {
+    font-size: 0.4rem;
   }
 }
 
 @media (max-width: 480px) {
-  .due-cards-counter {
-    padding: 2px 3px;
-    margin-left: 3px;
-    gap: 2px;
+  .due-cards-counter-card {
+    padding: 9px 7px 7px;
+    min-width: 42px;
   }
 
-  .due-cards-label,
+  .due-cards-icon-container {
+    width: 16px;
+    height: 16px;
+    top: -8px;
+  }
+
+  .due-cards-icon-container .due-cards-icon {
+    font-size: 9px;
+  }
+
   .due-cards-number {
-    font-size: 0.9rem;
+    font-size: 0.65rem;
+  }
+
+  .due-cards-label {
+    font-size: 0.36rem;
   }
 }
 
