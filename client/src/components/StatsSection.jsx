@@ -1,5 +1,4 @@
 import React from 'react'
-import Button from './Button'
 import './StatsSection.css'
 
 const StatsSection = ({ 
@@ -11,46 +10,6 @@ const StatsSection = ({
 }) => {
   return (
     <div className="stats-section">
-      <div className="create-card-button">
-        <Button
-          variant="primary"
-          size="medium"
-          onClick={() => setShowCreateCard(true)}
-          className="btn-upload-modal"
-          title="Create new card"
-          iconName="add_circle"
-          iconPosition="left"
-        >
-          Create New Card
-        </Button>
-        {onShowManageCards && (
-          <Button
-            variant="primary"
-            size="medium"
-            onClick={onShowManageCards}
-            className="btn-upload-modal"
-            title="Manage cards"
-            iconName="menu_book"
-            iconPosition="left"
-          >
-            Manage Cards
-          </Button>
-        )}
-        {onStartReview && (
-          <Button
-            variant="primary"
-            size="medium"
-            onClick={onStartReview}
-            className="btn-upload-modal"
-            title="Start Review"
-            iconName="menu_book"
-            iconPosition="left"
-          >
-            Start Review
-          </Button>
-        )}
-      </div>
-      
       <div className="srs-card">
         <div className="stats-header">
           <h3>

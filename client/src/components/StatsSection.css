@@ -110,7 +110,7 @@
 
 .stat-label {
   font-size: 0.9rem;
-  color: #aaa;
+  color: #aaaaaa !important;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -200,9 +200,10 @@
 
 .label-name {
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #fff;
-  text-transform: capitalize;
+  color: #aaaaaa !important;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .label-stat-number {
@@ -322,6 +323,7 @@
   
   .label-name {
     font-size: 0.85rem;
+    color: #aaaaaa !important;
   }
   
   .create-card-button {
@@ -434,6 +436,7 @@
   
   .label-name {
     font-size: 0.75rem;
+    color: #aaaaaa !important;
   }
   
   .create-card-button {
@@ -449,6 +452,16 @@
     min-height: 44px; /* Better touch target */
     font-size: 14px;
   }
+}
+
+/* Dark Mode - Ensure stat-label color is explicit */
+.stats-section .srs-card .stat-label {
+  color: #aaaaaa !important;
+}
+
+/* Dark Mode - Ensure label-name color is explicit and overrides inline styles */
+.stats-section .srs-card .label-name {
+  color: #aaaaaa !important;
 }
 
 /* Light Mode Styles */
@@ -474,7 +487,7 @@
 }
 
 .light-mode .stat-label {
-  color: #666;
+  color: #666 !important;
 }
 
 
@@ -497,5 +510,5 @@
 }
 
 .light-mode .label-name {
-  color: #333;
+  color: #666 !important;
 }

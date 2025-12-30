@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import ReviewSection from './ReviewSection/ReviewSection'
 import StatsSection from './StatsSection'
+import Button from './Button'
 import './DashboardView.css'
 
 const DashboardView = ({ 
@@ -64,13 +65,54 @@ const DashboardView = ({
 
       {/* Statistics and Create Card Button - only show when not in review mode */}
       {!isReviewMode && (
-        <StatsSection
-          stats={stats}
-          setShowHelp={setShowHelp}
-          setShowCreateCard={setShowCreateCard}
-          onShowManageCards={onShowManageCards}
-          onStartReview={handleStartReview}
-        />
+        <>
+          <div className="create-card-button">
+            <Button
+              variant="primary"
+              size="medium"
+              onClick={() => setShowCreateCard(true)}
+              className="btn-upload-modal"
+              title="Create new card"
+              iconName="add_circle"
+              iconPosition="left"
+            >
+              Create New Card
+            </Button>
+            {onShowManageCards && (
+              <Button
+                variant="primary"
+                size="medium"
+                onClick={onShowManageCards}
+                className="btn-upload-modal"
+                title="Manage cards"
+                iconName="menu_book"
+                iconPosition="left"
+              >
+                Manage Cards
+              </Button>
+            )}
+            {handleStartReview && (
+              <Button
+                variant="primary"
+                size="medium"
+                onClick={handleStartReview}
+                className="btn-upload-modal"
+                title="Start Review"
+                iconName="menu_book"
+                iconPosition="left"
+              >
+                Start Review
+              </Button>
+            )}
+          </div>
+          <StatsSection
+            stats={stats}
+            setShowHelp={setShowHelp}
+            setShowCreateCard={setShowCreateCard}
+            onShowManageCards={onShowManageCards}
+            onStartReview={handleStartReview}
+          />
+        </>
       )}
     </div>
   )
