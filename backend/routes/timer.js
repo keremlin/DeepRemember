@@ -206,5 +206,27 @@ router.get('/active', auth.verifyToken.bind(auth), async (req, res) => {
   }
 });
 
+// Get activity statistics
+router.get('/activity-stats', auth.verifyToken.bind(auth), async (req, res) => {
+  try {
+    const userId = req.userId;
+    
+    if (!srsRepository) {
+      await initializeDatabase();
+    }
+
+    const stats = await srsRepository.getActivityStatistics(userId);
+    
+    res.json({
+      success: true,
+      stats: stats || [],
+      message: 'Activity statistics retrieved'
+    });
+  } catch (error) {
+    console.error('[TIMER] Get activity statistics error:', error);
+    res.status(500).json({ error: 'Failed to get activity statistics', details: error.message });
+  }
+});
+
 module.exports = router;
 

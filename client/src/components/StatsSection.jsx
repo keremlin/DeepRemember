@@ -1,4 +1,5 @@
 import React from 'react'
+import NetStat from './ReviewSection/NetStat/NetStat'
 import './StatsSection.css'
 
 const StatsSection = ({ 
@@ -62,6 +63,9 @@ const StatsSection = ({
             </div>
           </div>
         )}
+        
+        {/* Activity Statistics Radar Chart */}
+        <NetStat />
       </div>
     </div>
   )

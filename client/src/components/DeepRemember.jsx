@@ -44,6 +44,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
   const [isEditCardModalOpen, setIsEditCardModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
   const [showCompletionModal, setShowCompletionModal] = useState(false)
+  const [dashboardKey, setDashboardKey] = useState(0)
   
   // Refs for loading states
   const lastNumberKeyRef = useRef(null)
@@ -399,7 +400,14 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
       onToggleCardsView={() => setIsCardsView(!isCardsView)}
       onNavigateToWelcome={onNavigateToWelcome}
       onNavigateToPlayer={onNavigateToPlayer}
-      onShowCards={() => setIsCardsView(false)}
+      onShowCards={() => {
+        setIsCardsView(false)
+        if (isReviewMode) {
+          setIsReviewMode(false)
+        }
+        // Force DashboardView to reset by changing its key
+        setDashboardKey(prev => prev + 1)
+      }}
       onNavigateToUserManagement={onNavigateToUserManagement}
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToChat={onNavigateToChat}
@@ -411,6 +419,7 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
           <div className="srs-container">
             {!isCardsView ? (
               <DashboardView
+                key={dashboardKey}
                 currentCards={currentCards}
                 currentCard={currentCard}
                 showAnswer={showAnswer}

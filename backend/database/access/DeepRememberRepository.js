@@ -1139,6 +1139,68 @@ class DeepRememberRepository {
       throw error;
     }
   }
+
+  /**
+   * Get activity statistics grouped by activity for a user
+   * @param {string} userId - User ID
+   * @returns {Promise<Array>} Array of objects with activity and totalSeconds
+   */
+  async getActivityStatistics(userId) {
+    try {
+      // Try GROUP BY query first
+      const query = `SELECT activity, SUM(length_seconds) as total_seconds 
+         FROM spend_time 
+         WHERE user_id = ? 
+         AND end_datetime IS NOT NULL
+         GROUP BY activity
+         ORDER BY total_seconds DESC`;
+      
+      const params = { user_id: userId };
+      const results = await this.db.query(query, params);
+      
+      // If GROUP BY doesn't work, try fallback approach
+      if (!Array.isArray(results) || results.length === 0) {
+        // Fallback: Get all records and group manually
+        const fallbackQuery = `SELECT activity, length_seconds 
+           FROM spend_time 
+           WHERE user_id = ? 
+           AND end_datetime IS NOT NULL
+           AND length_seconds > 0`;
+        
+        const allRecords = await this.db.query(fallbackQuery, params);
+        
+        // Group manually
+        const activityMap = {};
+        if (Array.isArray(allRecords)) {
+          allRecords.forEach(record => {
+            const activity = record.activity || 'unknown';
+            const seconds = parseInt(record.length_seconds || 0, 10);
+            if (seconds > 0) {
+              activityMap[activity] = (activityMap[activity] || 0) + seconds;
+            }
+          });
+        }
+        
+        // Convert to array and sort
+        return Object.entries(activityMap)
+          .map(([activity, totalSeconds]) => ({ activity, totalSeconds }))
+          .sort((a, b) => b.totalSeconds - a.totalSeconds);
+      }
+      
+      // Transform results to ensure consistent format
+      return results.map(row => {
+        const activity = row.activity || 'unknown';
+        const totalSeconds = parseInt(row.total_seconds || row.totalSeconds || 0, 10);
+        return {
+          activity,
+          totalSeconds
+        };
+      }).filter(stat => stat.totalSeconds > 0);
+    } catch (error) {
+      console.error('[SRS-REPO] Get activity statistics error:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = DeepRememberRepository;

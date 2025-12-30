@@ -1,0 +1,300 @@
+/* NetStat Component - Radar Chart */
+.net-stat-container {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.net-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.net-stat-header h3 {
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+}
+
+.net-stat-header h3 .material-symbols-outlined {
+  font-size: 1.5rem;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  margin-right: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.net-stat-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.radar-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.radar-chart {
+  width: 300px;
+  height: 300px;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.radar-label {
+  font-size: 0.7rem;
+  fill: #aaaaaa;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.radar-value {
+  font-size: 0.65rem;
+  fill: rgba(102, 126, 234, 1);
+  font-weight: 600;
+}
+
+.radar-polygon {
+  transition: all 0.3s ease;
+}
+
+.radar-polygon:hover {
+  fill: rgba(102, 126, 234, 0.4);
+  stroke: rgba(102, 126, 234, 1);
+  stroke-width: 3;
+}
+
+.net-stat-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.legend-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border-color: rgba(102, 126, 234, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.legend-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-label {
+  font-size: 0.75rem;
+  color: #aaaaaa;
+  font-weight: 500;
+}
+
+.legend-separator {
+  font-size: 0.7rem;
+  color: #666;
+  opacity: 0.5;
+}
+
+.legend-time {
+  font-size: 0.75rem;
+  color: rgba(102, 126, 234, 1);
+  font-weight: 600;
+}
+
+.net-stat-loading,
+.net-stat-error,
+.net-stat-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #aaaaaa;
+  font-size: 1rem;
+}
+
+.net-stat-error {
+  color: #ff6b6b;
+}
+
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+  .net-stat-header h3 {
+    font-size: 1.4rem;
+  }
+  
+  .radar-chart {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .net-stat-legend {
+    min-width: 180px;
+  }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .net-stat-container {
+    margin-top: 20px;
+    padding-top: 15px;
+  }
+  
+  .net-stat-header {
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+  }
+  
+  .net-stat-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .net-stat-header h3 .material-symbols-outlined {
+    font-size: 1.2rem;
+    margin-right: 6px;
+  }
+  
+  .net-stat-content {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .radar-chart-container {
+    padding: 10px;
+  }
+  
+  .radar-chart {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .radar-label {
+    font-size: 0.65rem;
+  }
+  
+  .radar-value {
+    font-size: 0.6rem;
+  }
+  
+  .net-stat-legend {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .legend-item {
+    padding: 8px;
+  }
+  
+  .legend-label {
+    font-size: 0.75rem;
+  }
+  
+  .legend-time {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .net-stat-container {
+    margin-top: 15px;
+    padding-top: 12px;
+  }
+  
+  .net-stat-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .radar-chart {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .net-stat-legend {
+    gap: 6px;
+  }
+  
+  .legend-item {
+    padding: 6px 8px;
+  }
+}
+
+/* Light Mode Styles */
+.light-mode .net-stat-container {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .net-stat-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .radar-label {
+  fill: #666;
+}
+
+.light-mode .radar-chart circle,
+.light-mode .radar-chart line {
+  stroke: rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .legend-item {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .legend-item:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .legend-label {
+  color: #666;
+}
+
+.light-mode .net-stat-loading,
+.light-mode .net-stat-empty {
+  color: #666;
+}
+
+.light-mode .net-stat-error {
+  color: #d32f2f;
+}
+
