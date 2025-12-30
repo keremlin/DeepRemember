@@ -3,8 +3,16 @@
   width: 100%;
 }
 
-.review-section h3 {
+.review-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
   margin-bottom: 7px;
+}
+
+.review-section-header h3 {
+  margin: 0;
   font-size: 1.5rem;
   font-weight: 300;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -14,10 +22,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: space-between;
 }
 
-.review-section h3 .material-symbols-outlined {
+.review-section-header h3 .material-symbols-outlined {
   font-size: 1.5rem;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -26,7 +33,7 @@
   background-clip: text;
 }
 
-.review-section h3 > div {
+.review-section-controls {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -412,10 +419,13 @@
     flex-direction: column;
   }
   
-  .review-section h3 {
-    font-size: 1.3rem;
-    margin-bottom: 5px;
+  .review-section-header {
     flex-wrap: wrap;
+    margin-bottom: 5px;
+  }
+  
+  .review-section-header h3 {
+    font-size: 1.3rem;
   }
 
   .current-card {
@@ -533,10 +543,13 @@
     min-height: 100%;
   }
   
-  .review-section h3 {
-    font-size: 1.2rem;
-    margin-bottom: 4px;
+  .review-section-header {
     flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  
+  .review-section-header h3 {
+    font-size: 1.2rem;
   }
 
   .current-card {

@@ -436,20 +436,22 @@ const ReviewSection = ({
 
   return (
     <div className="srs-card review-section">
-      <h3>
-        <span className="material-symbols-outlined">dictionary</span>
-        Review Cards
-        <div>
+      <div className="review-section-header">
+        <h3>
+          <span className="material-symbols-outlined">dictionary</span>
+          Review Cards
+        </h3>
+        <ActivityTimer 
+          activity="review_card"
+          shouldStart={!!currentCard}
+          shouldEnd={!currentCard}
+          size="small"
+        />
+        <div className="review-section-controls">
           <AutoplayCard autoPlay={autoPlay} setAutoPlay={setAutoPlay} />
           <DueCardsCounter count={dueCardsCount} />
         </div>
-      </h3>
-      <ActivityTimer 
-        activity="review_card"
-        shouldStart={!!currentCard}
-        shouldEnd={!currentCard}
-        size="small"
-      />
+      </div>
       <div className="srs-card current-card">
         <div className="card-content">
           <div className="word-display">
