@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import WordTranslationPopover from './WordTranslationPopover'
-import SentenceTranslationPopover from './SentenceTranslationPopover'
+import TranslatableText from '../shared/TranslatableText'
 import './ChatMessage.css'
 
 const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = false, audioBlob = null, audioMimeType = null, playbackSpeed = 1.0 }) => {
@@ -8,10 +7,7 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
   const audioRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [audioUrl, setAudioUrl] = useState(null)
-  const [popoverState, setPopoverState] = useState({ word: null, position: null })
-  const [sentencePopoverState, setSentencePopoverState] = useState({ text: null, position: null })
   const contentRef = useRef(null)
-  const translateButtonRef = useRef(null)
   const messageTextRef = useRef(null)
 
   useEffect(() => {
@@ -92,21 +88,6 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
     }
   }, [audioUrl])
 
-  // Close popovers on scroll
-  useEffect(() => {
-    if (!popoverState.word && !sentencePopoverState.text) return
-
-    const handleScroll = () => {
-      setPopoverState({ word: null, position: null })
-      setSentencePopoverState({ text: null, position: null })
-    }
-
-    window.addEventListener('scroll', handleScroll, true)
-    return () => {
-      window.removeEventListener('scroll', handleScroll, true)
-    }
-  }, [popoverState.word, sentencePopoverState.text])
-
   const formatTime = (date) => {
     if (!date) return ''
     const hours = date.getHours().toString().padStart(2, '0')
@@ -114,121 +95,8 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
     return `${hours}:${minutes}`
   }
 
-  const handleWordClick = (e, word) => {
-    if (isUser) return
-    
-    e.stopPropagation()
-    
-    // Close sentence popover if open
-    setSentencePopoverState({ text: null, position: null })
-    
-    // Clean the word (remove punctuation)
-    const cleanWord = word.replace(/[.,!?;:()\[\]{}'"`]/g, '').trim()
-    if (!cleanWord) return
-    
-    // Get the position of the clicked element relative to viewport
-    const rect = e.currentTarget.getBoundingClientRect()
-    const contentRect = contentRef.current?.getBoundingClientRect()
-    
-    if (!contentRect) return
-    
-    // Calculate position relative to the content container (for absolute positioning)
-    const popoverHeight = 50 // Approximate popover height
-    const popoverMaxWidth = 250 // Max width of popover
-    const wordCenterX = rect.left - contentRect.left + rect.width / 2
-    let x = wordCenterX
-    let y = rect.top - contentRect.top - popoverHeight - 8 // Position above the word with spacing
-    
-    // Adjust if popover would go off screen horizontally
-    const halfPopoverWidth = popoverMaxWidth / 2
-    if (x - halfPopoverWidth < 0) {
-      x = halfPopoverWidth
-    } else if (x + halfPopoverWidth > contentRect.width) {
-      x = contentRect.width - halfPopoverWidth
-    }
-    
-    // Adjust if popover would go off screen vertically (show below instead)
-    const showBelow = y < 0
-    if (showBelow) {
-      y = rect.bottom - contentRect.top + 8 // Position below the word with spacing
-    }
-    
-    const position = {
-      x: x, // Center of the word - popover will be centered using transform
-      y: y,
-      showBelow: showBelow
-    }
-    
-    setPopoverState({ word: cleanWord, position })
-  }
-
-  const handleClosePopover = () => {
-    setPopoverState({ word: null, position: null })
-  }
-
-  const handleTranslateClick = (e) => {
-    if (isUser || !content) return
-    
-    e.stopPropagation()
-    
-    // Close word popover if open
-    setPopoverState({ word: null, position: null })
-    
-    const messageTextRect = messageTextRef.current?.getBoundingClientRect()
-    const contentRect = contentRef.current?.getBoundingClientRect()
-    
-    if (!messageTextRect || !contentRect) return
-    
-    // Position popover below the message bubble, centered horizontally on the bubble
-    // Calculate position relative to contentRef (where popover will be positioned)
-    const popoverMaxWidth = 400 // Max width of popover
-    const messageCenterX = messageTextRect.left - contentRect.left + messageTextRect.width / 2
-    let x = messageCenterX
-    // Position below the message bubble - calculate from messageTextRect bottom to contentRect top
-    const y = messageTextRect.bottom - contentRect.top + 8 // Position below the message bubble
-    
-    // Adjust if popover would go off screen horizontally
-    const halfPopoverWidth = popoverMaxWidth / 2
-    if (x - halfPopoverWidth < 0) {
-      x = halfPopoverWidth
-    } else if (x + halfPopoverWidth > contentRect.width) {
-      x = contentRect.width - halfPopoverWidth
-    }
-    
-    setSentencePopoverState({ 
-      text: content, 
-      position: { x, y, showBelow: true } // Always show below the message
-    })
-  }
-
-  const handleCloseSentencePopover = () => {
-    setSentencePopoverState({ text: null, position: null })
-  }
-
-  const renderWord = (word, wordIndex, lineIndex) => {
-    const trimmedWord = word.trim()
-    if (!trimmedWord) {
-      // Return whitespace as-is
-      return <span key={`${lineIndex}-${wordIndex}`}>{word}</span>
-    }
-    
-    if (isUser) {
-      return <span key={`${lineIndex}-${wordIndex}`}>{word}</span>
-    }
-    
-    return (
-      <span
-        key={`${lineIndex}-${wordIndex}`}
-        className="chat-message-word"
-        onClick={(e) => handleWordClick(e, trimmedWord)}
-        title="Click to translate"
-      >
-        {word}
-      </span>
-    )
-  }
-
-  const formatContent = (text) => {
+  // Custom text formatter for ChatMessage (handles bullets, markdown bold, etc.)
+  const formatContent = (text, renderWord) => {
     if (!text) return ''
     
     // Split by newlines and process each line
@@ -348,39 +216,20 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
               ref={messageTextRef}
               className="chat-message-text"
             >
-              <div 
-                ref={contentRef}
-                className="chat-message-text-content"
-                style={{ position: 'relative' }}
-              >
-                {formatContent(content)}
-                {popoverState.word && popoverState.position && (
-                  <WordTranslationPopover
-                    word={popoverState.word}
-                    position={popoverState.position}
-                    onClose={handleClosePopover}
-                  />
-                )}
-                {sentencePopoverState.text && sentencePopoverState.position && (
-                  <SentenceTranslationPopover
-                    text={sentencePopoverState.text}
-                    position={sentencePopoverState.position}
-                    onClose={handleCloseSentencePopover}
-                  />
-                )}
-              </div>
-              <div className="chat-message-actions">
-                {!isUser && content && (
-                  <button
-                    ref={translateButtonRef}
-                    className="chat-message-translate-button"
-                    onClick={handleTranslateClick}
-                    title="Translate message"
-                  >
-                    <span className="material-symbols-outlined google-icon">translate</span>
-                  </button>
-                )}
-                {audioUrl && (
+              <TranslatableText
+                text={content}
+                enabled={!isUser}
+                wordClassName="chat-message-word"
+                translateButtonClassName="chat-message-translate-button"
+                containerClassName="chat-message-text-content"
+                contentClassName=""
+                showTranslateButton={!isUser && !!content}
+                formatText={formatContent}
+                textRef={messageTextRef}
+                contentRef={contentRef}
+              />
+              {audioUrl && (
+                <div className="chat-message-actions">
                   <button 
                     className="voice-play-button-inline"
                     onClick={handlePlayAudio}
@@ -390,8 +239,8 @@ const ChatMessage = ({ role, content, timestamp, isLoading = false, isVoice = fa
                       {isPlaying ? 'pause' : 'play_arrow'}
                     </span>
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
             {audioUrl && (
               <audio

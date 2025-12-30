@@ -1,0 +1,80 @@
+/* TranslatableText Component Styles - Base Styles */
+
+.translatable-text-container {
+  width: 100%;
+  flex: 1;
+}
+
+.translatable-text-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.translatable-text-content {
+  flex: 1;
+  position: relative;
+}
+
+.translatable-word {
+  cursor: pointer;
+  padding: 2px 1px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  display: inline-block;
+  margin: 0;
+  vertical-align: baseline;
+}
+
+.translatable-word:hover {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+}
+
+.translatable-text-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.translatable-translate-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.translatable-translate-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.translatable-translate-button .google-icon {
+  font-size: 18px;
+}
+
+/* Light Mode Styles */
+.light-mode .translatable-word:hover {
+  background: rgba(102, 126, 234, 0.15);
+  color: #667eea;
+}
+
+.light-mode .translatable-translate-button {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.light-mode .translatable-translate-button:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.9);
+}
+

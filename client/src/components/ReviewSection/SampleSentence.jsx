@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import SampleSentenceCircle from './SampleSentenceCircle'
+import TranslatableText from '../shared/TranslatableText'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import './SampleSentence.css'
@@ -16,6 +17,8 @@ const SampleSentence = ({
   const [audio, setAudio] = useState(null)
   const [pressedKey, setPressedKey] = useState(null)
   const [isCreatingAudio, setIsCreatingAudio] = useState(false)
+  const contentRef = useRef(null)
+  const sentenceTextRef = useRef(null)
 
   // Generate hash for the sentence
   const generateHash = (text) => {
@@ -200,7 +203,18 @@ const SampleSentence = ({
   return (
     <div className="context-line">
       <div className="sentence-content">
-        <span className="sentence-text">{sentence.trim()}</span>
+        <TranslatableText
+          text={sentence.trim()}
+          enabled={showAnswer}
+          wordClassName="sample-sentence-word"
+          translateButtonClassName="sample-sentence-translate-button"
+          containerClassName="sentence-text-wrapper"
+          contentClassName=""
+          textWrapperClassName="sentence-text"
+          showTranslateButton={showAnswer}
+          textRef={sentenceTextRef}
+          contentRef={contentRef}
+        />
         {showAnswer && (
           <div className="audio-controls">
             <SampleSentenceCircle
