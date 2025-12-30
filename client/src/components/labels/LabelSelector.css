@@ -307,6 +307,14 @@
     border-color: #444;
   }
 
+  .label-selector-select-all {
+    color: #8b9aff;
+  }
+
+  .label-selector-select-all:hover {
+    background: rgba(139, 154, 255, 0.15);
+  }
+
   .label-selector-item {
     border-color: #444;
   }
@@ -336,5 +344,82 @@
   .label-selector-empty {
     color: #aaa;
   }
+}
+
+/* Class-based Dark Mode Support */
+.dark-mode .label-selector-trigger {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #fff;
+}
+
+.dark-mode .label-selector-trigger:hover:not(.disabled) {
+  border-color: #667eea;
+}
+
+.dark-mode .label-selector-trigger.disabled {
+  background: #1a1a1a;
+}
+
+.dark-mode .label-selector-placeholder {
+  color: #aaa;
+}
+
+.dark-mode .label-selector-dropdown {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.dark-mode .label-selector-actions {
+  background: #1a1a1a;
+  border-color: #444;
+}
+
+.dark-mode .label-selector-select-all {
+  color: #8b9aff;
+}
+
+.dark-mode .label-selector-select-all:hover {
+  background: rgba(139, 154, 255, 0.15);
+  color: #a5b3ff;
+}
+
+.dark-mode .label-selector-item {
+  border-color: #444;
+}
+
+.dark-mode .label-selector-item:hover {
+  background: #333;
+}
+
+.dark-mode .label-selector-item.selected {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+.dark-mode .checkbox-custom {
+  background: #333;
+  border-color: #555;
+}
+
+.dark-mode .label-selector-name {
+  color: #fff;
+}
+
+.dark-mode .label-selector-description {
+  color: #aaa;
+}
+
+.dark-mode .label-selector-loading,
+.dark-mode .label-selector-empty {
+  color: #aaa;
+}
+
+.dark-mode .label-selector-arrow {
+  color: #aaa;
+}
+
+.dark-mode .label-preview-count {
+  color: #8b9aff;
+  background: rgba(139, 154, 255, 0.15);
 }
 

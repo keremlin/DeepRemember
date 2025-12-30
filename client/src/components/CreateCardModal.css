@@ -379,6 +379,71 @@
   margin-bottom: 10px;
 }
 
+/* Dark Mode Support */
+.dark-mode .modal-header h3 {
+  color: #fff;
+}
+
+.dark-mode .card-type-selector label {
+  color: #fff;
+}
+
+.dark-mode .similar-words-section h4 {
+  color: #aaa;
+}
+
+.dark-mode .similar-words-table {
+  border-color: #444;
+}
+
+.dark-mode .similar-words-table th {
+  background: #2a2a2a;
+  border-bottom-color: #444;
+  color: #fff;
+}
+
+.dark-mode .similar-words-table td {
+  border-bottom-color: #333;
+  color: #e0e0e0;
+}
+
+.dark-mode .translation-result {
+  background: #2a2a2a;
+  border-left-color: #667eea;
+}
+
+.dark-mode .translation-header h4 {
+  color: #fff;
+}
+
+.dark-mode .translation-content {
+  color: #e0e0e0;
+}
+
+.dark-mode .translation-content strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.dark-mode .translation-result .translation-text {
+  color: #8b9aff;
+}
+
+.dark-mode .sample-sentences {
+  color: #4ade80;
+}
+
+.dark-mode .translation-hint {
+  color: #aaa;
+}
+
+.dark-mode .translation-content:hover {
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 4px;
+  padding: 5px;
+  margin: -5px;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .modal {
