@@ -1,13 +1,302 @@
 .activity-timer-display {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 16px;
+  padding-bottom: 148px;
   margin-bottom: 10px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.9rem;
+  width: fit-content;
+}
+
+.activity-timer-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+/* Match the gap between circles for each size */
+.activity-timer-small .activity-timer-content {
+  gap: 0;
+}
+
+.activity-timer-medium .activity-timer-content {
+  gap: 18px;
+}
+
+.activity-timer-large .activity-timer-content {
+  gap: 24px;
+}
+
+.activity-timer-circles {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.timer-circle-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.activity-timer-small .timer-circle-wrapper {
+  gap: 0;
+}
+
+.timer-current-label {
+  color: #4a6b8a;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0;
+  line-height: 1;
+}
+
+/* Small size */
+.activity-timer-small .timer-current-label {
+  font-size: 0.5rem;
+  margin-bottom: -15px;
+}
+
+/* Medium size */
+.activity-timer-medium .timer-current-label {
+  font-size: 0.55rem;
+  margin-bottom: -12px;
+}
+
+/* Large size */
+.activity-timer-large .timer-current-label {
+  font-size: 0.65rem;
+  margin-bottom: -10px;
+}
+
+.timer-today-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+
+.timer-today-circles {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+
+.activity-timer-small .timer-today-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.activity-timer-small .timer-today-circles {
+  gap: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-timer-small .timer-today-circles .timer-circle-wrapper {
+  margin-right: -25px;
+}
+
+.activity-timer-small .timer-today-circles .timer-circle-wrapper:last-child {
+  margin-right: 0;
+}
+
+.activity-timer-small .timer-today-label {
+  margin-bottom: -15px;
+  font-size: 0.5rem;
+  align-self: center;
+}
+
+.activity-timer-medium .timer-today-circles {
+  gap: 18px;
+}
+
+.activity-timer-large .timer-today-circles {
+  gap: 24px;
+}
+
+.timer-today-label {
+  color: #4a6b8a;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  margin-bottom: 0;
+}
+
+
+/* Medium size */
+.activity-timer-medium .timer-today-label {
+  font-size: 0.55rem;
+  margin-bottom: -12px;
+  position: relative;
+}
+
+/* Large size */
+.activity-timer-large .timer-today-label {
+  font-size: 0.65rem;
+  margin-bottom: -10px;
+  position: relative;
+}
+
+.timer-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Large size (default) */
+.activity-timer-large .activity-timer-circles {
+  gap: 24px;
+}
+
+.activity-timer-large .timer-circle {
+  width: 120px;
+  height: 120px;
+}
+
+
+.activity-timer-large .timer-circle-value {
+  font-size: 2rem;
+}
+.activity-timer-small .timer-circle-wrapper {
+  margin: 0;
+  padding: 0;
+  margin-right: -25px; /* Negative margin to overlap slightly if needed */
+}
+
+.activity-timer-large .timer-circle-label {
+  font-size: 0.7rem;
+}
+
+
+/* Medium size */
+.activity-timer-medium .activity-timer-circles {
+  gap: 18px;
+}
+
+.activity-timer-medium .timer-circle {
+  width: 90px;
+  height: 90px;
+}
+
+.activity-timer-medium .timer-circle-value {
+  font-size: 1.5rem;
+}
+
+.activity-timer-medium .timer-circle-label {
+  font-size: 0.55rem;
+}
+
+
+/* Small size */
+.activity-timer-small {
+  gap: 12px;
+  padding: 10px;
+}
+
+.activity-timer-small .activity-timer-circles {
+  gap: 0px;
+}
+
+.activity-timer-small .timer-circle {
+  width: 75px;
+  height: 75px;
+}
+
+.activity-timer-small .timer-circle-value {
+  font-size: 1.25rem;
+  margin-bottom: 0;
+}
+
+.activity-timer-small .timer-circle-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-timer-small .timer-circle-label {
+  display: none;
+}
+
+.timer-circle-label-below {
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: -15px;
+  line-height: 1;
+  text-align: center;
+}
+
+.activity-timer-large .timer-circle-label-below,
+.activity-timer-medium .timer-circle-label-below {
+  display: none;
+}
+
+
+.timer-circle-progress {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.timer-circle-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(90deg);
+}
+
+.timer-circle-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-circle-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.activity-timer-small .timer-circle-value {
+  margin-bottom: 0;
+}
+
+.timer-circle-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .activity-timer-info {
@@ -28,33 +317,66 @@
   font-size: 0.95rem;
 }
 
-.activity-timer-pause-resume-btn {
+.activity-timer-control-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(30, 58, 95, 0.1);
+  color: #1e3a5f;
+  border: 1px solid rgba(30, 58, 95, 0.3);
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
   transition: all 0.2s ease;
-  margin-left: auto;
+  padding: 0;
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: 0;
 }
 
-.activity-timer-pause-resume-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.activity-timer-control-btn:hover {
+  background: rgba(30, 58, 95, 0.2);
+  border-color: rgba(30, 58, 95, 0.5);
+  transform: scale(1.05);
 }
 
-.activity-timer-pause-resume-btn:active {
-  transform: translateY(0);
+.activity-timer-control-btn:active {
+  transform: scale(0.95);
 }
 
-.activity-timer-pause-resume-btn .material-symbols-outlined {
-  font-size: 1.1rem;
+.activity-timer-control-btn .material-symbols-outlined {
+  font-size: 20px;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Small size */
+.activity-timer-small .activity-timer-control-btn {
+  width: 24px;
+  height: 24px;
+}
+
+.activity-timer-small .activity-timer-control-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* Medium size */
+.activity-timer-medium .activity-timer-control-btn {
+  width: 28px;
+  height: 28px;
+}
+
+.activity-timer-medium .activity-timer-control-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Large size */
+.activity-timer-large .activity-timer-control-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.activity-timer-large .activity-timer-control-btn .material-symbols-outlined {
+  font-size: 20px;
 }
 

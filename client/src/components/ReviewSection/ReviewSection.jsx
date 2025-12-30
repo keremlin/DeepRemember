@@ -454,6 +454,7 @@ const ReviewSection = ({
         activity="review_card"
         shouldStart={!!currentCard}
         shouldEnd={!currentCard}
+        size="small"
       />
       <div className="srs-card current-card">
         <div className="card-content">
