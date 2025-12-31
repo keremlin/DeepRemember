@@ -808,28 +808,7 @@ CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word)
       throw new Error('SUPABASE_DB_URL not found for direct SQL execution');
     }
 
-    // Log the exact query being executed
     const paramsArray = Array.isArray(params) ? params : Object.values(params || {});
-    
-    // Create a readable version of the SQL with parameter values for debugging
-    let debugSql = sql;
-    paramsArray.forEach((param, index) => {
-      const placeholder = `$${index + 1}`;
-      let value;
-      if (param === null || param === undefined) {
-        value = 'NULL';
-      } else if (typeof param === 'string') {
-        value = `'${param.replace(/'/g, "''")}'`;
-      } else {
-        value = String(param);
-      }
-      debugSql = debugSql.replace(new RegExp(`\\${placeholder}\\b`, 'g'), value);
-    });
-    
-    dbLog('[DB-SQL] Final SQL Query:', debugSql);
-    dbLog('[DB-SQL] Parameterized SQL:', sql);
-    dbLog('[DB-SQL] Parameters:', paramsArray);
-    dbLog('[DB-SQL] connecting to PostgreSQL...');
 
     const { Client } = require('pg');
     const client = new Client({
@@ -841,9 +820,7 @@ CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word)
 
     try {
       await client.connect();
-      dbLog('[DB-SQL] connected. Executing query...');
-      const result = await client.query(sql, params);
-      dbLog('[DB-SQL] query executed. Rows affected:', result.rowCount);
+      const result = await client.query(sql, paramsArray);
       return result;
     } finally {
       await client.end();
@@ -1046,7 +1023,6 @@ CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word)
    * Process SQL query and parameters for Supabase compatibility
    */
   processQuery(sql, params) {
-    // Convert SQLite-style parameterized queries ($1, $2, etc.) to Supabase format
     let processedSql = sql;
     const processedParams = [];
 

@@ -1,23 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../security/AuthContext'
 import { getApiUrl } from '../../../config/api'
+import ModernRadioButton from '../../ModernRadioButton/ModernRadioButton'
 import './NetStat.css'
 
 const NetStat = () => {
   const { authenticatedFetch } = useAuth()
   const [activityStats, setActivityStats] = useState([])
+  const [prevActivityStats, setPrevActivityStats] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const [error, setError] = useState(null)
+  const [timePeriod, setTimePeriod] = useState('today')
+
+  const timePeriodOptions = [
+    { value: 'today', label: 'Today' },
+    { value: 'this_week', label: 'This Week' },
+    { value: 'this_month', label: 'This Month' }
+  ]
 
   useEffect(() => {
-    fetchActivityStats()
-  }, [])
-
-  const fetchActivityStats = async () => {
-    try {
-      setLoading(true)
+    const fetchActivityStats = async () => {
+      try {
+        // Keep previous data visible during transition
+        setActivityStats(prevStats => {
+          if (prevStats.length > 0) {
+            setPrevActivityStats(prevStats)
+            setIsTransitioning(true)
+          }
+          return prevStats
+        })
+        
       setError(null)
-      const response = await authenticatedFetch(getApiUrl('/api/timer/activity-stats'))
+      const url = `${getApiUrl('/api/timer/activity-stats')}?period=${timePeriod}`
+      const response = await authenticatedFetch(url)
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -27,17 +43,31 @@ const NetStat = () => {
       const data = await response.json()
       
       if (data.success && Array.isArray(data.stats)) {
-        setActivityStats(data.stats)
-      } else {
-        setError('Failed to load activity statistics')
+        setTimeout(() => {
+          setActivityStats(data.stats)
+          setPrevActivityStats([])
+          setIsTransitioning(false)
+        }, 150)
+        } else {
+          setError('Failed to load activity statistics')
+          setIsTransitioning(false)
+        }
+      } catch (err) {
+        console.error('[NetStat] Error fetching activity stats:', err)
+        setError(err.message || 'Failed to load activity statistics')
+        setIsTransitioning(false)
+      } finally {
+        setLoading(prev => {
+          if (prev) {
+            return false
+          }
+          return prev
+        })
       }
-    } catch (err) {
-      console.error('[NetStat] Error fetching activity stats:', err)
-      setError(err.message || 'Failed to load activity statistics')
-    } finally {
-      setLoading(false)
     }
-  }
+    
+    fetchActivityStats()
+  }, [timePeriod, authenticatedFetch])
 
   // Format activity name for display
   const formatActivityName = (activity) => {
@@ -78,6 +108,35 @@ const NetStat = () => {
   }
 
   const normalizedData = getNormalizedData()
+  
+  // Get previous normalized data for transition
+  const getPrevNormalizedData = () => {
+    if (!prevActivityStats || prevActivityStats.length === 0) {
+      return []
+    }
+    
+    const validStats = prevActivityStats.filter(s => s && s.totalSeconds > 0)
+    
+    if (validStats.length === 0) {
+      return []
+    }
+    
+    const maxSeconds = Math.max(...validStats.map(s => s.totalSeconds))
+    
+    if (maxSeconds === 0) {
+      return []
+    }
+    
+    return validStats.map(stat => ({
+      activity: stat.activity,
+      label: formatActivityName(stat.activity),
+      value: Math.min(5, (stat.totalSeconds / maxSeconds) * 5),
+      totalSeconds: stat.totalSeconds
+    }))
+  }
+  
+  const prevNormalizedData = getPrevNormalizedData()
+  const displayData = isTransitioning && prevNormalizedData.length > 0 ? prevNormalizedData : normalizedData
 
   // Radar chart configuration (smaller size for horizontal layout)
   const chartSize = 300
@@ -85,7 +144,7 @@ const NetStat = () => {
   const centerY = chartSize / 2
   const radius = 100
   const levels = 5
-  const angleStep = (2 * Math.PI) / (normalizedData.length || 6)
+  const angleStep = (2 * Math.PI) / (displayData.length || 6)
 
   // Calculate point on circle
   const getPoint = (angle, distance) => {
@@ -95,11 +154,12 @@ const NetStat = () => {
   }
 
   // Generate polygon points for data
-  const getDataPoints = () => {
-    if (normalizedData.length === 0) return ''
+  const getDataPoints = (data = displayData) => {
+    if (data.length === 0) return ''
     
-    return normalizedData.map((item, index) => {
-      const angle = (index * angleStep) - (Math.PI / 2) // Start from top
+    const dataAngleStep = (2 * Math.PI) / (data.length || 6)
+    return data.map((item, index) => {
+      const angle = (index * dataAngleStep) - (Math.PI / 2) // Start from top
       const distance = (item.value / 5) * radius
       const point = getPoint(angle, distance)
       return `${point.x},${point.y}`
@@ -127,12 +187,13 @@ const NetStat = () => {
   }
 
   // Generate grid lines (spokes)
-  const getGridLines = () => {
-    if (normalizedData.length === 0) return []
+  const getGridLines = (data = displayData) => {
+    if (data.length === 0) return []
     
+    const dataAngleStep = (2 * Math.PI) / (data.length || 6)
     const lines = []
-    for (let i = 0; i < normalizedData.length; i++) {
-      const angle = (i * angleStep) - (Math.PI / 2)
+    for (let i = 0; i < data.length; i++) {
+      const angle = (i * dataAngleStep) - (Math.PI / 2)
       const endPoint = getPoint(angle, radius)
       lines.push(
         <line
@@ -150,17 +211,18 @@ const NetStat = () => {
   }
 
   // Generate labels
-  const getLabels = () => {
-    if (normalizedData.length === 0) return []
+  const getLabels = (data = displayData) => {
+    if (data.length === 0) return []
     
-    return normalizedData.map((item, index) => {
-      const angle = (index * angleStep) - (Math.PI / 2)
+    const dataAngleStep = (2 * Math.PI) / (data.length || 6)
+    return data.map((item, index) => {
+      const angle = (index * dataAngleStep) - (Math.PI / 2)
       const labelDistance = radius + 20
       const point = getPoint(angle, labelDistance)
       
       return (
         <text
-          key={index}
+          key={`${item.activity}-${index}`}
           x={point.x}
           y={point.y}
           textAnchor="middle"
@@ -174,17 +236,18 @@ const NetStat = () => {
   }
 
   // Generate value labels
-  const getValueLabels = () => {
-    if (normalizedData.length === 0) return []
+  const getValueLabels = (data = displayData) => {
+    if (data.length === 0) return []
     
-    return normalizedData.map((item, index) => {
-      const angle = (index * angleStep) - (Math.PI / 2)
+    const dataAngleStep = (2 * Math.PI) / (data.length || 6)
+    return data.map((item, index) => {
+      const angle = (index * dataAngleStep) - (Math.PI / 2)
       const distance = (item.value / 5) * radius
       const point = getPoint(angle, distance)
       
       return (
         <text
-          key={index}
+          key={`${item.activity}-${index}`}
           x={point.x}
           y={point.y - 15}
           textAnchor="middle"
@@ -207,25 +270,90 @@ const NetStat = () => {
     return `${minutes}m`
   }
 
-  if (loading) {
+  if (error && !isTransitioning) {
     return (
       <div className="net-stat-container">
+        <div className="net-stat-header">
+          <h3>
+            <span className="material-symbols-outlined">radar</span>
+            Activity Statistics
+          </h3>
+          <div className="net-stat-period-selector">
+            <ModernRadioButton
+              options={timePeriodOptions}
+              value={timePeriod}
+              onChange={setTimePeriod}
+              name="time-period"
+            />
+          </div>
+        </div>
+        <div className="net-stat-error">{error}</div>
+      </div>
+    )
+  }
+  
+  if (loading && activityStats.length === 0) {
+    return (
+      <div className="net-stat-container">
+        <div className="net-stat-header">
+          <h3>
+            <span className="material-symbols-outlined">radar</span>
+            Activity Statistics
+          </h3>
+          <div className="net-stat-period-selector">
+            <ModernRadioButton
+              options={timePeriodOptions}
+              value={timePeriod}
+              onChange={setTimePeriod}
+              name="time-period"
+            />
+          </div>
+        </div>
         <div className="net-stat-loading">Loading activity statistics...</div>
       </div>
     )
   }
 
-  if (error) {
+  if (!loading && normalizedData.length === 0 && !isTransitioning) {
     return (
       <div className="net-stat-container">
-        <div className="net-stat-error">{error}</div>
+        <div className="net-stat-header">
+          <h3>
+            <span className="material-symbols-outlined">radar</span>
+            Activity Statistics
+          </h3>
+          <div className="net-stat-period-selector">
+            <ModernRadioButton
+              options={timePeriodOptions}
+              value={timePeriod}
+              onChange={setTimePeriod}
+              name="time-period"
+            />
+          </div>
+        </div>
+        <div className="net-stat-empty">No activity data available</div>
       </div>
     )
   }
-
-  if (normalizedData.length === 0) {
+  
+  // Show content even if transitioning or if we have previous data
+  if (displayData.length === 0 && !isTransitioning && !loading) {
     return (
       <div className="net-stat-container">
+        <div className="net-stat-header">
+          <h3>
+            <span className="material-symbols-outlined">radar</span>
+            Activity Statistics
+          </h3>
+          <div className="net-stat-period-selector">
+            <ModernRadioButton
+              options={timePeriodOptions}
+              value={timePeriod}
+              onChange={setTimePeriod}
+              name="time-period"
+            />
+          </div>
+        </div>
         <div className="net-stat-empty">No activity data available</div>
       </div>
     )
@@ -238,9 +366,17 @@ const NetStat = () => {
           <span className="material-symbols-outlined">radar</span>
           Activity Statistics
         </h3>
+        <div className="net-stat-period-selector">
+          <ModernRadioButton
+            options={timePeriodOptions}
+            value={timePeriod}
+            onChange={setTimePeriod}
+            name="time-period"
+          />
+        </div>
       </div>
       
-      <div className="net-stat-content">
+      <div className={`net-stat-content ${isTransitioning ? 'transitioning' : ''}`}>
         <div className="radar-chart-container">
           <svg width={chartSize} height={chartSize} viewBox={`0 0 ${chartSize} ${chartSize}`} className="radar-chart">
             {/* Grid circles */}
@@ -249,32 +385,45 @@ const NetStat = () => {
             {/* Grid lines (spokes) */}
             {getGridLines()}
             
-            {/* Data polygon */}
-            {normalizedData.length > 0 && (
+            {/* Previous data polygon (fading out) */}
+            {isTransitioning && prevNormalizedData.length > 0 && (
+              <polygon
+                points={getDataPoints(prevNormalizedData)}
+                fill="rgba(102, 126, 234, 0.15)"
+                stroke="rgba(102, 126, 234, 0.4)"
+                strokeWidth="2"
+                className="radar-polygon radar-polygon-fade-out"
+              />
+            )}
+            
+            {/* Current data polygon */}
+            {displayData.length > 0 && (
               <polygon
                 points={getDataPoints()}
                 fill="rgba(102, 126, 234, 0.3)"
                 stroke="rgba(102, 126, 234, 0.8)"
                 strokeWidth="2"
-                className="radar-polygon"
+                className={`radar-polygon ${isTransitioning ? 'radar-polygon-fade-in' : ''}`}
               />
             )}
             
             {/* Data points */}
-            {normalizedData.map((item, index) => {
-              const angle = (index * angleStep) - (Math.PI / 2)
+            {displayData.map((item, index) => {
+              const dataAngleStep = (2 * Math.PI) / (displayData.length || 6)
+              const angle = (index * dataAngleStep) - (Math.PI / 2)
               const distance = (item.value / 5) * radius
               const point = getPoint(angle, distance)
               
               return (
                 <circle
-                  key={index}
+                  key={`${item.activity}-${index}`}
                   cx={point.x}
                   cy={point.y}
                   r="4"
                   fill="rgba(102, 126, 234, 1)"
                   stroke="white"
                   strokeWidth="2"
+                  className="radar-point"
                 />
               )
             })}
@@ -288,9 +437,9 @@ const NetStat = () => {
         </div>
         
         {/* Legend */}
-        <div className="net-stat-legend">
-          {normalizedData.map((item, index) => (
-            <div key={index} className="legend-item">
+        <div className={`net-stat-legend ${isTransitioning ? 'legend-transitioning' : ''}`}>
+          {displayData.map((item, index) => (
+            <div key={`${item.activity}-${index}`} className="legend-item">
               <div className="legend-color" style={{ backgroundColor: 'rgba(102, 126, 234, 0.8)' }}></div>
               <div className="legend-content">
                 <span className="legend-label">{item.label}</span>

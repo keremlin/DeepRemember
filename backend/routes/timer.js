@@ -210,12 +210,13 @@ router.get('/active', auth.verifyToken.bind(auth), async (req, res) => {
 router.get('/activity-stats', auth.verifyToken.bind(auth), async (req, res) => {
   try {
     const userId = req.userId;
+    const period = req.query.period || null;
     
     if (!srsRepository) {
       await initializeDatabase();
     }
 
-    const stats = await srsRepository.getActivityStatistics(userId);
+    const stats = await srsRepository.getActivityStatistics(userId, period);
     
     res.json({
       success: true,

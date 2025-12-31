@@ -1143,33 +1143,79 @@ class DeepRememberRepository {
   /**
    * Get activity statistics grouped by activity for a user
    * @param {string} userId - User ID
+   * @param {string} period - Time period: 'today', 'this_week', 'this_month', or null for all time
    * @returns {Promise<Array>} Array of objects with activity and totalSeconds
    */
-  async getActivityStatistics(userId) {
+  async getActivityStatistics(userId, period = null) {
     try {
-      // Try GROUP BY query first
+      // Calculate date range based on period
+      let dateFilter = '';
+      let params = {};
+      
+      if (period === 'today') {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        const todayStart = today.toISOString();
+        const tomorrow = new Date(today);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        const tomorrowStart = tomorrow.toISOString();
+        dateFilter = ' AND start_datetime >= ? AND start_datetime < ?';
+        params = {
+          user_id: userId,
+          date_start: todayStart,
+          date_end: tomorrowStart
+        };
+      } else if (period === 'this_week') {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        const dayOfWeek = today.getUTCDay();
+        const weekStart = new Date(today);
+        weekStart.setUTCDate(today.getUTCDate() - dayOfWeek);
+        const weekStartISO = weekStart.toISOString();
+        dateFilter = ' AND start_datetime >= ?';
+        params = {
+          user_id: userId,
+          date_start: weekStartISO
+        };
+      } else if (period === 'this_month') {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        today.setUTCDate(1);
+        const monthStart = today.toISOString();
+        dateFilter = ' AND start_datetime >= ?';
+        params = {
+          user_id: userId,
+          date_start: monthStart
+        };
+      } else {
+        params = { user_id: userId };
+      }
+      
       const query = `SELECT activity, SUM(length_seconds) as total_seconds 
          FROM spend_time 
          WHERE user_id = ? 
-         AND end_datetime IS NOT NULL
+         AND end_datetime IS NOT NULL${dateFilter}
          GROUP BY activity
          ORDER BY total_seconds DESC`;
       
-      const params = { user_id: userId };
-      const results = await this.db.query(query, params);
+      let results;
+      try {
+        results = await this.db.query(query, params);
+      } catch (queryError) {
+        console.error('[SRS-REPO] GROUP BY query failed:', queryError);
+        results = null;
+      }
       
-      // If GROUP BY doesn't work, try fallback approach
-      if (!Array.isArray(results) || results.length === 0) {
-        // Fallback: Get all records and group manually
-        const fallbackQuery = `SELECT activity, length_seconds 
+      // If GROUP BY query failed, try fallback approach
+      if (!Array.isArray(results)) {
+        const fallbackQuery = `SELECT activity, length_seconds, start_datetime
            FROM spend_time 
            WHERE user_id = ? 
            AND end_datetime IS NOT NULL
-           AND length_seconds > 0`;
+           AND length_seconds > 0${dateFilter}`;
         
         const allRecords = await this.db.query(fallbackQuery, params);
         
-        // Group manually
         const activityMap = {};
         if (Array.isArray(allRecords)) {
           allRecords.forEach(record => {
@@ -1181,13 +1227,16 @@ class DeepRememberRepository {
           });
         }
         
-        // Convert to array and sort
         return Object.entries(activityMap)
           .map(([activity, totalSeconds]) => ({ activity, totalSeconds }))
           .sort((a, b) => b.totalSeconds - a.totalSeconds);
       }
       
       // Transform results to ensure consistent format
+      if (results.length === 0) {
+        return [];
+      }
+      
       return results.map(row => {
         const activity = row.activity || 'unknown';
         const totalSeconds = parseInt(row.total_seconds || row.totalSeconds || 0, 10);

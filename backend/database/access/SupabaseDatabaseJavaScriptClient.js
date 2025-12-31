@@ -537,7 +537,6 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           if (value === null || value === undefined) {
             return 'NULL';
           } else if (typeof value === 'string') {
-            // Escape single quotes in strings
             const escaped = value.replace(/'/g, "''");
             return `'${escaped}'`;
           } else if (typeof value === 'number') {
@@ -576,13 +575,11 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       });
 
       if (!response.ok) {
-        // Fallback to using the JavaScript client for simple queries
         return await this.fallbackToClientQuery(sql, params);
       }
 
       const data = await response.json();
       
-      // Ensure we return an array
       if (Array.isArray(data)) {
         return data;
       } else if (data && typeof data === 'object') {
@@ -700,6 +697,57 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
   async trySimpleQuery(sql, params) {
     try {
       const sqlLower = sql.toLowerCase().trim();
+      
+      // Handle GROUP BY queries with SUM (e.g., activity statistics)
+      if (sqlLower.includes('sum(') && sqlLower.includes('group by') && sqlLower.includes('from spend_time')) {
+        const paramValues = Object.values(params);
+        const userId = params.user_id || paramValues[0];
+        
+        if (userId) {
+          let query = this.client
+            .from('spend_time')
+            .select('activity, length_seconds, start_datetime, end_datetime');
+          
+          query = query.eq('user_id', userId);
+          query = query.not('end_datetime', 'is', null);
+          
+          // Apply date filters if present
+          if (sqlLower.includes('start_datetime >= ?')) {
+            const dateStart = params.date_start || paramValues[1];
+            if (dateStart) {
+              query = query.gte('start_datetime', dateStart);
+            }
+          }
+          
+          if (sqlLower.includes('start_datetime < ?')) {
+            const dateEnd = params.date_end || paramValues[2];
+            if (dateEnd) {
+              query = query.lt('start_datetime', dateEnd);
+            }
+          }
+          
+          const { data, error } = await query;
+          if (error) {
+            throw error;
+          }
+          
+          // Group manually and sum
+          const activityMap = {};
+          if (Array.isArray(data)) {
+            data.forEach(record => {
+              const activity = record.activity || 'unknown';
+              const seconds = parseInt(record.length_seconds || 0, 10);
+              if (seconds > 0) {
+                activityMap[activity] = (activityMap[activity] || 0) + seconds;
+              }
+            });
+          }
+          
+          return Object.entries(activityMap)
+            .map(([activity, totalSeconds]) => ({ activity, totalSeconds }))
+            .sort((a, b) => b.totalSeconds - a.totalSeconds);
+        }
+      }
       
       // Handle COUNT stats on cards table FIRST (total, due, by state, with search)
       // This MUST run before the generic COUNT handler to catch cards queries with LIKE
