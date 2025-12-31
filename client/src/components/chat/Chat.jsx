@@ -5,6 +5,7 @@ import VoiceChatInput from './VoiceChatInput'
 import Button from '../Button'
 import Page from '../Page'
 import GrammarCheckModal from './GrammarCheckModal'
+import ActivityTimer from '../ActivityTimer/ActivityTimer'
 import { useAuth } from '../security/AuthContext'
 import { useToast } from '../ToastProvider'
 import { useUserConfig } from '../UserConfigContext'
@@ -622,6 +623,12 @@ ${conversationHistory}`
               <span className="material-symbols-outlined">conversation</span>
               <h2>DeepChat</h2>
             </div>
+            <ActivityTimer 
+              activity="chat"
+              shouldStart={messages.some(msg => msg.role === 'user')}
+              shouldEnd={!messages.some(msg => msg.role === 'user')}
+              size="small"
+            />
             <Button
               onClick={toggleChatMode}
               variant={chatMode === 'voice' ? 'primary' : 'secondary'}

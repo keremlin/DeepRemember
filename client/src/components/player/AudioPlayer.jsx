@@ -4,6 +4,7 @@ import { useToast } from '../ToastProvider'
 import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import Translator from './Translator'
 import UploadFileButt from './UploadFileButt'
+import ActivityTimer from '../ActivityTimer/ActivityTimer'
 import './AudioPlayer.css'
 
 function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref) {
@@ -488,6 +489,18 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
 
   return (
     <div className="audio-player">
+      <div className="player-header">
+        <h3>
+          <span className="material-symbols-outlined">headphones</span>
+          Audio Player
+        </h3>
+        <ActivityTimer 
+          activity="player"
+          shouldStart={!!currentTrack}
+          shouldEnd={!currentTrack}
+          size="small"
+        />
+      </div>
       <div className="player-main">
         <div className="player-info">
           <div className="track-info">
