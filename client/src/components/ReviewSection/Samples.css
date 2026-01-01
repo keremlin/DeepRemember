@@ -4,7 +4,7 @@
   margin-bottom: 20px;
   min-height: auto; /* Allow height to adjust to content */
   max-height: none; /* No max height constraint */
-  overflow-y: visible; /* No scrollbar, show all content */
+  overflow: visible; /* Allow popups to overflow */
 }
 
 .context-section h4 {
@@ -22,6 +22,7 @@
   font-size: 0.95rem;
   line-height: 1.6;
   color: #aaa;
+  overflow: visible; /* Allow popups to overflow */
 }
 
 .context-text.context-display {
@@ -53,6 +54,7 @@
   .context-text {
     padding: 10px;
     font-size: 0.9rem;
+    overflow: visible; /* Allow popups to overflow on mobile */
   }
   
 }

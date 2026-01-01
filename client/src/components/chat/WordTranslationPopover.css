@@ -23,8 +23,9 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  min-width: 120px;
-  max-width: 250px;
+  min-width: 180px;
+  max-width: 375px;
+  width: fit-content;
   padding: 10px 12px;
   position: relative;
 }
@@ -146,8 +147,9 @@
 /* Responsive Design - Mobile */
 @media (max-width: 768px) {
   .word-translation-popover-content {
-    min-width: 100px;
-    max-width: 200px;
+    min-width: 150px;
+    max-width: 300px;
+    width: fit-content;
     padding: 8px 10px;
   }
 
@@ -158,8 +160,9 @@
 
 @media (max-width: 480px) {
   .word-translation-popover-content {
-    min-width: 80px;
-    max-width: 180px;
+    min-width: 120px;
+    max-width: 270px;
+    width: fit-content;
     padding: 6px 8px;
   }
 

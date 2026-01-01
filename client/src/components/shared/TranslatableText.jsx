@@ -68,7 +68,7 @@ const TranslatableText = ({
     
     // Calculate position relative to the content container (for absolute positioning)
     const popoverHeight = 50 // Approximate popover height
-    const popoverMaxWidth = 250 // Max width of popover
+    const popoverMaxWidth = 375 // Max width of popover (50% bigger)
     const wordCenterX = rect.left - contentRect.left + rect.width / 2
     let x = wordCenterX
     let y = rect.top - contentRect.top - popoverHeight - 8 // Position above the word with spacing
@@ -120,11 +120,37 @@ const TranslatableText = ({
     
     // Position popover below the text, centered horizontally on the text
     // Calculate position relative to contentRef (where popover will be positioned)
-    const popoverMaxWidth = 400 // Max width of popover
+    const popoverMaxWidth = 600 // Max width of popover (50% bigger)
+    const popoverEstimatedHeight = 150 // Estimated height of popover
     const textCenterX = textRect.left - contentRect.left + textRect.width / 2
     let x = textCenterX
-    // Position below the text - calculate from textRect bottom to contentRect top
-    const y = textRect.bottom - contentRect.top + 8 // Position below the text
+    
+    // Check if there's enough space below, if not, position above
+    // Get viewport dimensions to check available space
+    const viewportHeight = window.innerHeight
+    const textBottomViewport = textRect.bottom
+    const textTopViewport = textRect.top
+    
+    // Check space below and above in viewport
+    const spaceBelowViewport = viewportHeight - textBottomViewport
+    const spaceAboveViewport = textTopViewport
+    
+    // Prefer showing below, but switch to above if not enough space
+    const showBelow = spaceBelowViewport >= popoverEstimatedHeight || 
+                     (spaceBelowViewport > spaceAboveViewport && spaceBelowViewport >= 100)
+    
+    let y
+    if (showBelow) {
+      // Position below the text
+      y = textRect.bottom - contentRect.top + 8
+    } else {
+      // Position above the text
+      y = textRect.top - contentRect.top - popoverEstimatedHeight - 8
+      // Ensure it doesn't go above the container
+      if (y < 0) {
+        y = 8 // Fallback to top of container with small padding
+      }
+    }
     
     // Adjust if popover would go off screen horizontally
     const halfPopoverWidth = popoverMaxWidth / 2
@@ -136,7 +162,7 @@ const TranslatableText = ({
     
     setSentencePopoverState({ 
       text: text, 
-      position: { x, y, showBelow: true } // Always show below the text
+      position: { x, y, showBelow } 
     })
   }
 
