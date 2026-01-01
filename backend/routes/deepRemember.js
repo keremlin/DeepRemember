@@ -14,6 +14,7 @@ const appConfig = require('../config/app');
 const fs = require('fs');
 const multer = require('multer');
 const { upload } = require('../middleware/uploadConfig');
+const UserConfigRepository = require('../database/access/UserConfigRepository');
 
 const router = express.Router();
 const { LlmFactory } = require('../llm/LlmFactory');
@@ -57,6 +58,29 @@ function cleanTextForTTS(text) {
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
   return cleaned;
+}
+
+/**
+ * Get user's default TTS voice from user_configs table
+ * @param {string} userId - User ID
+ * @returns {Promise<string>} - Voice name, defaults to "de-DE-Neural2-F" if not found
+ */
+async function getUserTtsVoice(userId) {
+  try {
+    const database = databaseFactory.getDatabase();
+    const userConfigRepository = new UserConfigRepository(database);
+    const configs = await userConfigRepository.getConfigsByName(userId, 'default_tts_voice');
+    
+    if (configs && configs.length > 0 && configs[0].value) {
+      return configs[0].value;
+    }
+    // Return default value if no record found
+    return 'de-DE-Neural2-F';
+  } catch (error) {
+    console.error('[DeepRemember] Error getting user TTS voice:', error);
+    // Return default value on error
+    return 'de-DE-Neural2-F';
+  }
 }
 
 // Initialize FSRS instance
@@ -449,11 +473,18 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
         console.log(`[DeepRemember] Converting to speech: "${text}"`);
         
         try {
+            // Get user's TTS voice preference if using Google TTS
+            const userId = req.userId;
+            const ttsOptions = { timeout: 10000 };
+            
+            if (appConfig.TTS_TYPE && (appConfig.TTS_TYPE.toLowerCase() === 'google' || appConfig.TTS_TYPE.toLowerCase() === 'googletts')) {
+                const userVoice = await getUserTtsVoice(userId);
+                ttsOptions.voice = userVoice;
+                console.log(`[DeepRemember] Using TTS voice: ${userVoice}`);
+            }
+            
             // Use the TTS service to convert text to speech with configuration
-            // Don't pass voice/model as they're service-specific and handled internally
-            const audioBuffer = await ttsService.convert(text, {
-                timeout: 10000
-            });
+            const audioBuffer = await ttsService.convert(text, ttsOptions);
             
             // Save the audio file
             fileSystem.writeFileSync(filepath, audioBuffer);
@@ -1226,9 +1257,17 @@ router.post('/chat-voice', authMiddleware.verifyToken, voiceChatUpload.single('a
     console.log('[DeepRemember] TTS Input:', cleanedText);
 
     // Step 4: Convert cleaned LLM response to speech using TTS
-    const audioBuffer = await ttsService.convert(cleanedText, {
-      timeout: 30000
-    });
+    // Get user's TTS voice preference if using Google TTS
+    const userId = req.userId;
+    const ttsOptions = { timeout: 30000 };
+    
+    if (appConfig.TTS_TYPE && (appConfig.TTS_TYPE.toLowerCase() === 'google' || appConfig.TTS_TYPE.toLowerCase() === 'googletts')) {
+      const userVoice = await getUserTtsVoice(userId);
+      ttsOptions.voice = userVoice;
+      console.log(`[DeepRemember] Using TTS voice: ${userVoice}`);
+    }
+    
+    const audioBuffer = await ttsService.convert(cleanedText, ttsOptions);
 
     // Convert audio buffer to base64 for frontend
     const audioBase64 = audioBuffer.toString('base64');
