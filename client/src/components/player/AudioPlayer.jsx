@@ -5,6 +5,7 @@ import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import Translator from './Translator'
 import UploadFileButt from './UploadFileButt'
 import ActivityTimer from '../ActivityTimer/ActivityTimer'
+import SlowGerman from './podcasts/SlowGerman'
 import './AudioPlayer.css'
 
 function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref) {
@@ -30,6 +31,7 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
   const [originalText, setOriginalText] = useState('')
   const [timeInput, setTimeInput] = useState('0:00')
   const [isTimeInputFocused, setIsTimeInputFocused] = useState(false)
+  const [activeTab, setActiveTab] = useState('playlist')
 
   const audioRef = useRef(null)
   const progressRef = useRef(null)
@@ -191,6 +193,82 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
       // Set new source
       audioRef.current.src = getApiUrl(`/files/${track}`)
       await loadSubtitle(track)
+    }
+  }
+
+  const handleExternalTrackSelect = async (url, title, filename) => {
+    setCurrentTrack(title || url)
+    setCurrentTime(0)
+    setCurrentSubtitleIndex(-1)
+    setSubtitleText('')
+    setTimeInput('0:00')
+    
+    try {
+      // Use provided filename or extract from URL
+      let finalFilename = filename
+      if (!finalFilename) {
+        try {
+          const urlPath = new URL(url).pathname
+          finalFilename = urlPath.split('/').pop() || 'podcast.mp3'
+        } catch {
+          finalFilename = 'podcast.mp3'
+        }
+      }
+      
+      // Check if subtitle exists, generate if needed
+      let subtitleFilename = null
+      try {
+        const response = await fetch(getApiUrl('/generate-podcast-subtitle'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url, filename: finalFilename })
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.subtitleFile) {
+            subtitleFilename = data.subtitleFile
+            console.log('Subtitle available:', subtitleFilename)
+          }
+        }
+      } catch (subtitleError) {
+        console.warn('Error generating subtitle:', subtitleError)
+        // Continue without subtitle if generation fails
+      }
+      
+      if (audioRef.current) {
+        // Force reload by clearing src first, then setting it again
+        audioRef.current.src = ''
+        audioRef.current.load()
+        
+        // Small delay to ensure load completes
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Set external URL directly
+        audioRef.current.src = url
+        
+        // Load subtitle if available
+        if (subtitleFilename) {
+          await loadSubtitle(subtitleFilename)
+        } else {
+          setSubtitleTracks([])
+        }
+        
+        // Auto-play the podcast
+        try {
+          await audioRef.current.play()
+          setIsPlaying(true)
+        } catch (error) {
+          console.error('Error playing audio:', error)
+          // If autoplay is blocked, user will need to click play manually
+          setIsPlaying(false)
+        }
+      }
+    } catch (error) {
+      console.error('Error handling external track:', error)
+      showError('Failed to load podcast')
     }
   }
 
@@ -680,39 +758,60 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
 
       {showPlaylist && (
         <div className="playlist-panel">
-          <div className="playlist-header">
-            <h4>
-              <span className="material-symbols-outlined">queue_music</span>
-              Playlist
-            </h4>
-            {onUploadClick && (
-              <UploadFileButt onClick={onUploadClick} />
-            )}
-          </div>
-          <div className="playlist-list">
-            {isLoading ? (
-              <p>Loading tracks...</p>
-            ) : playlistData.length > 0 ? (
-              playlistData.map((trackItem, index) => (
-                <div
-                  key={index}
-                  className={`playlist-item ${currentTrack === trackItem.media ? 'active' : ''}`}
-                  onClick={() => handleTrackSelect(trackItem.media)}
-                >
-                  <span className="track-number">{index + 1}</span>
-                  <span className="track-name">{trackItem.media}</span>
-                  <button
-                    className="delete-track-btn"
-                    onClick={(e) => handleDeleteFile(e, trackItem)}
-                    title="Delete file"
-                  >
-                    <span className="material-symbols-outlined">delete</span>
-                  </button>
+          <div className="tabs-container">
+            <div className="tabs-header">
+              <button 
+                className={`tab-button ${activeTab === 'playlist' ? 'active' : ''}`}
+                onClick={() => setActiveTab('playlist')}
+              >
+                <span className="material-symbols-outlined">queue_music</span>
+                Playlist
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'slowgerman' ? 'active' : ''}`}
+                onClick={() => setActiveTab('slowgerman')}
+              >
+                <span className="material-symbols-outlined">podcasts</span>
+                Slow German
+              </button>
+            </div>
+            <div className="tabs-content">
+              <div className={`tab-panel ${activeTab === 'playlist' ? 'active' : ''}`}>
+                <div className="playlist-header">
+                  {onUploadClick && (
+                    <UploadFileButt onClick={onUploadClick} />
+                  )}
                 </div>
-              ))
-            ) : (
-              <p>No audio files found</p>
-            )}
+                <div className="playlist-list">
+                  {isLoading ? (
+                    <p>Loading tracks...</p>
+                  ) : playlistData.length > 0 ? (
+                    playlistData.map((trackItem, index) => (
+                      <div
+                        key={index}
+                        className={`playlist-item ${currentTrack === trackItem.media ? 'active' : ''}`}
+                        onClick={() => handleTrackSelect(trackItem.media)}
+                      >
+                        <span className="track-number">{index + 1}</span>
+                        <span className="track-name">{trackItem.media}</span>
+                        <button
+                          className="delete-track-btn"
+                          onClick={(e) => handleDeleteFile(e, trackItem)}
+                          title="Delete file"
+                        >
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No audio files found</p>
+                  )}
+                </div>
+              </div>
+              <div className={`tab-panel ${activeTab === 'slowgerman' ? 'active' : ''}`}>
+                <SlowGerman onTrackSelect={handleExternalTrackSelect} />
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,0 +1,205 @@
+.slowgerman-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.slowgerman-header {
+  margin-bottom: 15px;
+}
+
+.slowgerman-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slowgerman-header h4 .material-symbols-outlined {
+  font-size: 20px;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.slowgerman-list {
+  height: 400px;
+  overflow-y: auto;
+}
+
+.slowgerman-loading,
+.slowgerman-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.slowgerman-error {
+  gap: 15px;
+}
+
+.retry-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.slowgerman-episode {
+  padding: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.slowgerman-episode:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.episode-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.episode-info {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.episode-title {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.episode-meta {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.episode-date,
+.episode-duration {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.episode-date .material-symbols-outlined,
+.episode-duration .material-symbols-outlined {
+  font-size: 16px;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.episode-description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Light Mode */
+.light-mode .slowgerman-header h4 {
+  color: #333;
+}
+
+.light-mode .slowgerman-episode {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .slowgerman-episode:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.light-mode .episode-title {
+  color: #333;
+}
+
+.light-mode .episode-meta {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.light-mode .episode-description {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.light-mode .slowgerman-loading,
+.light-mode .slowgerman-error {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Scrollbar */
+.slowgerman-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.slowgerman-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.slowgerman-list::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.5);
+  border-radius: 3px;
+}
+
+.slowgerman-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.7);
+}
+
+.light-mode .slowgerman-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .slowgerman-list {
+    height: 300px;
+  }
+  
+  .episode-header {
+    flex-wrap: wrap;
+  }
+  
+  .episode-description {
+    margin-top: 10px;
+  }
+  
+  .episode-meta {
+    font-size: 11px;
+    gap: 10px;
+  }
+}
+
