@@ -295,17 +295,14 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
 
       // Check if this is a complex query that should use RPC
       if (this.isComplexQuery(sql)) {
-        
         return await this.executeComplexQuery(sql, params);
       }
 
       // Convert SQL to Supabase JavaScript Client format
       const { tableName, operation, conditions, fields } = this.parseSQL(sql, params);
       
-      
       if (!tableName || tableName === 'unknown') {
         // Fallback to RPC for unrecognized queries
-        
         return await this.executeComplexQuery(sql, params);
       }
       
@@ -473,6 +470,12 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       return false; // This should be handled by the normal query path
     }
     
+    // Simple SELECT with multiple AND conditions and ORDER BY should NOT be complex
+    // Pattern: SELECT * FROM table WHERE col1 = ? AND col2 = ? ORDER BY col ASC/DESC
+    if (sqlLower.match(/^select\s+\*\s+from\s+\w+\s+where\s+[\w\s=?\s]+and\s+\w+\s*=\s*\?\s+order\s+by\s+\w+\s+(asc|desc)$/i)) {
+      return false; // This should be handled by the normal query path
+    }
+    
     // Check for SQL functions (excluding simple ORDER BY on its own)
     const sqlFunctions = ['count(', 'sum(', 'avg(', 'min(', 'max(', 'distinct', 'group by', 'having'];
     const hasFunction = sqlFunctions.some(func => sqlLower.includes(func));
@@ -490,10 +493,27 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     const hasLikeWithParams = sqlLower.includes('like') && sqlLower.includes('$');
     
     // Check for complex WHERE clauses with multiple conditions
-    const whereMatches = sqlLower.match(/where\s+(.*)/g);
-    const hasComplexWhere = whereMatches && whereMatches.some(where => 
-      where.includes(' and ') || where.includes(' or ') || where.includes(' in ')
-    );
+    // But exclude simple AND conditions with = ? patterns (e.g., "col1 = ? AND col2 = ?")
+    const whereMatch = sqlLower.match(/where\s+([\s\S]*?)(?:\s+order\s+by|\s+limit|\s+offset|$)/i);
+    let hasComplexWhere = false;
+    if (whereMatch) {
+      const whereClause = whereMatch[1].trim();
+      // Check if it's ONLY simple equality patterns: col = ? AND col = ? (can have multiple ANDs)
+      // Allow newlines and whitespace in the pattern
+      const onlySimpleEquals = /^(\w+\s*=\s*\?\s+and\s+)+(\w+\s*=\s*\?)$/i.test(whereClause.replace(/\s+/g, ' '));
+      
+      if (onlySimpleEquals) {
+        hasComplexWhere = false; // Simple AND conditions with = ?, not complex
+      } else {
+        // Check for OR, IN, NOT NULL, IS NULL, LIKE, or comparison operators
+        hasComplexWhere = whereClause.includes(' or ') || 
+                         whereClause.includes(' in ') || 
+                         whereClause.includes(' not null') || 
+                         whereClause.includes(' is null') ||
+                         whereClause.includes(' like ') ||
+                         whereClause.match(/[<>=!]+/); // Comparison operators
+      }
+    }
     
     // Check for LIMIT/OFFSET (can make a query complex if not in simple form)
     const hasLimit = sqlLower.includes('limit') || sqlLower.includes('offset');
@@ -1386,13 +1406,15 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       const fields = match[1];
       const tableName = match[2];
       
+      const conditions = this.extractConditions(sql, params);
+      
       // Handle COUNT queries specially
       if (fields.toLowerCase().includes('count(*)')) {
         return {
           tableName,
           operation: 'count',
           fields: '*',
-          conditions: this.extractConditions(sql, params)
+          conditions: conditions
         };
       }
       
@@ -1400,7 +1422,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         tableName,
         operation: 'select',
         fields,
-        conditions: this.extractConditions(sql, params)
+        conditions: conditions
       };
     }
     return { tableName: 'unknown', operation: 'select' };
@@ -1459,18 +1481,25 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     const whereMatch = sql.match(/where\s+([\s\S]*)/i);
     
     if (whereMatch) {
-      const whereClause = whereMatch[1];
+      let whereClause = whereMatch[1];
+      // Remove ORDER BY, GROUP BY, LIMIT, OFFSET clauses that might be at the end
+      whereClause = whereClause.replace(/\s+(?:order\s+by|group\s+by|limit|offset)[\s\S]*$/i, '').trim();
       
       // Handle ? placeholders (used by DeepRememberRepository)
       const questionMarkMatches = whereClause.match(/(\w+)\s*=\s*\?/gi);
       if (questionMarkMatches) {
+        const paramValues = Object.values(params);
         let paramIndex = 0;
         questionMarkMatches.forEach(match => {
           const columnMatch = match.match(/(\w+)\s*=\s*\?/i);
           if (columnMatch) {
             const column = columnMatch[1];
-            const paramKey = `$${paramIndex + 1}`;
-            const paramValue = params[paramKey] || params[column];
+            // Priority: 1) column name in params (for named params like {user_id: ..., name: ...})
+            //          2) positional $1/$2 style params
+            //          3) array index from Object.values
+            const paramValue = params[column] !== undefined ? params[column]
+                           : (params[`$${paramIndex + 1}`] !== undefined ? params[`$${paramIndex + 1}`]
+                           : paramValues[paramIndex]);
             
             if (paramValue !== undefined) {
               conditions.push({

@@ -413,6 +413,31 @@ class SupabaseDatabase extends IDatabase {
           FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
         )`,
         
+        `CREATE TABLE IF NOT EXISTS app_variables (
+          id SERIAL PRIMARY KEY,
+          keyname TEXT UNIQUE NOT NULL,
+          value TEXT,
+          type TEXT NOT NULL CHECK (type IN ('text', 'json', 'number')),
+          create_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          update_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          description TEXT
+        )`,
+        
+        `CREATE OR REPLACE FUNCTION update_app_variables_update_date()
+         RETURNS TRIGGER AS $$
+         BEGIN
+           NEW.update_date = NOW();
+           RETURN NEW;
+         END;
+         $$ LANGUAGE plpgsql`,
+        
+        `DROP TRIGGER IF EXISTS trigger_update_app_variables_update_date ON app_variables`,
+        
+        `CREATE TRIGGER trigger_update_app_variables_update_date
+         BEFORE UPDATE ON app_variables
+         FOR EACH ROW
+         EXECUTE FUNCTION update_app_variables_update_date()`,
+        
         'CREATE INDEX IF NOT EXISTS idx_cards_user_id ON cards(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due)',
         'CREATE INDEX IF NOT EXISTS idx_cards_state ON cards(state)',
@@ -428,7 +453,8 @@ class SupabaseDatabase extends IDatabase {
         'CREATE INDEX IF NOT EXISTS idx_user_configs_name ON user_configs(user_id, name)',
         'CREATE INDEX IF NOT EXISTS idx_spend_time_user_id ON spend_time(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_spend_time_start_datetime ON spend_time(start_datetime)',
-        'CREATE INDEX IF NOT EXISTS idx_spend_time_user_date ON spend_time(user_id, start_datetime)'
+        'CREATE INDEX IF NOT EXISTS idx_spend_time_user_date ON spend_time(user_id, start_datetime)',
+        'CREATE INDEX IF NOT EXISTS idx_app_variables_keyname ON app_variables(keyname)'
       ];
 
       let successCount = 0;
@@ -683,6 +709,17 @@ CREATE TABLE IF NOT EXISTS spend_time (
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
+-- App variables table for storing application-wide variables
+CREATE TABLE IF NOT EXISTS app_variables (
+  id SERIAL PRIMARY KEY,
+  keyname TEXT UNIQUE NOT NULL,
+  value TEXT,
+  type TEXT NOT NULL CHECK (type IN ('text', 'json', 'number')),
+  create_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  update_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  description TEXT
+);
+
 -- Word base table
 CREATE TABLE IF NOT EXISTS word_base (
   id SERIAL PRIMARY KEY,
@@ -717,6 +754,23 @@ CREATE INDEX IF NOT EXISTS idx_spend_time_user_date ON spend_time(user_id, start
 CREATE INDEX IF NOT EXISTS idx_word_base_word ON word_base(word);
 CREATE INDEX IF NOT EXISTS idx_word_base_group_alphabet_name ON word_base(group_alphabet_name);
 CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word);
+CREATE INDEX IF NOT EXISTS idx_app_variables_keyname ON app_variables(keyname);
+
+-- Trigger function to automatically update update_date
+CREATE OR REPLACE FUNCTION update_app_variables_update_date()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.update_date = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update update_date on row update
+DROP TRIGGER IF EXISTS trigger_update_app_variables_update_date ON app_variables;
+CREATE TRIGGER trigger_update_app_variables_update_date
+  BEFORE UPDATE ON app_variables
+  FOR EACH ROW
+  EXECUTE FUNCTION update_app_variables_update_date();
 `;
   }
 

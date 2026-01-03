@@ -2,6 +2,9 @@ const ITts = require('./ITts');
 const appConfig = require('../config/app');
 const { google } = require('googleapis');
 const textToSpeech = require('@google-cloud/text-to-speech');
+const databaseFactory = require('../database/access/DatabaseFactory');
+const dbConfig = require('../config/database');
+const AppVariablesRepository = require('../database/access/AppVariablesRepository');
 
 /**
  * Google Cloud Text-to-Speech TTS implementation
@@ -39,6 +42,8 @@ class GoogleTts extends ITts {
         this.oauth2Client = null;
         this.ttsClient = null;
         this.isInitialized = false;
+        this.appVariablesRepository = null;
+        this.repositoryInitialized = false;
         
         if (!this.config.clientId || !this.config.clientSecret) {
             throw new Error('Google OAuth credentials are required. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.');
@@ -128,6 +133,135 @@ class GoogleTts extends ITts {
     }
 
     /**
+     * Initialize the app variables repository
+     */
+    async initializeRepository() {
+        if (this.repositoryInitialized && this.appVariablesRepository) {
+            return;
+        }
+
+        try {
+            // Check if database is already initialized, if not initialize it
+            let database;
+            try {
+                database = databaseFactory.getDatabase();
+            } catch (error) {
+                // Database not initialized yet, initialize it
+                await databaseFactory.initialize(dbConfig.type, dbConfig[dbConfig.type]);
+                database = databaseFactory.getDatabase();
+            }
+            
+            this.appVariablesRepository = new AppVariablesRepository(database);
+            this.repositoryInitialized = true;
+            console.log('[Google TTS] App variables repository initialized successfully');
+        } catch (error) {
+            console.error('[Google TTS] Repository initialization failed:', error);
+            // Don't throw - allow TTS to work even if repository fails
+            this.repositoryInitialized = false;
+        }
+    }
+
+    /**
+     * Check and update character count for monthly limit
+     * @param {number} charCount - Number of characters to add
+     * @returns {Promise<boolean>} - True if within limit and updated, false if exceeded
+     */
+    async checkAndUpdateCharacterCount(charCount) {
+        try {
+            await this.initializeRepository();
+            
+            if (!this.appVariablesRepository) {
+                console.warn('[Google TTS] Repository not available, skipping character count check');
+                return true; // Allow if repository unavailable
+            }
+
+            const KEY_NAME = 'GOOGLE_TTS_CHAR_NUMB';
+            const MONTHLY_LIMIT = 999000;
+            
+            // Get current variable
+            let variable = await this.appVariablesRepository.getByKeyname(KEY_NAME);
+            
+            // Initialize default structure if variable doesn't exist
+            const now = new Date();
+            const currentDateStr = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}/${now.getFullYear()}`;
+            
+            let charData;
+            if (!variable) {
+                // Create new variable with default values
+                charData = {
+                    count: 0,
+                    startDate: currentDateStr
+                };
+                await this.appVariablesRepository.create({
+                    keyname: KEY_NAME,
+                    value: JSON.stringify(charData),
+                    type: 'json',
+                    description: 'Google TTS monthly character count tracker'
+                });
+            } else {
+                // Parse existing JSON value
+                try {
+                    charData = JSON.parse(variable.value);
+                } catch (e) {
+                    // If parsing fails, reset to default
+                    console.error('[Google TTS] Failed to parse existing variable:', e);
+                }
+            }
+
+            // Check if we're in a new month
+            // Parse date string in MM/DD/YYYY format
+            const dateParts = charData.startDate.split('/');
+            const startDate = new Date(
+                parseInt(dateParts[2]), // year
+                parseInt(dateParts[0]) - 1, // month (0-indexed)
+                parseInt(dateParts[1]) // day
+            );
+            const isNewMonth = now.getMonth() !== startDate.getMonth() || 
+                              now.getFullYear() !== startDate.getFullYear();
+
+            if (isNewMonth) {
+                // Reset count for new month
+                charData.count = 0;
+                charData.startDate = currentDateStr;
+                console.log(`[Google TTS] New month detected, resetting character count. New start date: ${currentDateStr}`);
+            }
+
+            // Calculate new count
+            const newCount = charData.count + charCount;
+
+            // Update the count in database first
+            charData.count = newCount;
+            await this.appVariablesRepository.update(KEY_NAME, {
+                value: JSON.stringify(charData)
+            });
+
+            // Get it again to verify
+            variable = await this.appVariablesRepository.getByKeyname(KEY_NAME);
+            if (variable) {
+                try {
+                    charData = JSON.parse(variable.value);
+                } catch (e) {
+                    console.error('[Google TTS] Failed to parse updated variable');
+                }
+            }
+
+            // Check if limit is exceeded
+            if (charData.count > MONTHLY_LIMIT) {
+                const logMessage = `[Google TTS] Monthly character limit exceeded. Current count: ${charData.count}, Limit: ${MONTHLY_LIMIT}, Requested: ${charCount}`;
+                console.warn(logMessage);
+                return false;
+            }
+
+            console.log(`[Google TTS] Character count updated. Current: ${charData.count}/${MONTHLY_LIMIT}, Added: ${charCount}`);
+            return true;
+        } catch (error) {
+            console.error('[Google TTS] Error checking character count:', error);
+            // Allow TTS to proceed if there's an error checking the limit
+            return true;
+        }
+    }
+
+    /**
      * Convert text to speech using Google Cloud TTS
      * @param {string} text - The text to convert to speech
      * @param {Object} options - Optional configuration for TTS
@@ -142,6 +276,16 @@ class GoogleTts extends ITts {
     async convert(text, options = {}) {
         if (!text || typeof text !== 'string') {
             throw new Error('Text parameter is required and must be a string');
+        }
+
+        // Count characters and check monthly limit
+        const charCount = text.length;
+        const withinLimit = await this.checkAndUpdateCharacterCount(charCount);
+        
+        if (!withinLimit) {
+            const logMessage = `[Google TTS] Monthly character limit (999000) exceeded. Google TTS API call blocked for text with ${charCount} characters.`;
+            console.warn(logMessage);
+            throw new Error(`Google TTS monthly character limit exceeded. Current usage exceeds 999000 characters for this month.`);
         }
 
         await this.initialize();

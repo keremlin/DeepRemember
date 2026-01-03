@@ -3,6 +3,7 @@ import Page from '../Page'
 import LabelsModal from '../labels/LabelsModal'
 import ChatTemplates from '../chat/ChatTemplates'
 import UserConfigurationManager from './UserConfigurationManager'
+import AppVariables from '../AppVariable/AppVariables'
 import '../security/UserInfo.css'
 
 const UserManagement = ({ 
@@ -18,6 +19,7 @@ const UserManagement = ({
   const [showLabelsModal, setShowLabelsModal] = useState(false)
   const [showChatTemplates, setShowChatTemplates] = useState(false)
   const [showUserConfigs, setShowUserConfigs] = useState(false)
+  const [showAppVariables, setShowAppVariables] = useState(false)
 
   const handleLabelsClick = () => {
     setShowLabelsModal(true)
@@ -29,6 +31,28 @@ const UserManagement = ({
 
   const handleConfigClick = () => {
     setShowUserConfigs(true)
+  }
+
+  const handleVariablesClick = () => {
+    setShowAppVariables(true)
+  }
+
+  if (showAppVariables) {
+    return (
+      <AppVariables
+        onUserSetup={onUserSetup}
+        onNavigateToWelcome={onNavigateToWelcome}
+        onNavigateToPlayer={onNavigateToPlayer}
+        onShowCards={onShowCards}
+        onNavigateToUserManagement={onNavigateToUserManagement}
+        onNavigateToManagement={() => {
+          setShowAppVariables(false)
+          onNavigateToManagement()
+        }}
+        onNavigateToChat={onNavigateToChat}
+        onNavigateToWordList={onNavigateToWordList}
+      />
+    )
   }
 
   if (showUserConfigs) {
@@ -110,6 +134,16 @@ const UserManagement = ({
               <span className="material-symbols-outlined">settings</span>
             </div>
             <div className="user-info-label">Config</div>
+          </div>
+          <div 
+            className="user-info-item" 
+            onClick={handleVariablesClick} 
+            title="Variables"
+          >
+            <div className="user-info-icon">
+              <span className="material-symbols-outlined">code</span>
+            </div>
+            <div className="user-info-label">Variables</div>
           </div>
         </div>
       </div>
