@@ -5,7 +5,7 @@ import { getApiUrl, getApiBaseUrl } from '../../config/api'
 import Translator from './Translator'
 import UploadFileButt from './UploadFileButt'
 import ActivityTimer from '../ActivityTimer/ActivityTimer'
-import SlowGerman from './podcasts/SlowGerman'
+import Podcast from './podcasts/Podcast'
 import './AudioPlayer.css'
 
 function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref) {
@@ -774,6 +774,13 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
                 <span className="material-symbols-outlined">podcasts</span>
                 Slow German
               </button>
+              <button 
+                className={`tab-button ${activeTab === 'easygerman' ? 'active' : ''}`}
+                onClick={() => setActiveTab('easygerman')}
+              >
+                <span className="material-symbols-outlined">podcasts</span>
+                Easy German
+              </button>
             </div>
             <div className="tabs-content">
               <div className={`tab-panel ${activeTab === 'playlist' ? 'active' : ''}`}>
@@ -809,7 +816,18 @@ function AudioPlayerComponent({ currentUserId = 'user123', onUploadClick }, ref)
                 </div>
               </div>
               <div className={`tab-panel ${activeTab === 'slowgerman' ? 'active' : ''}`}>
-                <SlowGerman onTrackSelect={handleExternalTrackSelect} />
+                <Podcast 
+                  onTrackSelect={handleExternalTrackSelect}
+                  rssUrl="https://slowgerman.com/feed/podcast/"
+                  title="Slow German Podcast"
+                />
+              </div>
+              <div className={`tab-panel ${activeTab === 'easygerman' ? 'active' : ''}`}>
+                <Podcast 
+                  onTrackSelect={handleExternalTrackSelect}
+                  rssUrl="https://proxyfeed.svmaudio.com/feeds/easygerman/feed.xml"
+                  title="Easy German Podcast"
+                />
               </div>
             </div>
           </div>

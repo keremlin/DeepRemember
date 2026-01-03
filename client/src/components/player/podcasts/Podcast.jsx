@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import './SlowGerman.css'
+import './Podcast.css'
 
-function SlowGerman({ onTrackSelect }) {
+function Podcast({ onTrackSelect, rssUrl, title = 'Podcast' }) {
   const [episodes, setEpisodes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [loadingEpisodeUrl, setLoadingEpisodeUrl] = useState(null)
 
   useEffect(() => {
-    fetchRSSFeed()
-  }, [])
+    if (rssUrl) {
+      fetchRSSFeed()
+    }
+  }, [rssUrl])
 
   const fetchRSSFeed = async () => {
     try {
@@ -16,7 +19,7 @@ function SlowGerman({ onTrackSelect }) {
       setError(null)
       
       // Fetch RSS feed
-      const response = await fetch('https://slowgerman.com/feed/podcast/')
+      const response = await fetch(rssUrl)
       if (!response.ok) {
         throw new Error('Failed to fetch RSS feed')
       }
@@ -65,17 +68,30 @@ function SlowGerman({ onTrackSelect }) {
     }
   }
 
-  const handleEpisodeClick = (episode) => {
+  const handleEpisodeClick = async (episode) => {
     if (onTrackSelect && episode.mp3Url) {
-      // Extract filename from URL
+      // Set loading state
+      setLoadingEpisodeUrl(episode.mp3Url)
+      
       try {
-        const urlPath = new URL(episode.mp3Url).pathname
-        const filename = urlPath.split('/').pop() || 'podcast.mp3'
+        // Extract filename from URL
+        let filename = 'podcast.mp3'
+        try {
+          const urlPath = new URL(episode.mp3Url).pathname
+          filename = urlPath.split('/').pop() || 'podcast.mp3'
+        } catch (error) {
+          // If URL parsing fails, use default filename
+        }
+        
         // Pass the external URL and filename to the parent player
-        onTrackSelect(episode.mp3Url, episode.title, filename)
+        await onTrackSelect(episode.mp3Url, episode.title, filename)
       } catch (error) {
-        // If URL parsing fails, use default filename
-        onTrackSelect(episode.mp3Url, episode.title, 'podcast.mp3')
+        console.error('Error loading episode:', error)
+      } finally {
+        // Clear loading state after a short delay to ensure UI updates
+        setTimeout(() => {
+          setLoadingEpisodeUrl(null)
+        }, 500)
       }
     }
   }
@@ -94,57 +110,65 @@ function SlowGerman({ onTrackSelect }) {
   }
 
   return (
-    <div className="slowgerman-container">
-      <div className="slowgerman-header">
+    <div className="podcast-container">
+      <div className="podcast-header">
         <h4>
           <span className="material-symbols-outlined">podcasts</span>
-          Slow German Podcast
+          {title}
         </h4>
       </div>
       
-      <div className="slowgerman-list">
+      <div className="podcast-list">
         {isLoading ? (
-          <div className="slowgerman-loading">
+          <div className="podcast-loading">
             <p>Loading episodes...</p>
           </div>
         ) : error ? (
-          <div className="slowgerman-error">
+          <div className="podcast-error">
             <p>{error}</p>
             <button onClick={fetchRSSFeed} className="retry-button">
               Retry
             </button>
           </div>
         ) : episodes.length > 0 ? (
-          episodes.map((episode, index) => (
-            <div
-              key={index}
-              className="slowgerman-episode"
-              onClick={() => handleEpisodeClick(episode)}
-            >
-              <div className="episode-header">
-                <div className="episode-info">
-                  <h5 className="episode-title">{episode.title}</h5>
-                  <div className="episode-meta">
-                    {episode.pubDate && (
-                      <span className="episode-date">
-                        <span className="material-symbols-outlined">calendar_today</span>
-                        {formatDate(episode.pubDate)}
-                      </span>
-                    )}
-                    {episode.duration && (
-                      <span className="episode-duration">
-                        <span className="material-symbols-outlined">schedule</span>
-                        {episode.duration}
-                      </span>
-                    )}
+          episodes.map((episode, index) => {
+            const isLoading = loadingEpisodeUrl === episode.mp3Url
+            return (
+              <div
+                key={index}
+                className={`podcast-episode ${isLoading ? 'loading' : ''}`}
+                onClick={() => handleEpisodeClick(episode)}
+              >
+                {isLoading && (
+                  <div className="episode-spinner">
+                    <div className="spinner"></div>
+                  </div>
+                )}
+                <div className="episode-header">
+                  <div className="episode-info">
+                    <h5 className="episode-title">{episode.title}</h5>
+                    <div className="episode-meta">
+                      {episode.pubDate && (
+                        <span className="episode-date">
+                          <span className="material-symbols-outlined">calendar_today</span>
+                          {formatDate(episode.pubDate)}
+                        </span>
+                      )}
+                      {episode.duration && (
+                        <span className="episode-duration">
+                          <span className="material-symbols-outlined">schedule</span>
+                          {episode.duration}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
+                {episode.description && (
+                  <p className="episode-description">{episode.description}</p>
+                )}
               </div>
-              {episode.description && (
-                <p className="episode-description">{episode.description}</p>
-              )}
-            </div>
-          ))
+            )
+          })
         ) : (
           <p>No episodes found</p>
         )}
@@ -153,5 +177,5 @@ function SlowGerman({ onTrackSelect }) {
   )
 }
 
-export default SlowGerman
+export default Podcast
 
