@@ -331,6 +331,34 @@ class GoogleTts extends ITts {
     }
 
     /**
+     * Extract text content from SSML, removing all XML tags
+     * This is used for accurate character counting (excluding SSML markup)
+     * @param {string} ssmlText - SSML text with XML tags
+     * @returns {string} - Plain text without XML tags
+     */
+    extractTextFromSSML(ssmlText) {
+        if (!ssmlText || typeof ssmlText !== 'string') {
+            return '';
+        }
+        
+        // Remove all XML/SSML tags using regex
+        // This matches <tag> or <tag attribute="value"> or </tag> or self-closing <tag/>
+        // We need to be careful to preserve the original text structure
+        let textContent = ssmlText.replace(/<[^>]+>/g, '');
+        
+        // Clean up whitespace more carefully:
+        // 1. Replace multiple spaces/newlines/tabs with single space
+        // 2. Remove leading/trailing spaces
+        // 3. But preserve single spaces between words
+        // This ensures we count only the actual text content, not extra whitespace from SSML tags
+        textContent = textContent
+            .replace(/\s+/g, ' ')  // Replace all whitespace sequences (spaces, newlines, tabs) with single space
+            .trim();                // Remove leading/trailing spaces
+        
+        return textContent;
+    }
+
+    /**
      * Convert text to speech using Google Cloud TTS
      * @param {string} text - The text to convert to speech
      * @param {Object} options - Optional configuration for TTS
@@ -340,6 +368,7 @@ class GoogleTts extends ITts {
      * @param {string} options.audioEncoding - Audio encoding ('MP3', 'LINEAR16', etc.)
      * @param {number} options.sampleRate - Sample rate in Hz
      * @param {string} options.userId - User ID for user-specific character limit
+     * @param {boolean} options.useSSML - Whether the text is SSML format
      * @returns {Promise<Buffer>} - Audio data as Buffer
      * @throws {Error} - If conversion fails
      */
@@ -348,14 +377,25 @@ class GoogleTts extends ITts {
             throw new Error('Text parameter is required and must be a string');
         }
 
-        // Count characters and check monthly limit
-        const charCount = text.length;
+        // Check if text is SSML (starts with <speak> tag or useSSML option is set)
+        const isSSML = text.trim().startsWith('<speak>') || options.useSSML === true;
+        
+        // Count characters - exclude SSML tags for accurate billing
+        // Google TTS charges based on actual text content, not SSML markup
+        const textForCounting = isSSML ? this.extractTextFromSSML(text) : text;
+        const charCount = textForCounting.length;
+        
+        // Warn if SSML extraction returned empty text
+        if (isSSML && (!textForCounting || textForCounting.length === 0)) {
+            console.warn(`[Google TTS] SSML extraction returned empty text! Original SSML: ${text.substring(0, 200)}`);
+        }
+        
         const userId = options.userId || null;
         const monthlyLimit = await this.getMonthlyLimit(userId);
         const withinLimit = await this.checkAndUpdateCharacterCount(charCount, userId);
         
         if (!withinLimit) {
-            const logMessage = `[Google TTS] Monthly character limit (${monthlyLimit}) exceeded. Google TTS API call blocked for text with ${charCount} characters.`;
+            const logMessage = `[Google TTS] Monthly character limit (${monthlyLimit}) exceeded. Google TTS API call blocked for text with ${charCount} characters (${isSSML ? 'SSML content' : 'plain text'}).`;
             console.warn(logMessage);
             throw new Error(`Google TTS monthly character limit exceeded. Current usage exceeds ${monthlyLimit} characters for this month.`);
         }
@@ -369,12 +409,11 @@ class GoogleTts extends ITts {
         const sampleRate = options.sampleRate || this.config.defaultSampleRate;
 
         try {
-            console.log(`[Google TTS] Converting to speech: "${text}"`);
-            console.log(`[Google TTS] Voice: ${voice}, Language: ${languageCode}, Gender: ${ssmlGender}, Encoding: ${audioEncoding}`);
+            console.log(`[Google TTS] Converting to speech (${charCount} chars, SSML: ${isSSML}), Voice: ${voice}, Language: ${languageCode}`);
             
             // Construct the request
             const request = {
-                input: { text: text },
+                input: isSSML ? { ssml: text } : { text: text },
                 voice: {
                     languageCode: languageCode,
                     name: voice,

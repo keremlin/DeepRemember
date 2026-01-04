@@ -7,6 +7,7 @@ import ManagementPage from './components/management/userManagement'
 import Chat from './components/chat/Chat'
 import WordList from './components/basewords/WordList'
 import Courses from './components/Courses/Courses'
+import Dictate from './components/Courses/Dictate/Dictate'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider, useAuth } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
@@ -78,6 +79,10 @@ function AppContent() {
 
   const navigateToCourses = () => {
     setCurrentView('courses')
+  }
+
+  const navigateToDictate = () => {
+    setCurrentView('dictate')
   }
 
   return (
@@ -164,6 +169,19 @@ function AppContent() {
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
+            onNavigateToDictate={navigateToDictate}
+          />
+        ) : currentView === 'dictate' ? (
+          <Dictate 
+            onUserSetup={() => {}}
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            onShowCards={() => navigateToDeepRemember(true)}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+            onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
           />
         ) : (
           <PlayerPage 

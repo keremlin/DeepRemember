@@ -13,6 +13,7 @@
   "author": "Arash Yeganehrad",
   "license": "MIT",
   "dependencies": {
+    "diff": "^7.0.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

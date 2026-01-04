@@ -10,10 +10,13 @@ const Courses = ({
   onNavigateToUserManagement,
   onNavigateToManagement,
   onNavigateToChat,
-  onNavigateToWordList
+  onNavigateToWordList,
+  onNavigateToDictate
 }) => {
   const handleDiktateClick = () => {
-    // Do nothing for now
+    if (onNavigateToDictate) {
+      onNavigateToDictate()
+    }
   }
 
   return (

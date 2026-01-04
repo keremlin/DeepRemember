@@ -515,6 +515,128 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
     }
 });
 
+// Dictation endpoint with SSML support
+router.post('/dictation', authMiddleware.verifyToken, async (req, res) => {
+    try {
+        const { text, mode, wordsPerChunk, breakTime, speed } = req.body;
+        const userId = req.userId;
+        
+        if (!text || typeof text !== 'string') {
+            return res.status(400).json({ error: 'text is required' });
+        }
+        
+        if (!mode || (mode !== 'word' && mode !== 'sentence')) {
+            return res.status(400).json({ error: 'mode must be "word" or "sentence"' });
+        }
+        
+        if (mode === 'word' && (!wordsPerChunk || wordsPerChunk < 1)) {
+            return res.status(400).json({ error: 'wordsPerChunk must be at least 1 when mode is "word"' });
+        }
+        
+        if (!breakTime || breakTime < 0) {
+            return res.status(400).json({ error: 'breakTime must be a positive number' });
+        }
+        
+        // Validate and set default speed (50% to 200%)
+        const speechRate = speed !== undefined ? Math.max(50, Math.min(200, parseFloat(speed) || 100)) : 100;
+        
+        // Create SSML based on mode
+        let ssmlContent = '';
+        
+        if (mode === 'word') {
+            // Split text into chunks of N words
+            const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+            const chunks = [];
+            
+            for (let i = 0; i < words.length; i += wordsPerChunk) {
+                chunks.push(words.slice(i, i + wordsPerChunk).join(' '));
+            }
+            
+            // Create SSML with breaks between chunks
+            ssmlContent = chunks.map((chunk, index) => 
+                `${chunk}${index < chunks.length - 1 ? ` <break time="${breakTime}s"/>` : ''}`
+            ).join(' ');
+        } else {
+            // Mode is 'sentence' - add breaks after commas and periods
+            // Split by sentence boundaries (., !, ?) and commas
+            let processedText = text.trim();
+            
+            // Add break after periods, exclamation marks, question marks
+            processedText = processedText.replace(/([.!?])\s*/g, `$1 <break time="${breakTime}s"/>`);
+            
+            // Add break after commas
+            processedText = processedText.replace(/(,)\s*/g, `$1 <break time="${breakTime}s"/>`);
+            
+            ssmlContent = processedText;
+        }
+        
+        // Wrap content in prosody tag for speed control, then in speak tag
+        const ssmlText = `<speak><prosody rate="${speechRate}%">${ssmlContent}</prosody></speak>`;
+        
+        console.log(`[Dictation] Generated SSML with speed: ${speechRate}%, breakTime: ${breakTime}s, mode: ${mode}`);
+        console.log(`[Dictation] SSML preview (first 200 chars): ${ssmlText.substring(0, 200)}...`);
+        
+        // Create a hash for the filename that includes all parameters (text, mode, speed, breakTime, wordsPerChunk)
+        // This ensures different settings generate different audio files
+        const hashInput = JSON.stringify({
+            text: text.trim(),
+            mode: mode,
+            speed: speechRate,
+            breakTime: breakTime,
+            wordsPerChunk: mode === 'word' ? wordsPerChunk : undefined
+        });
+        const textHash = crypto.createHash('md5').update(hashInput).digest('hex').substring(0, 12);
+        console.log(`[Dictation] Generated hash: ${textHash} for parameters: speed=${speechRate}%, breakTime=${breakTime}s`);
+        const extension = (appConfig.TTS_TYPE?.toLowerCase() === 'google' || appConfig.TTS_TYPE?.toLowerCase() === 'googletts') ? '.mp3' : '.wav';
+        const filename = `dictation_${textHash}${extension}`;
+        const filepath = path.posix.join('voice', filename);
+        
+        // Check if audio file already exists with these exact settings
+        if (fileSystem.existsSync(filepath)) {
+            console.log(`[Dictation] Audio file already exists: ${filepath}`);
+            res.json({
+                success: true,
+                audioUrl: `/voice/${filename}`,
+                filename: filename
+            });
+            return;
+        }
+        
+        // Get user's TTS voice preference if using Google TTS
+        const ttsOptions = { timeout: 30000, userId: userId, useSSML: true };
+        
+        if (appConfig.TTS_TYPE && (appConfig.TTS_TYPE.toLowerCase() === 'google' || appConfig.TTS_TYPE.toLowerCase() === 'googletts')) {
+            const userVoice = await getUserTtsVoice(userId);
+            ttsOptions.voice = userVoice;
+            console.log(`[Dictation] Using TTS voice: ${userVoice}`);
+        }
+        
+        // Convert SSML to speech
+        const audioBuffer = await ttsService.convert(ssmlText, ttsOptions);
+        
+        // Ensure the voice directory exists
+        const voiceDir = 'voice';
+        if (!fileSystem.existsSync(voiceDir)) {
+            fileSystem.mkdirSync(voiceDir, { recursive: true });
+        }
+        
+        // Save the audio file
+        fileSystem.writeFileSync(filepath, audioBuffer);
+        
+        console.log(`[Dictation] Audio file saved: ${filepath}`);
+        
+        res.json({
+            success: true,
+            audioUrl: `/voice/${filename}`,
+            filename: filename
+        });
+        
+    } catch (error) {
+        console.error('[Dictation] Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate dictation audio' });
+    }
+});
+
 // Get audio URL for a sentence (without generating new audio)
 router.get('/get-audio/:word/:sentence', authMiddleware.verifyToken, async (req, res) => {
     try {
