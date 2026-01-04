@@ -8,7 +8,7 @@ import { useToast } from '../ToastProvider'
 import { useAuth } from '../security/AuthContext'
 import './PlayerPage.css'
 
-function PlayerPage({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepRemember, onNavigateToUserManagement, onNavigateToManagement, onNavigateToChat, onNavigateToWordList }) {
+function PlayerPage({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepRemember, onNavigateToUserManagement, onNavigateToManagement, onNavigateToChat, onNavigateToWordList, onNavigateToCourses }) {
   const { showSuccess, showError } = useToast()
   const { user } = useAuth()
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -43,6 +43,7 @@ function PlayerPage({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepR
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToChat={onNavigateToChat}
       onNavigateToWordList={onNavigateToWordList}
+      onNavigateToCourses={onNavigateToCourses}
     >
       <div className="player-content">
         <AudioPlayer 

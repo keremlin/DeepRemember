@@ -16,7 +16,8 @@ const WordList = ({
   onNavigateToUserManagement,
   onNavigateToManagement,
   onNavigateToChat,
-  onNavigateToWordList
+  onNavigateToWordList,
+  onNavigateToCourses
 }) => {
   const { showSuccess, showError, showInfo } = useToast()
   const {
@@ -185,6 +186,7 @@ const WordList = ({
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToChat={onNavigateToChat}
       onNavigateToWordList={onNavigateToWordList}
+      onNavigateToCourses={onNavigateToCourses}
     >
       <div className="word-list-container" style={{ position: 'relative' }}>
         <div className="word-list-header">

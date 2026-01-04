@@ -6,6 +6,7 @@ import UserManagement from './components/users/UserManagement'
 import ManagementPage from './components/management/userManagement'
 import Chat from './components/chat/Chat'
 import WordList from './components/basewords/WordList'
+import Courses from './components/Courses/Courses'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider, useAuth } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
@@ -75,6 +76,10 @@ function AppContent() {
     setCurrentView('wordlist')
   }
 
+  const navigateToCourses = () => {
+    setCurrentView('courses')
+  }
+
   return (
     <AuthWrapper onNavigateToWelcome={navigateToWelcome}>
       <div className="App">
@@ -91,6 +96,7 @@ function AppContent() {
             onNavigateToChat={navigateToChat}
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
           />
         ) : currentView === 'deepremember' ? (
           <DeepRemember 
@@ -101,6 +107,7 @@ function AppContent() {
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
           />
         ) : currentView === 'usermanagement' ? (
           <UserManagement 
@@ -112,6 +119,7 @@ function AppContent() {
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
           />
         ) : currentView === 'management' ? (
           <ManagementPage 
@@ -123,6 +131,7 @@ function AppContent() {
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
           />
         ) : currentView === 'chat' ? (
           <Chat 
@@ -132,9 +141,22 @@ function AppContent() {
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToManagement={navigateToManagement}
             onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
           />
         ) : currentView === 'wordlist' ? (
           <WordList 
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            onShowCards={() => navigateToDeepRemember(true)}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+            onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
+          />
+        ) : currentView === 'courses' ? (
+          <Courses 
+            onUserSetup={() => {}}
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
             onShowCards={() => navigateToDeepRemember(true)}
@@ -152,6 +174,7 @@ function AppContent() {
             onNavigateToManagement={navigateToManagement}
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
           />
         )}
       </div>

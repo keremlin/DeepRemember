@@ -1,8 +1,8 @@
 import React from 'react'
 import Page from '../Page'
-import UserInfo from '../security/UserInfo'
+import '../security/UserInfo.css'
 
-const UserManagement = ({ 
+const Courses = ({ 
   onUserSetup,
   onNavigateToWelcome,
   onNavigateToPlayer,
@@ -10,9 +10,12 @@ const UserManagement = ({
   onNavigateToUserManagement,
   onNavigateToManagement,
   onNavigateToChat,
-  onNavigateToWordList,
-  onNavigateToCourses
+  onNavigateToWordList
 }) => {
+  const handleDiktateClick = () => {
+    // Do nothing for now
+  }
+
   return (
     <Page
       isCardsView={false}
@@ -25,12 +28,24 @@ const UserManagement = ({
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToChat={onNavigateToChat}
       onNavigateToWordList={onNavigateToWordList}
-      onNavigateToCourses={onNavigateToCourses}
     >
-      <UserInfo onUserSetup={onUserSetup} />
+      <div className="user-management-content">
+        <div className="user-info">
+          <div 
+            className="user-info-item" 
+            onClick={handleDiktateClick} 
+            title="Diktate"
+          >
+            <div className="user-info-icon">
+              <span className="material-symbols-outlined">edit_document</span>
+            </div>
+            <div className="user-info-label">Diktate</div>
+          </div>
+        </div>
+      </div>
     </Page>
   )
 }
 
-export default UserManagement
+export default Courses
 

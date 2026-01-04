@@ -16,6 +16,7 @@ function Page({
   onNavigateToManagement,
   onNavigateToChat,
   onNavigateToWordList,
+  onNavigateToCourses,
   isReviewMode
 }) {
   return (
@@ -31,6 +32,7 @@ function Page({
         onNavigateToManagement={onNavigateToManagement}
         onNavigateToChat={onNavigateToChat}
         onNavigateToWordList={onNavigateToWordList}
+        onNavigateToCourses={onNavigateToCourses}
       />
       
       <main className="page-body">

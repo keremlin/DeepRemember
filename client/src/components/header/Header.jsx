@@ -13,7 +13,8 @@ const Header = ({
   onNavigateToUserManagement,
   onNavigateToManagement,
   onNavigateToChat,
-  onNavigateToWordList
+  onNavigateToWordList,
+  onNavigateToCourses
 }) => {
   return (
     <>
@@ -33,6 +34,7 @@ const Header = ({
         onNavigateToManagement={onNavigateToManagement}
         onNavigateToChat={onNavigateToChat}
         onNavigateToWordList={onNavigateToWordList}
+        onNavigateToCourses={onNavigateToCourses}
       />
     </>
   )
