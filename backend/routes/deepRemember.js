@@ -475,7 +475,7 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
         try {
             // Get user's TTS voice preference if using Google TTS
             const userId = req.userId;
-            const ttsOptions = { timeout: 10000 };
+            const ttsOptions = { timeout: 10000, userId: userId };
             
             if (appConfig.TTS_TYPE && (appConfig.TTS_TYPE.toLowerCase() === 'google' || appConfig.TTS_TYPE.toLowerCase() === 'googletts')) {
                 const userVoice = await getUserTtsVoice(userId);
@@ -1259,7 +1259,7 @@ router.post('/chat-voice', authMiddleware.verifyToken, voiceChatUpload.single('a
     // Step 4: Convert cleaned LLM response to speech using TTS
     // Get user's TTS voice preference if using Google TTS
     const userId = req.userId;
-    const ttsOptions = { timeout: 30000 };
+    const ttsOptions = { timeout: 30000, userId: userId };
     
     if (appConfig.TTS_TYPE && (appConfig.TTS_TYPE.toLowerCase() === 'google' || appConfig.TTS_TYPE.toLowerCase() === 'googletts')) {
       const userVoice = await getUserTtsVoice(userId);

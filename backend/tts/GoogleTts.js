@@ -5,6 +5,7 @@ const textToSpeech = require('@google-cloud/text-to-speech');
 const databaseFactory = require('../database/access/DatabaseFactory');
 const dbConfig = require('../config/database');
 const AppVariablesRepository = require('../database/access/AppVariablesRepository');
+const UserConfigRepository = require('../database/access/UserConfigRepository');
 
 /**
  * Google Cloud Text-to-Speech TTS implementation
@@ -44,6 +45,8 @@ class GoogleTts extends ITts {
         this.isInitialized = false;
         this.appVariablesRepository = null;
         this.repositoryInitialized = false;
+        this.userConfigRepository = null;
+        this.userConfigRepositoryInitialized = false;
         
         if (!this.config.clientId || !this.config.clientSecret) {
             throw new Error('Google OAuth credentials are required. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.');
@@ -162,11 +165,77 @@ class GoogleTts extends ITts {
     }
 
     /**
+     * Initialize the user config repository
+     */
+    async initializeUserConfigRepository() {
+        if (this.userConfigRepositoryInitialized && this.userConfigRepository) {
+            return;
+        }
+
+        try {
+            // Check if database is already initialized, if not initialize it
+            let database;
+            try {
+                database = databaseFactory.getDatabase();
+            } catch (error) {
+                // Database not initialized yet, initialize it
+                await databaseFactory.initialize(dbConfig.type, dbConfig[dbConfig.type]);
+                database = databaseFactory.getDatabase();
+            }
+            
+            this.userConfigRepository = new UserConfigRepository(database);
+            this.userConfigRepositoryInitialized = true;
+            console.log('[Google TTS] User config repository initialized successfully');
+        } catch (error) {
+            console.error('[Google TTS] User config repository initialization failed:', error);
+            // Don't throw - allow TTS to work even if repository fails
+            this.userConfigRepositoryInitialized = false;
+        }
+    }
+
+    /**
+     * Get the monthly character limit from user configuration
+     * @param {string} userId - User ID
+     * @returns {Promise<number>} - Monthly character limit, defaults to 999000
+     */
+    async getMonthlyLimit(userId) {
+        const DEFAULT_LIMIT = 999000;
+        
+        if (!userId) {
+            return DEFAULT_LIMIT;
+        }
+
+        try {
+            await this.initializeUserConfigRepository();
+            
+            if (!this.userConfigRepository) {
+                console.warn('[Google TTS] User config repository not available, using default limit');
+                return DEFAULT_LIMIT;
+            }
+
+            const configs = await this.userConfigRepository.getConfigsByName(userId, 'google_tts_char_limit');
+            
+            if (configs && configs.length > 0 && configs[0].value) {
+                const limit = parseInt(configs[0].value, 10);
+                if (!isNaN(limit) && limit > 0) {
+                    return limit;
+                }
+            }
+            
+            return DEFAULT_LIMIT;
+        } catch (error) {
+            console.error('[Google TTS] Error getting monthly limit from user config:', error);
+            return DEFAULT_LIMIT;
+        }
+    }
+
+    /**
      * Check and update character count for monthly limit
      * @param {number} charCount - Number of characters to add
+     * @param {string} userId - Optional user ID to get user-specific limit
      * @returns {Promise<boolean>} - True if within limit and updated, false if exceeded
      */
-    async checkAndUpdateCharacterCount(charCount) {
+    async checkAndUpdateCharacterCount(charCount, userId = null) {
         try {
             await this.initializeRepository();
             
@@ -176,7 +245,7 @@ class GoogleTts extends ITts {
             }
 
             const KEY_NAME = 'GOOGLE_TTS_CHAR_NUMB';
-            const MONTHLY_LIMIT = 999000;
+            const MONTHLY_LIMIT = await this.getMonthlyLimit(userId);
             
             // Get current variable
             let variable = await this.appVariablesRepository.getByKeyname(KEY_NAME);
@@ -270,6 +339,7 @@ class GoogleTts extends ITts {
      * @param {string} options.ssmlGender - SSML gender ('MALE', 'FEMALE', 'NEUTRAL')
      * @param {string} options.audioEncoding - Audio encoding ('MP3', 'LINEAR16', etc.)
      * @param {number} options.sampleRate - Sample rate in Hz
+     * @param {string} options.userId - User ID for user-specific character limit
      * @returns {Promise<Buffer>} - Audio data as Buffer
      * @throws {Error} - If conversion fails
      */
@@ -280,12 +350,14 @@ class GoogleTts extends ITts {
 
         // Count characters and check monthly limit
         const charCount = text.length;
-        const withinLimit = await this.checkAndUpdateCharacterCount(charCount);
+        const userId = options.userId || null;
+        const monthlyLimit = await this.getMonthlyLimit(userId);
+        const withinLimit = await this.checkAndUpdateCharacterCount(charCount, userId);
         
         if (!withinLimit) {
-            const logMessage = `[Google TTS] Monthly character limit (999000) exceeded. Google TTS API call blocked for text with ${charCount} characters.`;
+            const logMessage = `[Google TTS] Monthly character limit (${monthlyLimit}) exceeded. Google TTS API call blocked for text with ${charCount} characters.`;
             console.warn(logMessage);
-            throw new Error(`Google TTS monthly character limit exceeded. Current usage exceeds 999000 characters for this month.`);
+            throw new Error(`Google TTS monthly character limit exceeded. Current usage exceeds ${monthlyLimit} characters for this month.`);
         }
 
         await this.initialize();
