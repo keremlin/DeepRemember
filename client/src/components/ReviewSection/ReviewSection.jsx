@@ -330,6 +330,17 @@ const ReviewSection = ({
 
   // Keyboard event handlers
   const handleKeyDown = (event) => {
+    // Ignore keyboard shortcuts when user is typing in input fields
+    const target = event.target
+    const isInputElement = target.tagName === 'INPUT' || 
+                          target.tagName === 'TEXTAREA' || 
+                          target.isContentEditable ||
+                          (target.closest && (target.closest('input') || target.closest('textarea')))
+    
+    if (isInputElement) {
+      return // Let the input handle the key normally
+    }
+
     // Enter or Space to show answer
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
