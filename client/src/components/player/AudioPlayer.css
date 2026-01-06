@@ -356,6 +356,7 @@
 .tabs-container {
   width: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .tabs-header {
@@ -363,6 +364,8 @@
   gap: 5px;
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tab-button {
@@ -779,6 +782,32 @@
     font-size: 1rem;
   }
   
+  .tabs-header {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    display: flex;
+    flex-wrap: nowrap;
+  }
+  
+  .tabs-header::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tab-button {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: fit-content;
+  }
+  
+  .tab-button .material-symbols-outlined {
+    font-size: 18px;
+  }
+  
   .playlist-list {
     height: 150px;
   }
@@ -925,15 +954,31 @@
   
   .tabs-header {
     gap: 3px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    display: flex;
+    flex-wrap: nowrap;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 15px;
+  }
+  
+  .tabs-header::-webkit-scrollbar {
+    display: none;
   }
   
   .tab-button {
-    padding: 8px 15px;
-    font-size: 0.9rem;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: fit-content;
   }
   
   .tab-button .material-symbols-outlined {
-    font-size: 18px;
+    font-size: 16px;
   }
 }
 
