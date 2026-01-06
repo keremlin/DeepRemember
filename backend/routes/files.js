@@ -251,11 +251,16 @@ router.post('/generate-podcast-subtitle', async (req, res) => {
     const baseName = path.basename(filename, path.extname(filename));
     const subtitleFilename = baseName + '.srt';
     
-    // Check if subtitle already exists
+    // Check if subtitle already exists (use async exists() for reliable Google Drive checking)
     const subtitleCloudPath = path.posix.join('files', subtitleFilename);
-    const subtitleExists = fileSystem.existsSync ? 
-      fileSystem.existsSync(subtitleCloudPath) : 
-      false;
+    let subtitleExists = false;
+    if (fileSystem.exists) {
+      // Use async exists() method for reliable cloud storage checking
+      subtitleExists = await fileSystem.exists(subtitleCloudPath);
+    } else if (fileSystem.existsSync) {
+      // Fallback to existsSync for local filesystem
+      subtitleExists = fileSystem.existsSync(subtitleCloudPath);
+    }
     
     if (subtitleExists) {
       console.log(`[PODCAST] Subtitle already exists: ${subtitleFilename}`);

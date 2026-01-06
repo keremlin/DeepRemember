@@ -378,13 +378,29 @@ class GoogleDrive extends IFileSystem {
 
   /**
    * Asynchronously check if a file or directory exists
+   * Checks local fallback first (fast), then Google Drive (slower)
    */
   async exists(filePath) {
+    // Step 1: Check local fallback first (fast, synchronous)
+    if (this.config.fallbackToLocal) {
+      const fs = require('fs');
+      const localPath = path.join(this.config.localFallbackPath, filePath);
+      if (fs.existsSync(localPath)) {
+        console.log(`[GOOGLE_DRIVE] File exists locally: ${filePath}`);
+        return true;
+      }
+    }
+    
+    // Step 2: Check Google Drive (slower, requires API call)
     await this.initialize();
     
     try {
       const fileId = await this.pathToFileId(filePath);
-      return fileId !== null;
+      if (fileId !== null) {
+        console.log(`[GOOGLE_DRIVE] File exists in Google Drive: ${filePath}`);
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error(`[GOOGLE_DRIVE] Error checking existence of ${filePath}:`, error);
       return false;
