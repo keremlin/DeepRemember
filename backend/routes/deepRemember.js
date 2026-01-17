@@ -171,7 +171,7 @@ function generateSentenceHash(sentence, word = '') {
 // Create a new card for learning
 router.post('/create-card', authMiddleware.verifyToken, async (req, res) => {
   try {
-    const { word, translation, context, type, labels } = req.body;
+    const { word, translation, context, type, labels, allowDuplicate } = req.body;
     const userId = req.userId; // Get userId from authenticated user
     
     if (!word) {
@@ -197,31 +197,33 @@ router.post('/create-card', authMiddleware.verifyToken, async (req, res) => {
 
     if (useDatabase && deepRememberRepository) {
       // Use database
-      // Check for duplicate card before creating
-      const normalizedWord = word.trim();
-      const normalizedTranslation = (translation || '').trim();
-      
-      const duplicateCard = await deepRememberRepository.checkDuplicateCard(
-        userId, 
-        normalizedWord, 
-        normalizedTranslation
-      );
-      
-      if (duplicateCard) {
-        console.log(`[DeepRemember] Duplicate card detected - skipping creation. User: ${userId}, Word: "${normalizedWord}", Translation: "${normalizedTranslation}", Existing Card ID: ${duplicateCard.card_id}`);
-        // Return success but indicate it was a duplicate
-        const cardLabels = await deepRememberRepository.getCardLabels(userId, duplicateCard.card_id);
-        return res.json({
-          success: true,
-          card: { 
-            id: duplicateCard.card_id,
-            word: duplicateCard.word,
-            translation: duplicateCard.translation,
-            labels: cardLabels 
-          },
-          message: 'Card already exists (duplicate skipped)',
-          isDuplicate: true
-        });
+      if (!allowDuplicate) {
+        // Check for duplicate card before creating
+        const normalizedWord = word.trim();
+        const normalizedTranslation = (translation || '').trim();
+        
+        const duplicateCard = await deepRememberRepository.checkDuplicateCard(
+          userId, 
+          normalizedWord, 
+          normalizedTranslation
+        );
+        
+        if (duplicateCard) {
+          console.log(`[DeepRemember] Duplicate card detected - skipping creation. User: ${userId}, Word: "${normalizedWord}", Translation: "${normalizedTranslation}", Existing Card ID: ${duplicateCard.card_id}`);
+          // Return success but indicate it was a duplicate
+          const cardLabels = await deepRememberRepository.getCardLabels(userId, duplicateCard.card_id);
+          return res.json({
+            success: true,
+            card: { 
+              id: duplicateCard.card_id,
+              word: duplicateCard.word,
+              translation: duplicateCard.translation,
+              labels: cardLabels 
+            },
+            message: 'Card already exists (duplicate skipped)',
+            isDuplicate: true
+          });
+        }
       }
       
       const result = await deepRememberRepository.createCard(userId, cardData);
@@ -328,24 +330,26 @@ router.post('/create-card', authMiddleware.verifyToken, async (req, res) => {
         userCards.set(userId, []);
       }
       
-      // Check for duplicate in memory storage
-      const normalizedWord = word.trim().toLowerCase();
-      const normalizedTranslation = (translation || '').trim().toLowerCase();
-      
-      const existingCards = userCards.get(userId);
-      const duplicateCard = existingCards.find(card => 
-        card.word.trim().toLowerCase() === normalizedWord &&
-        (card.translation || '').trim().toLowerCase() === normalizedTranslation
-      );
-      
-      if (duplicateCard) {
-        console.log(`[DeepRemember] Duplicate card detected (memory) - skipping creation. User: ${userId}, Word: "${normalizedWord}", Translation: "${normalizedTranslation}", Existing Card ID: ${duplicateCard.id}`);
-        return res.json({
-          success: true,
-          card: { ...duplicateCard, labels: [] },
-          message: 'Card already exists (duplicate skipped)',
-          isDuplicate: true
-        });
+      if (!allowDuplicate) {
+        // Check for duplicate in memory storage
+        const normalizedWord = word.trim().toLowerCase();
+        const normalizedTranslation = (translation || '').trim().toLowerCase();
+        
+        const existingCards = userCards.get(userId);
+        const duplicateCard = existingCards.find(card => 
+          card.word.trim().toLowerCase() === normalizedWord &&
+          (card.translation || '').trim().toLowerCase() === normalizedTranslation
+        );
+        
+        if (duplicateCard) {
+          console.log(`[DeepRemember] Duplicate card detected (memory) - skipping creation. User: ${userId}, Word: "${normalizedWord}", Translation: "${normalizedTranslation}", Existing Card ID: ${duplicateCard.id}`);
+          return res.json({
+            success: true,
+            card: { ...duplicateCard, labels: [] },
+            message: 'Card already exists (duplicate skipped)',
+            isDuplicate: true
+          });
+        }
       }
       
       userCards.get(userId).push(cardData);

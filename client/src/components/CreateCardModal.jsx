@@ -19,6 +19,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
   const [similarWords, setSimilarWords] = useState([])
   const [showSimilarWords, setShowSimilarWords] = useState(false)
   const [translationData, setTranslationData] = useState(null)
+  const [duplicateCard, setDuplicateCard] = useState(null)
+  const [showDuplicatePrompt, setShowDuplicatePrompt] = useState(false)
   const [showTranslationResult, setShowTranslationResult] = useState(false)
   
   // Loading states
@@ -279,7 +281,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
   }
 
   // Create card function
-  const createCard = async () => {
+  const createCard = async (allowDuplicate = false) => {
+    const shouldAllowDuplicate = allowDuplicate === true
     if (!newWord.trim()) {
       showWarning('Please enter a word')
       return
@@ -300,7 +303,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
           translation: newTranslation,
           context: newContext,
           type: cardType,
-          labels: selectedLabels
+          labels: selectedLabels,
+          allowDuplicate: shouldAllowDuplicate
         })
       })
       
@@ -310,6 +314,12 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
       
       const data = await response.json()
       if (data.success) {
+        if (data.isDuplicate && !shouldAllowDuplicate) {
+          setDuplicateCard(data.card || null)
+          setShowDuplicatePrompt(true)
+          setIsCreatingCard(false)
+          return
+        }
         // If card creation is successful, convert to speech
         let audioCreated = false
         
@@ -348,6 +358,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
         setShowSimilarWords(false)
         setShowTranslationResult(false)
         setTranslationData(null)
+        setDuplicateCard(null)
+        setShowDuplicatePrompt(false)
         // Close modal and notify parent
         onClose()
         if (onCreateCard) {
@@ -376,6 +388,8 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
     setShowTranslationResult(false)
     setTranslationData(null)
     setSimilarWords([])
+    setDuplicateCard(null)
+    setShowDuplicatePrompt(false)
     // Reset loading states
     setIsTranslating(false)
     setIsCreatingVoice(false)
@@ -571,7 +585,7 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
             <button className="btn-modal btn-modal-secondary" onClick={handleClose} disabled={isCreatingCard} tabIndex={5}>
               Cancel
             </button>
-            <button className="btn-modal btn-modal-primary" onClick={createCard} disabled={isCreatingCard} tabIndex={6}>
+            <button className="btn-modal btn-modal-primary" onClick={() => createCard()} disabled={isCreatingCard} tabIndex={6}>
               {isCreatingCard ? (
                 <>
                   {isCreatingVoice ? '🎤 Creating Voice...' : '💾 Creating Card...'}
@@ -583,6 +597,39 @@ const CreateCardModal = ({ isOpen, onClose, onCreateCard, currentUserId, prefill
           </div>
         </div>
       </div>
+      {showDuplicatePrompt && (
+        <div className="duplicate-confirm-overlay" onClick={(e) => e.stopPropagation()}>
+          <div className="duplicate-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h4>Duplicate card found</h4>
+            <p>This card already exists. Do you want to add a duplicate anyway?</p>
+            {duplicateCard && (
+              <div className="duplicate-card-preview">
+                <div><strong>Word/Sentence:</strong> {duplicateCard.word}</div>
+                <div><strong>Translation:</strong> {duplicateCard.translation || 'N/A'}</div>
+              </div>
+            )}
+            <div className="duplicate-confirm-buttons">
+              <button
+                className="btn-modal btn-modal-secondary"
+                onClick={() => {
+                  setShowDuplicatePrompt(false)
+                }}
+              >
+                No
+              </button>
+              <button
+                className="btn-modal btn-modal-primary"
+                onClick={() => {
+                  setShowDuplicatePrompt(false)
+                  createCard(true)
+                }}
+              >
+                Yes, add duplicate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -718,6 +718,31 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     try {
       const sqlLower = sql.toLowerCase().trim();
       
+      // Handle duplicate card check with normalized word/translation
+      // Pattern: SELECT ... FROM cards WHERE user_id = ? AND LOWER(TRIM(word)) = ? AND LOWER(TRIM(COALESCE(translation, ''))) = ?
+      if (sqlLower.includes('from cards') &&
+          sqlLower.includes('where user_id = ?') &&
+          sqlLower.includes('lower(trim(word)) = ?') &&
+          sqlLower.includes('lower(trim(coalesce(translation')) {
+        const paramValues = Object.values(params);
+        const userId = params.user_id || params.$1 || paramValues[0];
+        const normalizedWord = params.word || params.$2 || paramValues[1];
+        const normalizedTranslation = params.translation || params.$3 || paramValues[2];
+
+        if (userId && normalizedWord !== undefined && normalizedTranslation !== undefined) {
+          const { data, error } = await this.client
+            .from('cards')
+            .select('card_id, word, translation')
+            .eq('user_id', userId)
+            // ilike without wildcards is case-insensitive exact match
+            .ilike('word', normalizedWord)
+            .ilike('translation', normalizedTranslation);
+
+          if (error) throw error;
+          return this.normalizeRowsForSelect('cards', Array.isArray(data) ? data : (data ? [data] : []));
+        }
+      }
+
       // Handle GROUP BY queries with SUM (e.g., activity statistics)
       if (sqlLower.includes('sum(') && sqlLower.includes('group by') && sqlLower.includes('from spend_time')) {
         const paramValues = Object.values(params);
