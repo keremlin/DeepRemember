@@ -525,11 +525,16 @@ class GoogleDrive extends IFileSystem {
         const localPath = path.join(this.config.localFallbackPath, filePath);
         
         if (fs.existsSync(localPath)) {
-          console.log(`[GOOGLE_DRIVE] File exists locally: ${filePath}, using local file`);
-          // Return the file ID if we can find it, otherwise return local path
-          // Try to get file ID from Google Drive for consistency
           const existingFileId = await this.findFile(fileName, parentId);
-          return existingFileId || localPath;
+          if (existingFileId) {
+            console.log(`[GOOGLE_DRIVE] File exists locally and in Drive: ${filePath}`);
+            return existingFileId;
+          }
+
+          console.log(`[GOOGLE_DRIVE] File exists locally but missing in Drive: ${filePath}, uploading...`);
+          if (data === undefined || data === null) {
+            data = fs.readFileSync(localPath);
+          }
         }
       }
       

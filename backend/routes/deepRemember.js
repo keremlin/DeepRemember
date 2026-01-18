@@ -26,6 +26,77 @@ const ttsService = TtsFactory.createTtsService();
 // Initialize STT service with configuration
 const sstService = SstFactory.createSstService();
 
+const isGoogleDriveFs = () => {
+  const fsType = (process.env.FS_TYPE || '').toLowerCase().trim();
+  return fsType.startsWith('google');
+};
+
+const getFallbackPath = (relativePath) => {
+  return path.resolve(__dirname, '../fallback-storage', relativePath);
+};
+
+const downloadFromStorageToFallback = async (relativePath) => {
+  if (!fileSystem.createReadStream) {
+    return false;
+  }
+
+  const fallbackPath = getFallbackPath(relativePath);
+  const fallbackDir = path.dirname(fallbackPath);
+
+  if (!fs.existsSync(fallbackDir)) {
+    fs.mkdirSync(fallbackDir, { recursive: true });
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finalize = (success) => {
+      if (settled) return;
+      settled = true;
+      if (!success && fs.existsSync(fallbackPath)) {
+        try {
+          fs.unlinkSync(fallbackPath);
+        } catch (unlinkError) {
+          console.warn('[DeepRemember] Failed to cleanup partial file:', unlinkError.message);
+        }
+      }
+      resolve(success);
+    };
+
+    const readStream = fileSystem.createReadStream(relativePath);
+    const writeStream = fs.createWriteStream(fallbackPath);
+
+    readStream.on('error', (error) => {
+      const message = error?.message || '';
+      if (message.includes('File not found')) {
+        console.log(`[DeepRemember] Google Drive missing file: ${relativePath}`);
+      } else {
+        console.error('[DeepRemember] Error downloading from storage:', error);
+      }
+      finalize(false);
+    });
+
+    writeStream.on('error', (error) => {
+      console.error('[DeepRemember] Error writing fallback file:', error);
+      finalize(false);
+    });
+
+    writeStream.on('finish', () => finalize(true));
+    readStream.pipe(writeStream);
+  });
+};
+
+const ensureVoiceFileAvailable = async (relativePath) => {
+  if (isGoogleDriveFs()) {
+    const fallbackPath = getFallbackPath(relativePath);
+    if (fs.existsSync(fallbackPath)) {
+      return true;
+    }
+    return await downloadFromStorageToFallback(relativePath);
+  }
+
+  return fileSystem.existsSync ? fileSystem.existsSync(relativePath) : false;
+};
+
 /**
  * Clean text for TTS - removes markdown and keeps only letters, numbers, periods, commas, and question marks
  * @param {string} text - Text to clean
@@ -462,8 +533,9 @@ router.post('/convert-to-speech', authMiddleware.verifyToken, async (req, res) =
             console.log(`[DeepRemember] Created voice directory: ${voiceDir}`);
         }
 
-        // Check if audio file already exists
-        if (fileSystem.existsSync(filepath)) {
+        // Check if audio file already exists (local first, then Google Drive)
+        const audioReady = await ensureVoiceFileAvailable(filepath);
+        if (audioReady) {
             console.log(`[DeepRemember] Audio file already exists: ${filepath}`);
             res.json({
                 success: true,
@@ -668,8 +740,8 @@ router.get('/get-audio/:word/:sentence', authMiddleware.verifyToken, async (req,
         const filename = `${safeWord}_${sentenceHash}${extension}`;
         const filepath = path.posix.join('voice', filename);
 
-        // Check if audio file exists
-        if (fileSystem.existsSync(filepath)) {
+        // Check if audio file exists (local first, then Google Drive)
+        if (await ensureVoiceFileAvailable(filepath)) {
             res.json({
                 success: true,
                 audioUrl: `/voice/${filename}`,
@@ -682,7 +754,7 @@ router.get('/get-audio/:word/:sentence', authMiddleware.verifyToken, async (req,
             const altFilename = `${safeWord}_${sentenceHash}${altExtension}`;
             const altFilepath = path.posix.join('voice', altFilename);
             
-            if (fileSystem.existsSync(altFilepath)) {
+            if (await ensureVoiceFileAvailable(altFilepath)) {
                 res.json({
                     success: true,
                     audioUrl: `/voice/${altFilename}`,
