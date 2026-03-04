@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useToast } from '../ToastProvider'
+import { useAuth } from '../security/AuthContext'
 import { getApiUrl } from '../../config/api'
 import { useWordBase } from './WordBaseContext'
 import Page from '../Page'
@@ -20,6 +21,7 @@ const WordList = ({
   onNavigateToCourses
 }) => {
   const { showSuccess, showError, showInfo } = useToast()
+  const { authenticatedFetch } = useAuth()
   const {
     words,
     groupedWords,
@@ -38,6 +40,7 @@ const WordList = ({
     wordText: ''
   })
   const [isDeleting, setIsDeleting] = useState(false)
+  const [addingCardForWordId, setAddingCardForWordId] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredGroupedWords, setFilteredGroupedWords] = useState({})
   const [filteredAlphabetGroups, setFilteredAlphabetGroups] = useState([])
@@ -167,6 +170,55 @@ const WordList = ({
       showError(`Failed to delete word: ${error.message}`)
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  // Handle add word to cards
+  const handleAddToCards = async (word) => {
+    setAddingCardForWordId(word.id)
+    try {
+      // Build context: more_info at the start if present, then sample_sentence
+      let context = ''
+      if (word.more_info && word.sample_sentence) {
+        context = `${word.more_info}\n${word.sample_sentence}`
+      } else if (word.more_info) {
+        context = word.more_info
+      } else if (word.sample_sentence) {
+        context = word.sample_sentence
+      }
+
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/create-card'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors',
+        body: JSON.stringify({
+          word: word.word,
+          translation: word.translate || '',
+          context,
+          type: 'word',
+          allowDuplicate: false
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        if (data.isDuplicate) {
+          showInfo(`"${word.word}" is already in your cards.`)
+        } else {
+          showSuccess(`"${word.word}" added to your cards!`)
+        }
+      } else {
+        throw new Error(data.error || 'Failed to add card')
+      }
+    } catch (error) {
+      console.error('Error adding card:', error)
+      showError(`Failed to add "${word.word}" to cards: ${error.message}`)
+    } finally {
+      setAddingCardForWordId(null)
     }
   }
 
@@ -307,6 +359,15 @@ const WordList = ({
                             </div>
                           </div>
                           <div className="word-item-actions">
+                            <Button
+                              onClick={() => handleAddToCards(word)}
+                              variant="success"
+                              size="small"
+                              iconName="library_add"
+                              disabled={addingCardForWordId === word.id}
+                            >
+                              {addingCardForWordId === word.id ? 'Adding...' : 'Add to Cards'}
+                            </Button>
                             <Button
                               onClick={() => handleEdit(word)}
                               variant="secondary"
