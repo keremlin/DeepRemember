@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import AudioPlayer from './AudioPlayer'
 import FileUpload from './FileUpload'
 import CloseButton from '../CloseButton'
@@ -15,6 +15,13 @@ function PlayerPage({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepR
   const [showUserSetup, setShowUserSetup] = useState(false)
   const [currentUserId, setCurrentUserId] = useState(user?.email || 'user123')
   const audioPlayerRef = useRef(null)
+
+  // Keep currentUserId in sync when the logged-in user changes
+  useEffect(() => {
+    if (user?.email) {
+      setCurrentUserId(user.email)
+    }
+  }, [user])
 
   const handleUploadSuccess = (result) => {
     const { files, refreshPlaylist } = result
@@ -46,8 +53,9 @@ function PlayerPage({ onNavigateToWelcome, onNavigateToPlayer, onNavigateToDeepR
       onNavigateToCourses={onNavigateToCourses}
     >
       <div className="player-content">
-        <AudioPlayer 
+        <AudioPlayer
           ref={audioPlayerRef}
+          currentUserId={currentUserId}
           onUploadClick={() => setShowUploadModal(true)}
         />
       </div>

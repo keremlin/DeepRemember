@@ -378,17 +378,21 @@ const DeepRemember = ({ onNavigateToWelcome, onNavigateToPlayer, showCardsOnMoun
     }
   }, [stats.dueCards])
 
-  // Initialize on component mount
+  // Load data whenever the current user changes (covers mount + user switch)
   useEffect(() => {
-    // Only load user data once on mount
-    if (!isLoadingRef.current) {
-      loadUserData()
+    if (currentUserId && currentUserId !== 'user123') {
+      if (!isLoadingRef.current) {
+        loadUserData()
+      }
     }
-    // Show review cards view if requested (DashboardView, not ManageCards)
+  }, [currentUserId]) // Re-run when user switches
+
+  // Show review cards view if requested (DashboardView, not ManageCards)
+  useEffect(() => {
     if (showCardsOnMount) {
       setIsCardsView(false)
     }
-  }, [showCardsOnMount]) // Include showCardsOnMount in dependencies
+  }, [showCardsOnMount])
 
   // Get current card
   const currentCard = currentCards[currentCardIndex]

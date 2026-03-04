@@ -1590,7 +1590,7 @@ router.get('/all-cards/:userId', authMiddleware.verifyToken, authMiddleware.chec
 });
 
 // Update card details (word, translation, context)
-router.put('/update-card/:userId/:cardId', async (req, res) => {
+router.put('/update-card/:userId/:cardId', authMiddleware.verifyToken, authMiddleware.checkResourceOwnership('userId'), async (req, res) => {
   try {
     const { userId, cardId } = req.params;
     const { word, translation, context } = req.body;
@@ -1660,12 +1660,13 @@ router.put('/update-card/:userId/:cardId', async (req, res) => {
 });
 
 // Answer a card (rate the difficulty)
-router.post('/answer-card', async (req, res) => {
+router.post('/answer-card', authMiddleware.verifyToken, async (req, res) => {
   try {
-    const { userId, cardId, rating } = req.body;
-    
+    const { cardId, rating } = req.body;
+    const userId = req.userId; // Use authenticated user from JWT
+
     if (!userId || !cardId || rating === undefined) {
-      return res.status(400).json({ error: 'userId, cardId, and rating are required' });
+      return res.status(400).json({ error: 'cardId and rating are required' });
     }
 
     // Simple SRS algorithm implementation
@@ -1810,7 +1811,7 @@ router.post('/answer-card', async (req, res) => {
 });
 
 // Get user statistics
-router.get('/stats/:userId', async (req, res) => {
+router.get('/stats/:userId', authMiddleware.verifyToken, authMiddleware.checkResourceOwnership('userId'), async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -1867,7 +1868,7 @@ router.get('/stats/:userId', async (req, res) => {
 });
 
 // Delete a card
-router.delete('/delete-card/:userId/:cardId', async (req, res) => {
+router.delete('/delete-card/:userId/:cardId', authMiddleware.verifyToken, authMiddleware.checkResourceOwnership('userId'), async (req, res) => {
   try {
     const { userId, cardId } = req.params;
     console.log(`[DeepRemember] DELETE request received: userId=${userId}, cardId=${cardId}`);
