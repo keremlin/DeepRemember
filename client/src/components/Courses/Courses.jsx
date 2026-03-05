@@ -2,7 +2,7 @@ import React from 'react'
 import Page from '../Page'
 import '../security/UserInfo.css'
 
-const Courses = ({ 
+const Courses = ({
   onUserSetup,
   onNavigateToWelcome,
   onNavigateToPlayer,
@@ -11,7 +11,8 @@ const Courses = ({
   onNavigateToManagement,
   onNavigateToChat,
   onNavigateToWordList,
-  onNavigateToDictate
+  onNavigateToDictate,
+  onNavigateToArtikelGame
 }) => {
   const handleDiktateClick = () => {
     if (onNavigateToDictate) {
@@ -31,6 +32,7 @@ const Courses = ({
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToChat={onNavigateToChat}
       onNavigateToWordList={onNavigateToWordList}
+      onNavigateToArtikelGame={onNavigateToArtikelGame}
     >
       <div className="user-management-content">
         <div className="user-info">

@@ -18,7 +18,8 @@ const WordList = ({
   onNavigateToManagement,
   onNavigateToChat,
   onNavigateToWordList,
-  onNavigateToCourses
+  onNavigateToCourses,
+  onNavigateToArtikelGame
 }) => {
   const { showSuccess, showError, showInfo } = useToast()
   const { authenticatedFetch } = useAuth()
@@ -239,6 +240,7 @@ const WordList = ({
       onNavigateToChat={onNavigateToChat}
       onNavigateToWordList={onNavigateToWordList}
       onNavigateToCourses={onNavigateToCourses}
+      onNavigateToArtikelGame={onNavigateToArtikelGame}
     >
       <div className="word-list-container" style={{ position: 'relative' }}>
         <div className="word-list-header">

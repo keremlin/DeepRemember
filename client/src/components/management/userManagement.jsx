@@ -15,7 +15,8 @@ const UserManagement = ({
   onNavigateToManagement,
   onNavigateToChat,
   onNavigateToWordList,
-  onNavigateToCourses
+  onNavigateToCourses,
+  onNavigateToArtikelGame
 }) => {
   const [showLabelsModal, setShowLabelsModal] = useState(false)
   const [showChatTemplates, setShowChatTemplates] = useState(false)
@@ -104,6 +105,7 @@ const UserManagement = ({
       onNavigateToChat={onNavigateToChat}
       onNavigateToWordList={onNavigateToWordList}
       onNavigateToCourses={onNavigateToCourses}
+      onNavigateToArtikelGame={onNavigateToArtikelGame}
     >
       <div className="user-management-content">
         <div className="user-info">

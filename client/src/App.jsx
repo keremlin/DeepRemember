@@ -8,6 +8,7 @@ import Chat from './components/chat/Chat'
 import WordList from './components/basewords/WordList'
 import Courses from './components/Courses/Courses'
 import Dictate from './components/Courses/Dictate/Dictate'
+import ArtikelGame from './components/artikelGame/ArtikelGame'
 import { ToastProvider } from './components/ToastProvider'
 import { AuthProvider, useAuth } from './components/security/AuthContext'
 import { ThemeProvider } from './components/ThemeContext'
@@ -85,6 +86,10 @@ function AppContent() {
     setCurrentView('dictate')
   }
 
+  const navigateToArtikelGame = () => {
+    setCurrentView('artikelgame')
+  }
+
   return (
     <AuthWrapper onNavigateToWelcome={navigateToWelcome}>
       <div className="App">
@@ -94,7 +99,7 @@ function AppContent() {
             <p>The login modal should appear above this message.</p>
           </div>
         ) : currentView === 'welcome' ? (
-          <Welcome 
+          <Welcome
             onNavigateToDeepRemember={navigateToDeepRemember}
             onNavigateToPlayer={navigateToPlayer}
             onNavigateToManagement={navigateToManagement}
@@ -102,9 +107,10 @@ function AppContent() {
             onNavigateToUserManagement={navigateToUserManagement}
             onNavigateToWordList={navigateToWordList}
             onNavigateToCourses={navigateToCourses}
+            onNavigateToArtikelGame={navigateToArtikelGame}
           />
         ) : currentView === 'deepremember' ? (
-          <DeepRemember 
+          <DeepRemember
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
             showCardsOnMount={showCardsOnMount}
@@ -113,9 +119,10 @@ function AppContent() {
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
             onNavigateToCourses={navigateToCourses}
+            onNavigateToArtikelGame={navigateToArtikelGame}
           />
         ) : currentView === 'usermanagement' ? (
-          <UserManagement 
+          <UserManagement
             onUserSetup={() => {}}
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
@@ -125,9 +132,10 @@ function AppContent() {
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
             onNavigateToCourses={navigateToCourses}
+            onNavigateToArtikelGame={navigateToArtikelGame}
           />
         ) : currentView === 'management' ? (
-          <ManagementPage 
+          <ManagementPage
             onUserSetup={() => {}}
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
@@ -137,9 +145,10 @@ function AppContent() {
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
             onNavigateToCourses={navigateToCourses}
+            onNavigateToArtikelGame={navigateToArtikelGame}
           />
         ) : currentView === 'chat' ? (
-          <Chat 
+          <Chat
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
             onShowCards={() => navigateToDeepRemember(true)}
@@ -147,9 +156,10 @@ function AppContent() {
             onNavigateToManagement={navigateToManagement}
             onNavigateToWordList={navigateToWordList}
             onNavigateToCourses={navigateToCourses}
+            onNavigateToArtikelGame={navigateToArtikelGame}
           />
         ) : currentView === 'wordlist' ? (
-          <WordList 
+          <WordList
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
             onShowCards={() => navigateToDeepRemember(true)}
@@ -158,9 +168,10 @@ function AppContent() {
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
             onNavigateToCourses={navigateToCourses}
+            onNavigateToArtikelGame={navigateToArtikelGame}
           />
         ) : currentView === 'courses' ? (
-          <Courses 
+          <Courses
             onUserSetup={() => {}}
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
@@ -170,9 +181,10 @@ function AppContent() {
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
             onNavigateToDictate={navigateToDictate}
+            onNavigateToArtikelGame={navigateToArtikelGame}
           />
         ) : currentView === 'dictate' ? (
-          <Dictate 
+          <Dictate
             onUserSetup={() => {}}
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
@@ -183,8 +195,20 @@ function AppContent() {
             onNavigateToWordList={navigateToWordList}
             onNavigateToCourses={navigateToCourses}
           />
+        ) : currentView === 'artikelgame' ? (
+          <ArtikelGame
+            onNavigateToWelcome={navigateToWelcome}
+            onNavigateToPlayer={navigateToPlayer}
+            onShowCards={() => navigateToDeepRemember(true)}
+            onNavigateToUserManagement={navigateToUserManagement}
+            onNavigateToManagement={navigateToManagement}
+            onNavigateToChat={navigateToChat}
+            onNavigateToWordList={navigateToWordList}
+            onNavigateToCourses={navigateToCourses}
+            onNavigateToArtikelGame={navigateToArtikelGame}
+          />
         ) : (
-          <PlayerPage 
+          <PlayerPage
             onNavigateToWelcome={navigateToWelcome}
             onNavigateToPlayer={navigateToPlayer}
             onNavigateToDeepRemember={navigateToDeepRemember}
@@ -193,6 +217,7 @@ function AppContent() {
             onNavigateToChat={navigateToChat}
             onNavigateToWordList={navigateToWordList}
             onNavigateToCourses={navigateToCourses}
+            onNavigateToArtikelGame={navigateToArtikelGame}
           />
         )}
       </div>

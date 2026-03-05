@@ -16,7 +16,8 @@ const Dictate = ({
   onNavigateToManagement,
   onNavigateToChat,
   onNavigateToWordList,
-  onNavigateToCourses
+  onNavigateToCourses,
+  onNavigateToArtikelGame
 }) => {
   const { authenticatedFetch } = useAuth()
   const { showSuccess, showError } = useToast()
@@ -166,6 +167,7 @@ const Dictate = ({
       onNavigateToChat={onNavigateToChat}
       onNavigateToWordList={onNavigateToWordList}
       onNavigateToCourses={onNavigateToCourses}
+      onNavigateToArtikelGame={onNavigateToArtikelGame}
     >
       <div className="dictate-container">
         <div className="dictate-header">

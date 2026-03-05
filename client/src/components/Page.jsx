@@ -3,12 +3,12 @@ import Header from './header/Header'
 import Footer from './Footer'
 import './Page.css'
 
-function Page({ 
+function Page({
   children,
   // Header props
-  isCardsView, 
-  onUserSetup, 
-  onToggleCardsView, 
+  isCardsView,
+  onUserSetup,
+  onToggleCardsView,
   onNavigateToWelcome,
   onNavigateToPlayer,
   onShowCards,
@@ -17,6 +17,7 @@ function Page({
   onNavigateToChat,
   onNavigateToWordList,
   onNavigateToCourses,
+  onNavigateToArtikelGame,
   isReviewMode
 }) {
   return (
@@ -33,6 +34,7 @@ function Page({
         onNavigateToChat={onNavigateToChat}
         onNavigateToWordList={onNavigateToWordList}
         onNavigateToCourses={onNavigateToCourses}
+        onNavigateToArtikelGame={onNavigateToArtikelGame}
       />
       
       <main className="page-body">

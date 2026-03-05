@@ -19,7 +19,8 @@ const Chat = ({
   onNavigateToUserManagement,
   onNavigateToManagement,
   onNavigateToWordList,
-  onNavigateToCourses
+  onNavigateToCourses,
+  onNavigateToArtikelGame
 }) => {
   const { authenticatedFetch } = useAuth()
   const { showError } = useToast()
@@ -516,6 +517,7 @@ ${conversationHistory}`
       onNavigateToManagement={onNavigateToManagement}
       onNavigateToWordList={onNavigateToWordList}
       onNavigateToCourses={onNavigateToCourses}
+      onNavigateToArtikelGame={onNavigateToArtikelGame}
     >
       <div className={`chat-container ${chatMode === 'voice' ? 'voice-mode' : ''}`}>
         <div className="chat-header">

@@ -154,6 +154,29 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         )`
+      },
+      {
+        name: 'games',
+        sql: `CREATE TABLE IF NOT EXISTS games (
+          id          SERIAL PRIMARY KEY,
+          name        TEXT    NOT NULL,
+          description TEXT,
+          create_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )`
+      },
+      {
+        name: 'game_data',
+        sql: `CREATE TABLE IF NOT EXISTS game_data (
+          id      SERIAL  PRIMARY KEY,
+          name    TEXT,
+          level   TEXT,
+          user_id TEXT    NOT NULL,
+          game_id INTEGER NOT NULL,
+          date    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          score   INTEGER DEFAULT 0,
+          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+          FOREIGN KEY (game_id) REFERENCES games(id)      ON DELETE CASCADE
+        )`
       }
     ];
 

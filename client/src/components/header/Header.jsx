@@ -3,10 +3,10 @@ import UserInfo from '../security/UserInfo'
 import TopMenu from './TopMenu'
 import './Header.css'
 
-const Header = ({ 
-  isCardsView, 
-  onUserSetup, 
-  onToggleCardsView, 
+const Header = ({
+  isCardsView,
+  onUserSetup,
+  onToggleCardsView,
   onNavigateToWelcome,
   onNavigateToPlayer,
   onShowCards,
@@ -14,7 +14,8 @@ const Header = ({
   onNavigateToManagement,
   onNavigateToChat,
   onNavigateToWordList,
-  onNavigateToCourses
+  onNavigateToCourses,
+  onNavigateToArtikelGame
 }) => {
   return (
     <>
@@ -27,7 +28,7 @@ const Header = ({
           <UserInfo onUserSetup={onUserSetup} />
         </div>
       </div>
-      <TopMenu 
+      <TopMenu
         onNavigateToPlayer={onNavigateToPlayer}
         onShowCards={onShowCards}
         onNavigateToUserManagement={onNavigateToUserManagement}
@@ -35,6 +36,7 @@ const Header = ({
         onNavigateToChat={onNavigateToChat}
         onNavigateToWordList={onNavigateToWordList}
         onNavigateToCourses={onNavigateToCourses}
+        onNavigateToArtikelGame={onNavigateToArtikelGame}
       />
     </>
   )

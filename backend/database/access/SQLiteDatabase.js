@@ -215,6 +215,34 @@ class SQLiteDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_word_base_type_of_word ON word_base(type_of_word);
     `;
 
+    const createGamesTable = `
+      CREATE TABLE IF NOT EXISTS games (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        name        TEXT    NOT NULL,
+        description TEXT,
+        create_date DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    const createGameDataTable = `
+      CREATE TABLE IF NOT EXISTS game_data (
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        name    TEXT,
+        level   TEXT,
+        user_id TEXT    NOT NULL,
+        game_id INTEGER NOT NULL,
+        date    DATETIME DEFAULT CURRENT_TIMESTAMP,
+        score   INTEGER DEFAULT 0,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (game_id) REFERENCES games(id)      ON DELETE CASCADE
+      )
+    `;
+
+    const createGameDataIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_game_data_user_id ON game_data(user_id);
+      CREATE INDEX IF NOT EXISTS idx_game_data_game_id ON game_data(game_id);
+    `;
+
     try {
       this.db.exec(createUsersTable);
       this.db.exec(createCardsTable);
@@ -225,12 +253,20 @@ class SQLiteDatabase extends IDatabase {
       this.db.exec(createUserChatTemplatesTable);
       this.db.exec(createUserConfigsTable);
       this.db.exec(createWordBaseTable);
+      this.db.exec(createGamesTable);
+      this.db.exec(createGameDataTable);
       this.db.exec(createIndexes);
       this.db.exec(createSentenceAnalysisIndexes);
       this.db.exec(createLabelIndexes);
       this.db.exec(createChatTemplateIndexes);
       this.db.exec(createUserConfigsIndexes);
       this.db.exec(createWordBaseIndexes);
+      this.db.exec(createGameDataIndexes);
+      // Seed default games
+      this.db.exec(`
+        INSERT OR IGNORE INTO games (id, name, description)
+        VALUES (1, 'Artikel-Spiel', 'Rate den richtigen deutschen Artikel (der/die/das) für Nomen.')
+      `);
       console.log('[DB] Database tables created successfully');
     } catch (error) {
       console.error('[DB] Failed to create tables:', error);
@@ -271,7 +307,7 @@ class SQLiteDatabase extends IDatabase {
       // Only take as many values as there are placeholders
       const finalParams = paramValues.slice(0, placeholderCount);
       
-      const results = stmt.all(finalParams);
+      const results = stmt.all(...finalParams);
       return results;
     } catch (error) {
       console.error('[DB] Query error:', error);
@@ -295,7 +331,7 @@ class SQLiteDatabase extends IDatabase {
       const paramValues = Object.values(params);
       const finalParams = paramValues.slice(0, placeholderCount);
       
-      const result = stmt.get(finalParams);
+      const result = stmt.get(...finalParams);
       return result || null;
     } catch (error) {
       console.error('[DB] QueryOne error:', error);
@@ -319,7 +355,7 @@ class SQLiteDatabase extends IDatabase {
       const paramValues = Object.values(params);
       const finalParams = paramValues.slice(0, placeholderCount);
       
-      const result = stmt.run(finalParams);
+      const result = stmt.run(...finalParams);
       return {
         changes: result.changes,
         lastInsertRowid: result.lastInsertRowid

@@ -2,42 +2,47 @@ import React from 'react'
 import TopMenuButton from './TopMenuButton'
 import './TopMenu.css'
 
-const TopMenu = ({ onNavigateToPlayer, onShowCards, onNavigateToUserManagement, onNavigateToManagement, onNavigateToChat, onNavigateToWordList, onNavigateToCourses }) => {
+const TopMenu = ({ onNavigateToPlayer, onShowCards, onNavigateToUserManagement, onNavigateToManagement, onNavigateToChat, onNavigateToWordList, onNavigateToCourses, onNavigateToArtikelGame }) => {
   const menuItems = [
-    { 
-      icon: 'play_circle', 
-      label: 'Player', 
+    {
+      icon: 'play_circle',
+      label: 'Player',
       active: true,
       onClick: onNavigateToPlayer
     },
-    { 
-      icon: 'style', 
+    {
+      icon: 'style',
       label: 'Cards',
       onClick: onShowCards
     },
-    { 
-      icon: 'menu_book', 
+    {
+      icon: 'menu_book',
       label: 'Words',
       onClick: onNavigateToWordList
     },
-    { 
-      icon: 'school', 
+    {
+      icon: 'school',
       label: 'Courses',
       onClick: onNavigateToCourses
     },
+    {
+      icon: 'sports_esports',
+      label: 'Games',
+      onClick: onNavigateToArtikelGame
+    },
     { icon: 'description', label: 'Grammar' },
-    { 
-      icon: 'settings', 
+    {
+      icon: 'settings',
       label: 'Manage',
       onClick: onNavigateToManagement
     },
-    { 
-      icon: 'person', 
+    {
+      icon: 'person',
       label: 'User',
       onClick: onNavigateToUserManagement
     },
-    { 
-      icon: 'chat', 
+    {
+      icon: 'chat',
       label: 'Chat',
       onClick: onNavigateToChat
     },

@@ -19,6 +19,7 @@ const wordBaseRoutes = require('./routes/wordBase');
 const llmRoutes = require('./routes/llm');
 const testRoutes = require('./testing/testRoutes');
 const timerRoutes = require('./routes/timer');
+const gamesRoutes = require('./routes/games');
 
 // Import configuration
 const config = require('./config/app');
@@ -96,6 +97,7 @@ app.use('/api/word-base', wordBaseRoutes);
 app.use('/api/llm', llmRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/timer', timerRoutes);
+app.use('/api/games', gamesRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

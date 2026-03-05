@@ -11,7 +11,8 @@ const UserManagement = ({
   onNavigateToManagement,
   onNavigateToChat,
   onNavigateToWordList,
-  onNavigateToCourses
+  onNavigateToCourses,
+  onNavigateToArtikelGame
 }) => {
   return (
     <Page
@@ -26,6 +27,7 @@ const UserManagement = ({
       onNavigateToChat={onNavigateToChat}
       onNavigateToWordList={onNavigateToWordList}
       onNavigateToCourses={onNavigateToCourses}
+      onNavigateToArtikelGame={onNavigateToArtikelGame}
     >
       <UserInfo onUserSetup={onUserSetup} />
     </Page>

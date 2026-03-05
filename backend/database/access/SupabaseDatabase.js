@@ -454,7 +454,29 @@ class SupabaseDatabase extends IDatabase {
         'CREATE INDEX IF NOT EXISTS idx_spend_time_user_id ON spend_time(user_id)',
         'CREATE INDEX IF NOT EXISTS idx_spend_time_start_datetime ON spend_time(start_datetime)',
         'CREATE INDEX IF NOT EXISTS idx_spend_time_user_date ON spend_time(user_id, start_datetime)',
-        'CREATE INDEX IF NOT EXISTS idx_app_variables_keyname ON app_variables(keyname)'
+        'CREATE INDEX IF NOT EXISTS idx_app_variables_keyname ON app_variables(keyname)',
+
+        `CREATE TABLE IF NOT EXISTS games (
+          id          SERIAL PRIMARY KEY,
+          name        TEXT    NOT NULL,
+          description TEXT,
+          create_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        )`,
+
+        `CREATE TABLE IF NOT EXISTS game_data (
+          id      SERIAL  PRIMARY KEY,
+          name    TEXT,
+          level   TEXT,
+          user_id TEXT    NOT NULL,
+          game_id INTEGER NOT NULL,
+          date    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          score   INTEGER DEFAULT 0,
+          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+          FOREIGN KEY (game_id) REFERENCES games(id)      ON DELETE CASCADE
+        )`,
+
+        'CREATE INDEX IF NOT EXISTS idx_game_data_user_id ON game_data(user_id)',
+        'CREATE INDEX IF NOT EXISTS idx_game_data_game_id ON game_data(game_id)'
       ];
 
       let successCount = 0;
