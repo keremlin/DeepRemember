@@ -253,6 +253,71 @@ class GamesRepository {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // artikle_user_word_answer table
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Upsert a per-word answer record for the Artikel game.
+   * If a row for (wordBaseId, userId) already exists the correct/wrong counts
+   * are incremented and the last-answer fields are updated.
+   *
+   * @param {Object} data
+   * @param {number} data.wordBaseId
+   * @param {string} data.userId
+   * @param {number} data.correctDelta   - How many correct answers to add (0 or more)
+   * @param {number} data.wrongDelta     - How many wrong answers to add (0 or more)
+   * @param {string} data.lastAnswer     - 'correct' | 'wrong'
+   * @param {number} data.lastGameDataId - FK to game_data.id
+   * @returns {Promise<void>}
+   */
+  async upsertArtikelUserWordAnswer(data) {
+    try {
+      await this.db.execute(
+        `INSERT INTO artikle_user_word_answer
+           (word_base_id, user_id, number_of_correct_answer, number_of_wrong_answer,
+            last_answer, date_of_last_answer, last_game_data_id)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+         ON CONFLICT(word_base_id, user_id) DO UPDATE SET
+           number_of_correct_answer = artikle_user_word_answer.number_of_correct_answer + excluded.number_of_correct_answer,
+           number_of_wrong_answer   = artikle_user_word_answer.number_of_wrong_answer   + excluded.number_of_wrong_answer,
+           last_answer              = excluded.last_answer,
+           date_of_last_answer      = CURRENT_TIMESTAMP,
+           last_game_data_id        = excluded.last_game_data_id
+         RETURNING id`,
+        {
+          word_base_id:      data.wordBaseId,
+          user_id:           data.userId,
+          correct:           data.correctDelta || 0,
+          wrong:             data.wrongDelta   || 0,
+          last_answer:       data.lastAnswer,
+          last_game_data_id: data.lastGameDataId || null
+        }
+      );
+    } catch (error) {
+      console.error('[Games-REPO] upsertArtikelUserWordAnswer error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all per-word answer stats for a user
+   * @param {string} userId
+   * @returns {Promise<Array>}
+   */
+  async getArtikelUserWordAnswers(userId) {
+    try {
+      const rows = await this.db.query(
+        `SELECT * FROM artikle_user_word_answer WHERE user_id = ? ORDER BY date_of_last_answer DESC`,
+        { user_id: userId }
+      );
+      return (rows || []).map(this._mapArtikelUserWordAnswer);
+    } catch (error) {
+      console.error('[Games-REPO] getArtikelUserWordAnswers error:', error);
+      throw error;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // Private mapping helpers
   // ─────────────────────────────────────────────────────────────
 
@@ -274,6 +339,19 @@ class GamesRepository {
       gameId: row.game_id,
       date: row.date,
       score: row.score
+    };
+  }
+
+  _mapArtikelUserWordAnswer(row) {
+    return {
+      id: row.id,
+      wordBaseId: row.word_base_id,
+      userId: row.user_id,
+      numberOfWrongAnswer: row.number_of_wrong_answer,
+      numberOfCorrectAnswer: row.number_of_correct_answer,
+      lastAnswer: row.last_answer,
+      dateOfLastAnswer: row.date_of_last_answer,
+      lastGameDataId: row.last_game_data_id
     };
   }
 }

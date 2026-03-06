@@ -44,6 +44,8 @@ const ArtikelGame = ({
   // keep live refs so the timer callback always has current values
   const correctRef = useRef(0)
   const totalRef = useRef(0)
+  // per-word answer accumulator: Map<wordBaseId, { correct: n, wrong: n }>
+  const wordAnswersRef = useRef(new Map())
 
   // Filter words that have a valid article
   const prepareWords = useCallback((allWords) => {
@@ -69,10 +71,15 @@ const ArtikelGame = ({
     setComputedScore(score)
     setIsSaving(true)
     try {
+      const wordAnswers = Array.from(wordAnswersRef.current.entries()).map(([wordBaseId, counts]) => ({
+        wordBaseId,
+        correct: counts.correct,
+        wrong: counts.wrong
+      }))
       const res = await authenticatedFetch(getApiUrl('/api/games/data'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameId: ARTIKEL_GAME_ID, correct: c, total: g, level: '1' })
+        body: JSON.stringify({ gameId: ARTIKEL_GAME_ID, correct: c, total: g, level: '1', wordAnswers })
       })
       if (res.ok) {
         const data = await res.json()
@@ -98,6 +105,7 @@ const ArtikelGame = ({
     setTotal(0)
     correctRef.current = 0
     totalRef.current = 0
+    wordAnswersRef.current = new Map()
     setTimeLeft(GAME_DURATION)
     setFeedback(null)
     setChosenArticle(null)
@@ -146,6 +154,17 @@ const ArtikelGame = ({
       return prev + 1
     })
     const correctArticle = (currentWord.article || '').toLowerCase().trim()
+
+    // Accumulate per-word stats (keyed by word_base id)
+    const wordId = currentWord.id
+    if (wordId != null) {
+      const existing = wordAnswersRef.current.get(wordId) || { correct: 0, wrong: 0 }
+      wordAnswersRef.current.set(wordId, {
+        correct: existing.correct + (isCorrect ? 1 : 0),
+        wrong:   existing.wrong   + (isCorrect ? 0 : 1)
+      })
+    }
+
     if (isCorrect) {
       setCorrect(prev => {
         correctRef.current = prev + 1

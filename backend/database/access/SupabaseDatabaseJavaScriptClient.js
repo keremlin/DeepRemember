@@ -198,29 +198,36 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
   async executeSQLDirectly(sql) {
     try {
       // Use Supabase's built-in execute_sql function via RPC
-      const { error } = await this.client.rpc('execute_sql', { 
+      const { data, error } = await this.client.rpc('execute_sql', {
         sql_query: sql
       });
-      
+
       if (error) {
         throw error;
       }
-      
+      // The execute_sql function returns errors inside data.error (it uses EXCEPTION WHEN OTHERS)
+      if (data && typeof data === 'object' && data.error) {
+        throw new Error(`[execute_sql] ${data.error}`);
+      }
+
       return true;
-      
+
     } catch (error) {
       // If execute_sql doesn't exist, try creating it first
       if (error.message.includes('function execute_sql') || error.message.includes('does not exist')) {
         await this.createExecuteSQLFunction();
         // Retry the original query
-        const { error: retryError } = await this.client.rpc('execute_sql', { 
+        const { data: retryData, error: retryError } = await this.client.rpc('execute_sql', {
           sql_query: sql
         });
-        
+
         if (retryError) {
           throw retryError;
         }
-        
+        if (retryData && typeof retryData === 'object' && retryData.error) {
+          throw new Error(`[execute_sql] ${retryData.error}`);
+        }
+
         return true;
       }
       throw error;
@@ -1169,6 +1176,24 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
     dbLog('[SupabaseJS] execute() called with SQL:', sql.substring(0, 80));
 
     try {
+      // ON CONFLICT DO UPDATE (upsert with increment) cannot be expressed via the
+      // Supabase JS client — handleInsert only calls .insert() and drops the ON CONFLICT
+      // clause entirely.  Fall back to raw SQL via the execute_sql RPC so PostgreSQL
+      // handles the full statement correctly.
+      if (sql.toLowerCase().includes('on conflict')) {
+        const paramValues = Object.values(params);
+        let paramIndex = 0;
+        const interpolatedSQL = sql.replace(/\?/g, () => {
+          const value = paramValues[paramIndex++];
+          if (value === null || value === undefined) return 'NULL';
+          if (typeof value === 'number') return String(value);
+          return `'${String(value).replace(/'/g, "''")}'`;
+        });
+        dbLog('[SupabaseJS] ON CONFLICT detected — using executeSQLDirectly');
+        await this.executeSQLDirectly(interpolatedSQL);
+        return { changes: 1, lastInsertRowId: null };
+      }
+
       // Check if this is a complex query that should use RPC
       if (this.isComplexQuery(sql)) {
         dbLog('[SupabaseJS] Query is complex, using executeComplexQuery');

@@ -61,7 +61,7 @@ router.post('/data', authMiddleware.verifyToken, async (req, res) => {
     }
 
     const userId = req.userId;
-    const { gameId, correct, total, level } = req.body;
+    const { gameId, correct, total, level, wordAnswers } = req.body;
 
     if (!gameId) {
       return res.status(400).json({ success: false, error: 'gameId is required' });
@@ -80,6 +80,21 @@ router.post('/data', authMiddleware.verifyToken, async (req, res) => {
       gameId: parseInt(gameId),
       score
     });
+
+    // Upsert per-word answer stats when word-level data is provided
+    if (Array.isArray(wordAnswers) && wordAnswers.length > 0) {
+      for (const wa of wordAnswers) {
+        if (!wa.wordBaseId) continue;
+        await gamesRepository.upsertArtikelUserWordAnswer({
+          wordBaseId:    wa.wordBaseId,
+          userId,
+          correctDelta:  wa.correct || 0,
+          wrongDelta:    wa.wrong   || 0,
+          lastAnswer:    wa.correct > 0 ? 'correct' : 'wrong',
+          lastGameDataId: entry?.id ?? null
+        });
+      }
+    }
 
     const bestScore = await gamesRepository.getBestScore(userId, parseInt(gameId));
 

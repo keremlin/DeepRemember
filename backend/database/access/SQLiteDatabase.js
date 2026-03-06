@@ -243,6 +243,28 @@ class SQLiteDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_game_data_game_id ON game_data(game_id);
     `;
 
+    const createArtikleUserWordAnswerTable = `
+      CREATE TABLE IF NOT EXISTS artikle_user_word_answer (
+        id                       INTEGER  PRIMARY KEY AUTOINCREMENT,
+        word_base_id             INTEGER  NOT NULL,
+        user_id                  TEXT     NOT NULL,
+        number_of_wrong_answer   INTEGER  NOT NULL DEFAULT 0,
+        number_of_correct_answer INTEGER  NOT NULL DEFAULT 0,
+        last_answer              TEXT     CHECK (last_answer IN ('correct', 'wrong')),
+        date_of_last_answer      DATETIME,
+        last_game_data_id        INTEGER,
+        FOREIGN KEY (word_base_id)      REFERENCES word_base(id)    ON DELETE CASCADE,
+        FOREIGN KEY (user_id)           REFERENCES users(user_id)   ON DELETE CASCADE,
+        FOREIGN KEY (last_game_data_id) REFERENCES game_data(id)    ON DELETE SET NULL,
+        UNIQUE (word_base_id, user_id)
+      )
+    `;
+
+    const createArtikleUserWordAnswerIndexes = `
+      CREATE INDEX IF NOT EXISTS idx_artikle_uwa_user_id      ON artikle_user_word_answer(user_id);
+      CREATE INDEX IF NOT EXISTS idx_artikle_uwa_word_base_id ON artikle_user_word_answer(word_base_id);
+    `;
+
     try {
       this.db.exec(createUsersTable);
       this.db.exec(createCardsTable);
@@ -255,6 +277,7 @@ class SQLiteDatabase extends IDatabase {
       this.db.exec(createWordBaseTable);
       this.db.exec(createGamesTable);
       this.db.exec(createGameDataTable);
+      this.db.exec(createArtikleUserWordAnswerTable);
       this.db.exec(createIndexes);
       this.db.exec(createSentenceAnalysisIndexes);
       this.db.exec(createLabelIndexes);
@@ -262,6 +285,7 @@ class SQLiteDatabase extends IDatabase {
       this.db.exec(createUserConfigsIndexes);
       this.db.exec(createWordBaseIndexes);
       this.db.exec(createGameDataIndexes);
+      this.db.exec(createArtikleUserWordAnswerIndexes);
       // Seed default games
       this.db.exec(`
         INSERT OR IGNORE INTO games (id, name, description)
