@@ -2,8 +2,10 @@ const express = require('express');
 const databaseFactory = require('../database/access/DatabaseFactory');
 const dbConfig = require('../config/database');
 const WordBaseRepository = require('../database/access/WordBaseRepository');
+const AuthMiddleware = require('../security/authMiddleware');
 
 const router = express.Router();
+const authMiddleware = new AuthMiddleware();
 
 let wordBaseRepository = null;
 let useDatabase = false;
@@ -35,7 +37,7 @@ initializeRepository();
 
 // Get all words with optional filters
 // Query params: groupAlphabetName, type_of_word, search, limit, offset
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -68,7 +70,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get a single word by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -94,7 +96,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Get words by alphabet group
-router.get('/group/:groupAlphabetName', async (req, res) => {
+router.get('/group/:groupAlphabetName', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -111,7 +113,7 @@ router.get('/group/:groupAlphabetName', async (req, res) => {
 });
 
 // Get words by type
-router.get('/type/:typeOfWord', async (req, res) => {
+router.get('/type/:typeOfWord', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -128,7 +130,7 @@ router.get('/type/:typeOfWord', async (req, res) => {
 });
 
 // Search words
-router.get('/search/:searchTerm', async (req, res) => {
+router.get('/search/:searchTerm', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -145,7 +147,7 @@ router.get('/search/:searchTerm', async (req, res) => {
 });
 
 // Create a new word
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -183,7 +185,7 @@ router.post('/', async (req, res) => {
 });
 
 // Bulk create words
-router.post('/bulk', async (req, res) => {
+router.post('/bulk', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -214,7 +216,7 @@ router.post('/bulk', async (req, res) => {
 });
 
 // Update a word
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -269,7 +271,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a word
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });
@@ -301,7 +303,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Get total word count
-router.get('/count/total', async (req, res) => {
+router.get('/count/total', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (!useDatabase || !wordBaseRepository) {
       return res.status(503).json({ error: 'Database not available' });

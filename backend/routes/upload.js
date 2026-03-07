@@ -5,11 +5,14 @@ const FileSystemFactory = require('../filesystem/FileSystemFactory');
 const fileSystem = FileSystemFactory.createDefault();
 const { upload, filesDir } = require('../middleware/uploadConfig');
 const SstFactory = require('../stt/SstFactory');
+const AuthMiddleware = require('../security/authMiddleware');
+const config = require('../config/app');
 
 const router = express.Router();
+const authMiddleware = new AuthMiddleware();
 
 // Upload files endpoint
-router.post('/upload-files', (req, res, next) => {
+router.post('/upload-files', authMiddleware.verifyToken, (req, res, next) => {
   console.log('[UPLOAD] Starting file upload...');
   next();
 }, upload.fields([
@@ -38,7 +41,7 @@ router.post('/upload-files', (req, res, next) => {
       // Both files provided
       console.log('[UPLOAD] Finished file upload:', mediaFile.originalname, subtitleFile.originalname);
       
-      if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+      if (config.FS_TYPE && config.FS_TYPE.toLowerCase() === 'google') {
         // Google Drive flow: Upload both files to Drive
         try {
           // Verify files exist before reading
@@ -78,7 +81,7 @@ router.post('/upload-files', (req, res, next) => {
       try {
         let mediaPath, subtitlePath, tempMediaPath = null;
         
-        if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+        if (config.FS_TYPE && config.FS_TYPE.toLowerCase() === 'google') {
           // Google Drive flow: Upload to Drive first, then process locally
           console.log('[UPLOAD] Google Drive mode: Uploading to Drive first');
           
@@ -120,7 +123,7 @@ router.post('/upload-files', (req, res, next) => {
         if (result.success) {
           console.log('[UPLOAD] Subtitle generated successfully');
           
-          if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+          if (config.FS_TYPE && config.FS_TYPE.toLowerCase() === 'google') {
             // Google Drive flow: Upload generated subtitle to Drive
             const subData = await fs.promises.readFile(subtitlePath);
             const cloudSubPath = path.posix.join('files', baseName + '.srt');
@@ -156,7 +159,7 @@ router.post('/upload-files', (req, res, next) => {
       // Only media file provided but no subtitle generation requested
       console.log('[UPLOAD] Media file uploaded without subtitle:', mediaFile.originalname);
       
-      if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+      if (config.FS_TYPE && config.FS_TYPE.toLowerCase() === 'google') {
         // Google Drive flow: Upload media file to Drive
         try {
           // Verify file exists before reading

@@ -1,225 +1,167 @@
-# AI Trainer - Separated Frontend & Backend
+# DeepRemember
 
-A modern, modular application for learning with AI-generated subtitles using OpenAI's Whisper, now with separated frontend and backend architecture.
+A full-stack language learning application with spaced repetition (SRS), AI-powered chat, TTS/STT integration, and vocabulary management.
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
-aitrainer/
-├── frontend/                 # Frontend (Client-side)
-│   ├── public/              # Static assets
-│   │   ├── js/              # JavaScript files
-│   │   │   ├── app.js       # Main application logic
-│   │   │   ├── deepRemember.js # Learning system logic
-│   │   │   └── InteliSentence.js # Sentence analysis
-│   │   └── styles.css       # Main stylesheet
-│   ├── views/               # HTML templates
-│   │   ├── index.html       # Main page
-│   │   ├── deepRemember.html # Learning system page
-│   │   └── sentenceAnalysisModal.html # Modal template
-│   └── package.json         # Frontend dependencies
-├── backend/                  # Backend (Server-side)
-│   ├── routes/              # Express routes
-│   │   ├── index.js         # Main routes
-│   │   ├── upload.js        # File upload routes
-│   │   ├── files.js         # File management routes
-│   │   ├── deepRemember.js  # Learning system routes
-│   │   └── srs.js          # Spaced repetition routes
+deepremember/
+├── client/                   # React 19 + Vite frontend
+│   ├── src/
+│   │   ├── main.jsx         # React entry point
+│   │   ├── config/api.js    # API base URL
+│   │   └── components/      # React components
+│   │       ├── App.jsx      # Main app with view routing
+│   │       ├── security/    # Auth (login, register)
+│   │       ├── player/      # Audio player, file upload
+│   │       ├── chat/        # Chat interface, templates
+│   │       ├── ReviewSection/   # SRS flashcard review
+│   │       ├── ManageCards/     # Card management
+│   │       ├── basewords/       # Vocabulary management
+│   │       └── Courses/Dictate/ # Dictation exercises
+│   └── package.json
+├── backend/                  # Express.js server
+│   ├── server.js            # Main server file
 │   ├── config/              # Configuration
-│   │   ├── app.js          # App settings
-│   │   └── database.js     # Database config
-│   ├── database/           # Database layer
-│   │   ├── access/         # Database access objects
-│   │   ├── db/             # Database files
-│   │   └── sampledata/     # Sample data
-│   ├── middleware/         # Express middleware
-│   │   └── uploadConfig.js # Upload configuration
-│   ├── server.js           # Main server file
-│   └── package.json        # Backend dependencies
-├── files/                   # User uploaded files
-├── voice/                   # Voice recordings
-├── package.json            # Root package.json
-└── README.md               # This file
+│   │   ├── app.js           # App settings
+│   │   └── database.js      # Database config
+│   ├── routes/              # API endpoints
+│   │   ├── srs.js           # Spaced repetition
+│   │   ├── auth.js          # Authentication
+│   │   ├── chatTemplates.js # Chat templates
+│   │   ├── files.js         # File management
+│   │   ├── llm.js           # LLM queries
+│   │   ├── wordBase.js      # Vocabulary
+│   │   └── ...
+│   ├── database/access/     # Repository pattern
+│   ├── llm/                 # LLM integrations
+│   ├── tts/                 # Text-to-Speech
+│   ├── stt/                 # Speech-to-Text
+│   ├── filesystem/          # File storage
+│   └── security/            # Auth middleware
+├── files/                   # Uploaded media files
+├── voice/                   # Generated voice files
+└── package.json             # Root package.json
 ```
 
-## 🚀 Features
+## Features
 
-- **Media Player**: Support for audio and video files
-- **Subtitle Generation**: Automatic subtitle generation using Whisper AI
-- **Playlist Management**: Organize and manage your media files
-- **Interactive Subtitles**: Click on words for potential translations
-- **DeepRemember Learning System**: Spaced repetition system for vocabulary learning
-- **Responsive Design**: Works on desktop and mobile devices
-- **Modular Architecture**: Clean separation of frontend and backend
+- **Spaced Repetition System (SRS)**: FSRS-based flashcard learning
+- **AI Chat**: Configurable chat templates with grammar checking
+- **Audio Player**: Media playback with subtitle support
+- **Subtitle Generation**: Automatic transcription via Whisper (local or Groq)
+- **Text-to-Speech**: Multiple TTS providers (Piper, ElevenLabs, Google)
+- **Vocabulary Management**: Word base with sentence analysis caching
+- **User Authentication**: Supabase Auth with email confirmation
 
-## 🛠️ Installation & Setup
+## Quick Start
 
-### Prerequisites
-- Node.js (version 14 or higher)
-- Whisper (for subtitle generation): `pip install openai-whisper`
-- Supabase account (for remote database) - optional, can use SQLite for local development
-
-### Quick Start
 ```bash
-# Install all dependencies (root, backend, and frontend)
+# Install all dependencies
 npm run install-all
 
-# Start the application
-npm start
+# Start both servers (Windows)
+start-dev.bat
 ```
+
+This opens two terminal windows:
+- Backend: http://localhost:4004
+- Client: http://localhost:5173
 
 ### Manual Setup
+
 ```bash
-# Install root dependencies
-npm install
+# Backend only
+cd backend && npm start
 
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-
-# Start the server
-cd ../backend
-npm start
+# Client only (separate terminal)
+cd client && npm run dev
 ```
 
-### Database Configuration
+**Note:** Backend does not hot-reload. Restart after code changes.
 
-The application supports both SQLite (local) and Supabase (remote) databases:
+## Configuration
 
-#### Option 1: Supabase (Recommended for production)
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Create a `.env` file in the `backend/` directory:
-```env
-DB_TYPE=supabase
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-```
-3. Run the setup SQL in your Supabase SQL editor (see [Supabase Setup Guide](backend/SUPABASE_SETUP.md))
-4. Test the connection: `npm run test:supabase`
+All configuration is done via environment variables in `backend/.env`.
 
-#### Option 2: SQLite (Local development)
-1. Create a `.env` file in the `backend/` directory:
-```env
-DB_TYPE=sqlite
-SQLITE_DB_PATH=./database/db/deepRemember.db
-```
+### Database
 
-#### Switching DB implementations
-You can switch between SQLite, Supabase (hybrid), and Supabase JavaScript Client by setting `DB_TYPE` in `backend/.env`. See the [Supabase Setup Guide](backend/SUPABASE_SETUP.md) for details and recommended settings.
+| `DB_TYPE` | Description |
+|-----------|-------------|
+| `sqlite` | Local SQLite file (default for development) |
+| `supabase-js-client` | Supabase via HTTPS only (recommended for production) |
+| `supabase` | Supabase hybrid with direct Postgres connection |
 
-### LLM Integration
-User can use different llm base on its usage.
-See the LLM documentation: [backend/llm/LLM.md](backend/llm/LLM.md)
+See [Supabase Setup Guide](backend/SUPABASE_SETUP.md) for complete instructions.
 
-### STT (Speech-to-Text) Services
-The application supports multiple STT services for subtitle generation.
-See the STT documentation: [backend/stt/README.md](backend/stt/README.md)
+### Service Providers
 
-### TTS (Text-to-Speech) Services
-The application supports configurable TTS services for audio generation.
-See the TTS documentation: [backend/tts/TTS.md](backend/tts/TTS.md)
+| Service | Environment Variable | Options |
+|---------|---------------------|---------|
+| LLM | `LLM_PROVIDER` | `groq`, `ollama` |
+| TTS | `TTS_TYPE` | `piper`, `elevenlabs`, `google` |
+| STT | `WHISPER_TYPE` | `LocalWhisper`, `Groq` |
+| FileSystem | `FS_TYPE` | `node`, `googledrive` |
 
-### FileSystem Configuration
-The application supports multiple file system implementations including local storage and Google Drive.
-See the FileSystem documentation: [backend/filesystem/FILESYSTEM.md](backend/filesystem/FILESYSTEM.md)
-- [Fallback Storage](backend/filesystem/fallback-storage.md) - Local backup system for cloud storage
-- [Google Drive Setup](backend/filesystem/GOOGLE_CLOUD_SETUP.md) - Google Drive configuration guide
-- [Google Drive Environment Variables](backend/filesystem/GOOGLE_DRIVE_ENV.md) - Environment configuration
+### Documentation
 
-#### Migration from SQLite to Supabase
-If you have existing data in SQLite and want to migrate to Supabase:
-```bash
-npm run migrate:supabase
-```
+- [LLM Integration](backend/llm/LLM.md) - Groq and Ollama setup
+- [TTS Services](backend/tts/TTS.md) - Piper, ElevenLabs, Google TTS
+- [STT Services](backend/stt/README.md) - LocalWhisper and Groq STT
+- [FileSystem](backend/filesystem/FILESYSTEM.md) - Local and Google Drive storage
+  - [Google Drive Setup](backend/filesystem/GOOGLE_CLOUD_SETUP.md)
+  - [Google Drive Environment](backend/filesystem/GOOGLE_DRIVE_ENV.md)
 
-## 🎯 Usage
+## API Endpoints
 
-1. **Upload Media**: Select an audio/video file
-2. **Upload Subtitle** (optional): Select a subtitle file (.srt, .vtt, .txt)
-3. **Auto-Generate Subtitles**: For audio files, let Whisper generate subtitles automatically
-4. **Play**: Use the media player controls to play your files
-5. **Manage Playlist**: View, play, and delete files from your playlist
-6. **DeepRemember Learning**: Access the spaced repetition system at `/deepRemember` for vocabulary learning
+### Authentication (`/api/auth`)
+- `POST /register`, `POST /login`, `POST /logout`
+- `POST /confirm-email`, `GET /me`
 
-## 📋 API Endpoints
+### SRS (`/api/srs`)
+- `GET /cards/:userId` - Get cards due for review
+- `POST /cards` - Create card
+- `POST /cards/answer` - Submit answer with FSRS rating
 
-### Upload Routes (`/backend/routes/upload.js`)
-- `POST /upload-files` - Upload media and subtitle files with Whisper integration
+### Chat Templates (`/api/chat-templates`)
+- `GET /`, `POST /`, `PUT /:id`, `DELETE /:id`
 
-### Files Routes (`/backend/routes/files.js`)
-- `GET /files-list` - Get list of uploaded files as playlist
-- `POST /delete-files` - Delete uploaded files
+### Files (`/files`)
+- `GET /files-list` - List uploaded files
+- `POST /upload-files` - Upload media with auto-transcription
+- `POST /delete-files` - Delete files
 
-### DeepRemember Routes (`/backend/routes/deepRemember.js`)
-- `POST /deepRemember/create-card` - Create a new learning card
-- `GET /deepRemember/review-cards/:userId` - Get cards due for review
-- `POST /deepRemember/answer-card` - Answer a card with difficulty rating
-- `GET /deepRemember/stats/:userId` - Get user learning statistics
-- `DELETE /deepRemember/delete-card/:userId/:cardId` - Delete a learning card
+### LLM (`/api/llm`)
+- `GET /models` - List available models
+- `POST /query` - Query the LLM
 
-### Index Routes (`/backend/routes/index.js`)
-- `GET /` - Serve the main application
-- `GET /deepRemember` - Serve the DeepRemember learning system
+## Architecture
 
-## 🔧 Configuration
+### Design Patterns
 
-Configuration is centralized in `backend/config/app.js`:
+**Factory Pattern** - Pluggable service providers:
+- `LlmFactory` → Creates Groq or Ollama instances
+- `TtsFactory` → Creates Piper, ElevenLabs, or Google TTS
+- `SstFactory` → Creates LocalWhisper or Groq STT
+- `DatabaseFactory` → Creates SQLite or Supabase connection
+- `FileSystemFactory` → Creates Node.js or Google Drive filesystem
 
-- **Port**: Change `PORT` (default: 4004)
-- **File Upload**: Configure max file size and allowed types
-- **Whisper**: Set output format and other settings
-- **Logging**: Configure log levels
+**Repository Pattern** - Data access abstraction:
+- `DeepRememberRepository` - Main facade for all data operations
+- Individual repositories: `UserConfigRepository`, `WordBaseRepository`, `ChatTemplateRepository`
 
-## 🏗️ Architecture Benefits
+### Database Schema
 
-### Frontend (`/frontend/`)
-- **Static Assets**: CSS, JavaScript, and HTML templates
-- **Client-side Logic**: Media player, UI interactions, API calls
-- **Responsive Design**: Mobile-friendly interface
-- **Modular JavaScript**: Separated concerns for different features
+Key tables: `users`, `cards` (FSRS scheduling), `labels`, `card_labels`, `chattemplates`, `word_base`, `sentence_analysis_cache`
 
-### Backend (`/backend/`)
-- **Express.js Server**: RESTful API endpoints
-- **File Processing**: Upload handling and Whisper integration
-- **Database Layer**: Supports both SQLite (local) and Supabase (remote) with repository pattern
-- **Middleware**: Upload configuration and error handling
-- **Route Organization**: Separated by functionality
-
-### Separation Benefits
-- **Maintainability**: Clear separation of concerns
-- **Scalability**: Frontend and backend can be deployed separately
-- **Development**: Teams can work on frontend/backend independently
-- **Testing**: Easier to test frontend and backend separately
-- **Deployment**: Can serve frontend from CDN, backend from server
-
-## 🚀 Deployment
+## Deployment
 
 ### Development
 ```bash
-npm start
+start-dev.bat
 ```
 
-### Production
+### Production Build
 ```bash
-npm run build
+cd backend && npm run build
 ```
-
-The application will be available at: `http://localhost:4004`
-
-## 📁 File Organization
-
-- **Frontend**: All client-side code in `/frontend/`
-- **Backend**: All server-side code in `/backend/`
-- **Shared Resources**: `/files/` and `/voice/` remain in root for easy access
-- **Configuration**: Centralized in `/backend/config/`
-
-This structure makes it easy to:
-- Deploy frontend to a CDN
-- Deploy backend to a server
-- Scale each part independently
-- Maintain and update components separately

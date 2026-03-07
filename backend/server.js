@@ -110,12 +110,16 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Start server
-app.listen(config.PORT, async () => {
-  console.log(`🚀 Server running at http://localhost:${config.PORT}`);
-  console.log(`📁 Environment: ${config.NODE_ENV}`);
-  console.log(`📊 Log level: ${config.LOG_LEVEL}`);
-  
-  // Initialize application folders
-  await initializeAppFolders();
-});
+// Start server only when run directly (not when imported by tests)
+if (require.main === module) {
+  app.listen(config.PORT, async () => {
+    console.log(`🚀 Server running at http://localhost:${config.PORT}`);
+    console.log(`📁 Environment: ${config.NODE_ENV}`);
+    console.log(`📊 Log level: ${config.LOG_LEVEL}`);
+
+    // Initialize application folders
+    await initializeAppFolders();
+  });
+}
+
+module.exports = app;

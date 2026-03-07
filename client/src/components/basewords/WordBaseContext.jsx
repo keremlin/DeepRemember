@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { getApiUrl } from '../../config/api'
+import { useAuth } from '../security/AuthContext'
 
 const WordBaseContext = createContext()
 
@@ -12,6 +13,7 @@ export const useWordBase = () => {
 }
 
 export const WordBaseProvider = ({ children }) => {
+  const { authenticatedFetch } = useAuth()
   const [words, setWords] = useState([])
   const [groupedWords, setGroupedWords] = useState({}) // Words grouped by groupAlphabetName
   const [alphabetGroups, setAlphabetGroups] = useState([]) // Sorted list of alphabet groups
@@ -42,14 +44,13 @@ export const WordBaseProvider = ({ children }) => {
 
         // Fetch words in batches
         while (hasMore && batchNumber < maxBatches) {
-          const response = await fetch(
+          const response = await authenticatedFetch(
             getApiUrl(`/api/word-base?limit=${batchSize}&offset=${offset}`),
             {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json'
-              },
-              mode: 'cors'
+              }
             }
           )
 
@@ -129,7 +130,7 @@ export const WordBaseProvider = ({ children }) => {
     })()
 
     return loadingPromiseRef.current
-  }, [])
+  }, [authenticatedFetch])
 
   // Invalidate and reload words from backend
   const invalidateAndReload = useCallback(async () => {
@@ -323,12 +324,11 @@ export const WordBaseProvider = ({ children }) => {
     // Create the load promise
     countLoadingPromiseRef.current = (async () => {
       try {
-        const response = await fetch(getApiUrl('/api/word-base/count/total'), {
+        const response = await authenticatedFetch(getApiUrl('/api/word-base/count/total'), {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
-          },
-          mode: 'cors'
+          }
         })
 
         if (!response.ok) {
@@ -352,7 +352,7 @@ export const WordBaseProvider = ({ children }) => {
     })()
 
     return countLoadingPromiseRef.current
-  }, [])
+  }, [authenticatedFetch])
 
   // Load words on mount (only once)
   useEffect(() => {
