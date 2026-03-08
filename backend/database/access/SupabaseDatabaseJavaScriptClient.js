@@ -329,7 +329,7 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
       }
 
       // Convert SQL to Supabase JavaScript Client format
-      const { tableName, operation, conditions, fields } = this.parseSQL(sql, params);
+      const { tableName, operation, conditions, fields, orderBy } = this.parseSQL(sql, params);
       
       if (!tableName || tableName === 'unknown') {
         // Fallback to RPC for unrecognized queries
@@ -372,6 +372,11 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         for (const condition of conditions) {
           query = query[condition.operator](condition.column, condition.value);
         }
+      }
+
+      // Apply ORDER BY
+      if (orderBy) {
+        query = query.order(orderBy.column, { ascending: orderBy.ascending });
       }
 
       // Handle LIMIT and OFFSET from SQL
@@ -1491,11 +1496,18 @@ class SupabaseDatabaseJavaScriptClient extends IDatabase {
         };
       }
       
+      // Extract ORDER BY
+      const orderByMatch = sql.match(/order\s+by\s+(\w+)\s*(asc|desc)?/i);
+      const orderBy = orderByMatch
+        ? { column: orderByMatch[1], ascending: (orderByMatch[2] || 'asc').toLowerCase() !== 'desc' }
+        : null;
+
       return {
         tableName,
         operation: 'select',
         fields,
-        conditions: conditions
+        conditions: conditions,
+        orderBy
       };
     }
     return { tableName: 'unknown', operation: 'select' };

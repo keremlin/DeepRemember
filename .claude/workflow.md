@@ -1,5 +1,21 @@
 # Development Workflow — DeepRemember
 
+## Adding a new feature workflow
+
+1- Read files in .claude folder 
+    - rules.md explain the rules of coding and structure
+    - coding-standards.md explain how to code syntax and file structures.
+    - testing.md explain how to create unit-tests and integration tests.
+    - workflow show the way how to implement a feature
+
+2- find out how should be new feature implemented.
+
+3- create new unit-test case for new feature, before implementng new futeare by using testing.md directions , write test cases.
+4- create new integration test for new feature, before implementng new futeare by using testing.md directions , write test cases.
+5- implement the feature, by help of rules.md, coding-standards.md and old code find the best solution to solve the problem. 
+6- pass tests.
+6- make you code better. 
+
 ## Starting the Project
 
 ```bash
@@ -26,15 +42,18 @@ cd client && npm run dev
 ## Adding a New Feature Checklist
 
 ### Backend feature
+- [ ] read all files in .claude folder
+- [ ] Unit test written for every new repository method (`tests/unit/repositories/`)
+- [ ] Integration test written for every new route (`tests/integration/api/`)
 - [ ] Route in `backend/routes/` (thin — no business logic)
 - [ ] Registered in `backend/routes/index.js`
 - [ ] Data access via existing or new Repository in `backend/database/access/`
 - [ ] New service follows Factory pattern if pluggable
 - [ ] Protected by `authMiddleware` if user-specific
 - [ ] Config values added to `backend/config/app.js` if needed
-- [ ] Unit test written for every new repository method (`tests/unit/repositories/`)
-- [ ] Integration test written for every new route (`tests/integration/api/`)
+- [ ] If SQL or `SupabaseDatabaseJavaScriptClient.js` changed: add/update `tests/unit/utils/SupabaseDatabaseJavaScriptClient.test.js`
 - [ ] Full suite passes: `cd backend && npm test`
+- [ ] Check if can write better code for implementing new feature and change the code and pass the test again.
 
 > **A feature is not done until all tests pass. If any test fails, fix the
 > implementation — do not skip, comment out, or weaken the test to make it green.**
@@ -78,10 +97,16 @@ Full testing procedures, patterns, and the new-feature test requirements are in
 Quick reference:
 
 ```bash
-cd backend && npm run test:unit          # repository + utility tests (no server)
-cd backend && npm run test:integration   # HTTP round-trip tests via supertest
-cd backend && npm test                   # full suite
+cd backend && npm run test:unit               # repository + utility tests (no server)
+cd backend && npm run test:integration        # HTTP round-trip tests via supertest
+cd backend && npm run test:supabase-adapter   # Supabase adapter SQL-translation tests
+cd backend && npm test                        # full suite
 ```
 
 Every new feature must ship with tests — see the **New Feature — Required Tests**
 section in `testing.md` for the step-by-step procedure (unit → integration → checklist).
+
+> **Supabase adapter gap:** Repository and integration tests use SQLite and cannot
+> catch bugs in `SupabaseDatabaseJavaScriptClient.js`. Any change to that file or
+> to SQL in a repository method **must** be covered by
+> `tests/unit/utils/SupabaseDatabaseJavaScriptClient.test.js`.

@@ -21,4 +21,9 @@ describe('Games routes — auth guard', () => {
     const res = await request(app).get('/api/games/data');
     expect(res.status).toBe(401);
   });
+
+  test('GET /api/games/artikel/words returns 401 without token', async () => {
+    const res = await request(app).get('/api/games/artikel/words');
+    expect(res.status).toBe(401);
+  });
 });

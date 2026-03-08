@@ -154,6 +154,51 @@ describe('Games routes — authenticated responses', () => {
     expect(res.body.success).toBe(true);
   });
 
+  // ── GET /artikel/words ────────────────────────────────────────────────────
+
+  test('GET /api/games/artikel/words returns 200 with words array', async () => {
+    const res = await request(app).get('/api/games/artikel/words');
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.words)).toBe(true);
+  });
+
+  test('GET /api/games/artikel/words returns only words with valid articles', async () => {
+    // Seed a noun with article so there is at least one result
+    const databaseFactory = require('../../../database/access/DatabaseFactory');
+    const db = databaseFactory.getDatabase();
+    await db.execute(
+      `INSERT INTO word_base (word, group_alphabet_name, type_of_word, article) VALUES (?, ?, ?, ?)`,
+      { word: 'Buch', group_alphabet_name: 'B', type_of_word: 'noun', article: 'das' }
+    );
+
+    const res = await request(app).get('/api/games/artikel/words');
+    expect(res.status).toBe(200);
+    const articles = ['der', 'die', 'das'];
+    res.body.words.forEach(w => {
+      expect(articles).toContain((w.article || '').toLowerCase().trim());
+    });
+  });
+
+  test('GET /api/games/artikel/words?count=1 returns at most 1 word', async () => {
+    const res = await request(app).get('/api/games/artikel/words?count=1');
+    expect(res.status).toBe(200);
+    expect(res.body.words.length).toBeLessThanOrEqual(1);
+  });
+
+  test('GET /api/games/artikel/words word shape includes required fields', async () => {
+    const res = await request(app).get('/api/games/artikel/words?count=5');
+    expect(res.status).toBe(200);
+    if (res.body.words.length > 0) {
+      const w = res.body.words[0];
+      expect(w).toHaveProperty('id');
+      expect(w).toHaveProperty('word');
+      expect(w).toHaveProperty('article');
+      expect(w).toHaveProperty('lastAnswer');
+      expect(w).toHaveProperty('dateOfLastAnswer');
+    }
+  });
+
   // ── GET /data ─────────────────────────────────────────────────────────────
 
   test('GET /api/games/data returns 200 with data array', async () => {
@@ -184,6 +229,170 @@ describe('Games routes — authenticated responses', () => {
     const res = await request(app).get('/api/games/data?gameId=1');
     expect(res.status).toBe(200);
     expect(res.body.bestScore).toBeGreaterThanOrEqual(1000);
+  });
+
+  // ── bestScore — Bester Score invariant tests ───────────────────────────────
+
+  test('POST /api/games/data response always includes bestScore as a number', async () => {
+    const res = await request(app)
+      .post('/api/games/data')
+      .send({ gameId: 1, correct: 5, total: 10 });
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('bestScore');
+    expect(typeof res.body.bestScore).toBe('number');
+  });
+
+  test('POST /api/games/data bestScore is >= current round score', async () => {
+    // The all-time best can only be >= the score just earned
+    const res = await request(app)
+      .post('/api/games/data')
+      .send({ gameId: 1, correct: 6, total: 10 }); // score = 6*(6/10)*100 = 360
+    expect(res.status).toBe(200);
+    expect(res.body.bestScore).toBeGreaterThanOrEqual(res.body.score);
+  });
+
+  test('bestScore does NOT decrease after a weaker round', async () => {
+    // Record a strong session first
+    const strong = await request(app)
+      .post('/api/games/data')
+      .send({ gameId: 1, correct: 10, total: 10 }); // score = 1000
+    const peakBestScore = strong.body.bestScore;
+
+    // Now record a much weaker session
+    const weak = await request(app)
+      .post('/api/games/data')
+      .send({ gameId: 1, correct: 1, total: 10 }); // score = 10
+
+    // The all-time best must not have regressed
+    expect(weak.body.bestScore).toBeGreaterThanOrEqual(peakBestScore);
+  });
+
+  test('GET /api/games/data?gameId=1 bestScore is the all-time high, not the latest score', async () => {
+    // Post a perfect session, then a terrible one, then check bestScore via GET
+    await request(app)
+      .post('/api/games/data')
+      .send({ gameId: 1, correct: 10, total: 10 }); // score = 1000 (perfect)
+    await request(app)
+      .post('/api/games/data')
+      .send({ gameId: 1, correct: 0, total: 10 }); // score = 0 (terrible)
+
+    const res = await request(app).get('/api/games/data?gameId=1');
+    expect(res.status).toBe(200);
+    // bestScore must reflect the 1000, not the 0
+    expect(res.body.bestScore).toBeGreaterThanOrEqual(1000);
+  });
+
+  test('GET /api/games/data without gameId returns null bestScore', async () => {
+    const res = await request(app).get('/api/games/data');
+    expect(res.status).toBe(200);
+    expect(res.body.bestScore).toBeNull();
+  });
+
+  // ── artikle_user_word_answer upsert via POST /data ────────────────────────
+  // These tests verify the insert-if-new / update-if-exists behaviour:
+  //   • First POST with a wordId → one record created in artikle_user_word_answer
+  //   • Second POST with same wordId → record UPDATED, NOT a second row
+  //   • lastAnswer from the most recent call is reflected in GET /artikel/words
+
+  describe('artikle_user_word_answer — insert-if-new / update-if-exists', () => {
+    let upsertWordId;
+
+    beforeAll(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const databaseFactory = require('../../../database/access/DatabaseFactory');
+      const db = databaseFactory.getDatabase();
+      const r = await db.execute(
+        `INSERT INTO word_base (word, group_alphabet_name, type_of_word, article) VALUES (?, ?, ?, ?)`,
+        { word: 'Katze', group_alphabet_name: 'K', type_of_word: 'noun', article: 'die' }
+      );
+      upsertWordId = r.lastInsertRowid || r.lastInsertRowId;
+    });
+
+    test('first POST with wordAnswer creates exactly one record', async () => {
+      await request(app)
+        .post('/api/games/data')
+        .send({ gameId: 1, correct: 1, total: 1,
+          wordAnswers: [{ wordBaseId: upsertWordId, correct: 1, wrong: 0 }] });
+
+      const databaseFactory = require('../../../database/access/DatabaseFactory');
+      const db = databaseFactory.getDatabase();
+      const rows = await db.query(
+        `SELECT * FROM artikle_user_word_answer WHERE word_base_id = ? AND user_id = ?`,
+        { word_base_id: upsertWordId, user_id: 'test@integration.test' }
+      );
+      expect(rows.length).toBe(1);
+      expect(rows[0].last_answer).toBe('correct');
+    });
+
+    test('second POST with same wordId updates the record — still exactly one row', async () => {
+      await request(app)
+        .post('/api/games/data')
+        .send({ gameId: 1, correct: 0, total: 1,
+          wordAnswers: [{ wordBaseId: upsertWordId, correct: 0, wrong: 1 }] });
+
+      const databaseFactory = require('../../../database/access/DatabaseFactory');
+      const db = databaseFactory.getDatabase();
+      const rows = await db.query(
+        `SELECT * FROM artikle_user_word_answer WHERE word_base_id = ? AND user_id = ?`,
+        { word_base_id: upsertWordId, user_id: 'test@integration.test' }
+      );
+      expect(rows.length).toBe(1);                        // not two rows
+      expect(rows[0].number_of_correct_answer).toBe(1);  // from first POST
+      expect(rows[0].number_of_wrong_answer).toBe(1);    // from second POST
+      expect(rows[0].last_answer).toBe('wrong');          // updated to latest
+    });
+
+    test('updated lastAnswer is visible in GET /artikel/words', async () => {
+      const databaseFactory = require('../../../database/access/DatabaseFactory');
+      const db = databaseFactory.getDatabase();
+      const r = await db.execute(
+        `INSERT INTO word_base (word, group_alphabet_name, type_of_word, article) VALUES (?, ?, ?, ?)`,
+        { word: 'Fenster', group_alphabet_name: 'F', type_of_word: 'noun', article: 'das' }
+      );
+      const fensterWordId = r.lastInsertRowid || r.lastInsertRowId;
+
+      // Answer wrong once
+      await request(app)
+        .post('/api/games/data')
+        .send({ gameId: 1, correct: 0, total: 1,
+          wordAnswers: [{ wordBaseId: fensterWordId, correct: 0, wrong: 1 }] });
+
+      const res = await request(app).get('/api/games/artikel/words?count=9999');
+      expect(res.status).toBe(200);
+      const fenster = res.body.words.find(w => w.id === fensterWordId);
+      expect(fenster).toBeDefined();
+      expect(fenster.lastAnswer).toBe('wrong');
+    });
+
+    test('counts accumulate across multiple rounds — no data is lost', async () => {
+      const databaseFactory = require('../../../database/access/DatabaseFactory');
+      const db = databaseFactory.getDatabase();
+      const r = await db.execute(
+        `INSERT INTO word_base (word, group_alphabet_name, type_of_word, article) VALUES (?, ?, ?, ?)`,
+        { word: 'Tür', group_alphabet_name: 'T', type_of_word: 'noun', article: 'die' }
+      );
+      const wordId = r.lastInsertRowid || r.lastInsertRowId;
+
+      // Round 1: 2 correct
+      await request(app)
+        .post('/api/games/data')
+        .send({ gameId: 1, correct: 2, total: 2,
+          wordAnswers: [{ wordBaseId: wordId, correct: 2, wrong: 0 }] });
+
+      // Round 2: 1 wrong
+      await request(app)
+        .post('/api/games/data')
+        .send({ gameId: 1, correct: 0, total: 1,
+          wordAnswers: [{ wordBaseId: wordId, correct: 0, wrong: 1 }] });
+
+      const rows = await db.query(
+        `SELECT * FROM artikle_user_word_answer WHERE word_base_id = ? AND user_id = ?`,
+        { word_base_id: wordId, user_id: 'test@integration.test' }
+      );
+      expect(rows.length).toBe(1);
+      expect(rows[0].number_of_correct_answer).toBe(2); // round 1
+      expect(rows[0].number_of_wrong_answer).toBe(1);   // round 2
+    });
   });
 
 });

@@ -7,6 +7,7 @@
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
+    "test:supabase-adapter": "jest tests/unit/utils/SupabaseDatabaseJavaScriptClient",
     "build": "node build-production.js",
     "start": "node server.js",
     "setup-google-oauth": "node filesystem/setup-oauth.js",

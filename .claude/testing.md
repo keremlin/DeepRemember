@@ -87,11 +87,69 @@ test('deleteCard removes the card', async () => {
 | `GamesRepository` | `tests/unit/repositories/GamesRepository.test.js` |
 | `UserConfigRepository` | `tests/unit/repositories/UserConfigRepository.test.js` |
 | Tools/utilities in `backend/tools/` | `tests/unit/utils/*.test.js` |
+| **`SupabaseDatabaseJavaScriptClient` adapter** | `tests/unit/utils/SupabaseDatabaseJavaScriptClient.test.js` |
 
 ### Run
 
 ```bash
 cd backend && npm run test:unit
+cd backend && npm run test:supabase-adapter   # Supabase adapter only
+```
+
+---
+
+## Supabase Adapter Tests (Critical Gap)
+
+> **Why:** All repository and integration tests use SQLite, which executes raw SQL
+> natively. Bugs in `SupabaseDatabaseJavaScriptClient.js` (the SQL→Supabase API
+> translation layer) are completely invisible to SQLite-based tests. A real bug
+> caused `getBestScore` to return 377 instead of 533 because `ORDER BY` was
+> silently dropped when translating SQL to Supabase builder calls.
+
+### When to add/update Supabase adapter tests
+
+Any time you:
+- Add or change SQL in a repository method
+- Change `parseSelectSQL`, `isComplexQuery`, `extractConditions`, or the main `query()` path
+- Fix a production bug that didn't appear in SQLite tests
+
+### Pattern — mock the Supabase builder
+
+```js
+// tests/unit/utils/SupabaseDatabaseJavaScriptClient.test.js
+jest.mock('@supabase/supabase-js', () => ({ createClient: jest.fn(() => ({})) }));
+jest.mock('../../../config/app', () => ({ DB_LOG: false }));
+
+const SupabaseDatabaseJavaScriptClient = require('../../../database/access/SupabaseDatabaseJavaScriptClient');
+
+function makeBuilder(rows = []) {
+  const builder = {};
+  ['select','eq','order','limit','range','or','in','ilike','not','filter'].forEach(m => {
+    builder[m] = jest.fn(() => builder);
+  });
+  builder.then = (resolve) => Promise.resolve({ data: rows, error: null }).then(resolve);
+  return builder;
+}
+
+test('ORDER BY DESC is applied for getBestScore query', async () => {
+  const adapter = new SupabaseDatabaseJavaScriptClient({ url: 'x', anonKey: 'x', serviceRoleKey: 'x' });
+  adapter.isInitialized = true;
+  const builder = makeBuilder([{ score: 533 }]);
+  adapter.client = { from: jest.fn(() => builder) };
+
+  await adapter.query(
+    'SELECT score FROM game_data WHERE user_id = ? AND game_id = ? ORDER BY score DESC',
+    { user_id: 'u1', game_id: 1 }
+  );
+
+  expect(builder.order).toHaveBeenCalledWith('score', { ascending: false });
+});
+```
+
+### Run
+
+```bash
+cd backend && npm run test:supabase-adapter
 ```
 
 ---
