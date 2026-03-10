@@ -110,7 +110,7 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
     setIsLoading(true)
     try {
       // First update the card data
-      const response = await fetch(getApiUrl(`/deepRemember/update-card/${currentUserId}/${card.id}`), {
+      const response = await authenticatedFetch(getApiUrl(`/deepRemember/update-card/${currentUserId}/${card.id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         mode: 'cors',
