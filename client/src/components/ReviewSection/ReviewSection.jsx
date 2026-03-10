@@ -26,6 +26,9 @@ const ReviewSection = ({
   const [autoPlay, setAutoPlay] = useState(false)
   const [isPlayingTranslation, setIsPlayingTranslation] = useState(false)
   const [isDeletingCard, setIsDeletingCard] = useState(false)
+  const [autoTranslation, setAutoTranslation] = useState(null)
+  const [isAutoTranslating, setIsAutoTranslating] = useState(false)
+  const [autoTranslateFailed, setAutoTranslateFailed] = useState(false)
   const hasAutoPlayedRef = useRef(false)
   const hasAutoPlayedAnswerRef = useRef(false)
   const canEditCard = Boolean(onEditCard && currentCard)
@@ -444,6 +447,43 @@ const ReviewSection = ({
     }
   }, [showAnswer])
 
+  // Reset auto-translation when card changes
+  useEffect(() => {
+    setAutoTranslation(null)
+    setAutoTranslateFailed(false)
+  }, [currentCard?.id])
+
+  const fetchAutoTranslation = useCallback(async () => {
+    if (!currentCard?.word) return
+    setIsAutoTranslating(true)
+    setAutoTranslateFailed(false)
+    setAutoTranslation(null)
+    try {
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/translate-word'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors',
+        body: JSON.stringify({ word: currentCard.word })
+      })
+      const data = await response.json()
+      if (data.success && data.translation) {
+        setAutoTranslation(data.translation)
+      } else {
+        setAutoTranslateFailed(true)
+      }
+    } catch {
+      setAutoTranslateFailed(true)
+    } finally {
+      setIsAutoTranslating(false)
+    }
+  }, [currentCard?.word, authenticatedFetch])
+
+  // Auto-translate when answer is shown and translation is missing
+  useEffect(() => {
+    if (!showAnswer || !currentCard?.word || currentCard.translation) return
+    fetchAutoTranslation()
+  }, [showAnswer, currentCard?.word, currentCard?.translation])
+
 
   return (
     <div className="srs-card review-section">
@@ -540,7 +580,36 @@ const ReviewSection = ({
                 <h4>Answer</h4>
               </div>
               <div className="translation-text">
-                {showAnswer && currentCard ? (currentCard.translation || '') : 'Click ANSWER to reveal translation'}
+                {!showAnswer || !currentCard
+                  ? 'Click ANSWER to reveal translation'
+                  : currentCard.translation
+                    ? currentCard.translation
+                    : isAutoTranslating
+                      ? <span className="auto-translation-loading">Translating...</span>
+                      : autoTranslation
+                        ? (
+                          <span className="auto-translation">
+                            {autoTranslation}
+                            <span className="auto-translation-badge">Auto-translate</span>
+                          </span>
+                        )
+                        : autoTranslateFailed
+                          ? (
+                            <span className="auto-translation-failed">
+                              <span className="auto-translation-no-result">No translation</span>
+                              <button
+                                type="button"
+                                className="auto-translation-retry"
+                                onClick={fetchAutoTranslation}
+                                title="Retry auto-translation"
+                              >
+                                <span className="material-symbols-outlined">refresh</span>
+                                Retry
+                              </button>
+                            </span>
+                          )
+                          : ''
+                }
               </div>
             </div>
             <Samples 
