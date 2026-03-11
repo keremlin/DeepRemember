@@ -790,7 +790,7 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
                 return res.status(400).json({ error: 'word is required in wordRecord' });
             }
 
-            const prompt = `response in this format :  {
+            const prompt = `/no_think response in this format :  {
     "word": "Ausbildung",
     "translate": "translation of word in german",
     "sample_sentence": "Ich habe eine ausbildung",
@@ -889,7 +889,7 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
             return res.status(400).json({ error: 'word is required' });
         }
 
-        const prompt = `answer in this format {"translation":"string", "phrase":"phrase", "isWord":"boolean", "sampleSentecesOfThisWord":["stringSentence01","stringSentence02","StringSentence03"]} , what is the translation of "${word}" and make some simple sentences in German with this word. Also `;
+        const prompt = `/no_think answer in this format {"translation":"string", "phrase":"phrase", "isWord":"boolean", "sampleSentecesOfThisWord":["stringSentence01","stringSentence02","StringSentence03"]} , what is the translation of "${word}" and make some simple sentences in German with this word. Also `;
         
         console.log('[DeepRemember] Sending prompt to Ollama:', prompt);
         
@@ -902,7 +902,13 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
         
         if (data.response) {
             try {
-                const match = data.response.match(/\{[^}]+\}/);
+                // Strip <think>...</think> blocks and code fences (Qwen3)
+                const cleanedResponse = data.response
+                    .replace(/<think>[\s\S]*?<\/think>/g, '')
+                    .replace(/```(?:json)?\s*/g, '')
+                    .replace(/```/g, '')
+                    .trim();
+                const match = cleanedResponse.match(/\{[\s\S]*\}/);
                 if (match) {
                     const parsed = JSON.parse(match[0]);
                     console.log('[DeepRemember] Parsed Ollama response:', parsed);
