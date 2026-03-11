@@ -94,9 +94,24 @@ const ArtikelGame = ({
     }
   }, [authenticatedFetch])
 
-  const startGame = () => {
-    const prepared = prepareWords(words)
+  const startGame = async () => {
+    // Fetch a smart word selection from the backend (40% new / 35% wrong / 25% correct)
+    let prepared = []
+    try {
+      const res = await authenticatedFetch(getApiUrl('/api/games/artikel/words?count=30'))
+      if (res.ok) {
+        const data = await res.json()
+        prepared = data.words || []
+      }
+    } catch (err) {
+      console.error('[ArtikelGame] word fetch error:', err)
+    }
+    // Fallback: local filter if API returned nothing
+    if (prepared.length === 0) {
+      prepared = prepareWords(words)
+    }
     if (prepared.length === 0) return
+
     clearInterval(timerRef.current)
     clearTimeout(feedbackTimeoutRef.current)
     setNounWords(prepared)

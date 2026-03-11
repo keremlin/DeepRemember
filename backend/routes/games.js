@@ -32,6 +32,27 @@ async function initializeRepository() {
 initializeRepository();
 
 // ─────────────────────────────────────────────────────────────
+// GET /api/games/artikel/words
+// Return a smart word selection for a new Artikel-game round.
+// Distribution: 40 % new · 35 % previously wrong · 25 % correct (oldest first)
+// Query: ?count=30  (default 30)
+// ─────────────────────────────────────────────────────────────
+router.get('/artikel/words', authMiddleware.verifyToken, async (req, res) => {
+  try {
+    if (!useDatabase || !gamesRepository) {
+      return res.status(503).json({ success: false, error: 'Database not available' });
+    }
+    const userId = req.userId;
+    const count = req.query.count ? parseInt(req.query.count) : 30;
+    const words = await gamesRepository.getArtikelWordSelection(userId, count);
+    res.json({ success: true, words });
+  } catch (error) {
+    console.error('[Games] GET /artikel/words error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // GET /api/games
 // List all game definitions
 // ─────────────────────────────────────────────────────────────

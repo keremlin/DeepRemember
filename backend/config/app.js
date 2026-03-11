@@ -1,7 +1,16 @@
 module.exports = {
   PORT: process.env.PORT || 4004,
   NODE_ENV: process.env.NODE_ENV || 'development',
-  
+
+  // Filesystem settings
+  FS_TYPE: process.env.FS_TYPE || 'node',
+
+  // LLM Service settings
+  LLM_PROVIDER: process.env.LLM_PROVIDER || 'ollama',
+  LLM_MODEL: process.env.LLM_MODEL || '',
+  LLM_BASE_URL: process.env.LLM_BASE_URL || 'http://localhost:11434',
+  LLM_API_KEY: process.env.LLM_API_KEY || '',
+
   // File upload settings
   MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
   ALLOWED_MEDIA_TYPES: ['audio/*', 'video/*'],
