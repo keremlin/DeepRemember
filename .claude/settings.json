@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \":*)",
+      "Bash(node queryTable.js word_base --limit 3 --columns \"id,word,article\" --filter \"article=eq.der\")"
+    ]
+  }
+}

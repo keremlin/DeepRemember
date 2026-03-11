@@ -1,6 +1,10 @@
 {
   "permissions": {
     "allow": [
+      "Bash(node queryTable.js games --limit 5)",
+      "Bash(node queryTable.js games --count)",
+      "Bash(node queryTable.js --list-tables)",
+      "Bash(node queryTable.js artikle_user_word_answer --count)"
       "Bash(npm install --save-dev jest supertest dotenv)",
       "Bash(npm run test:unit)",
       "Bash(npm run test:integration)",
