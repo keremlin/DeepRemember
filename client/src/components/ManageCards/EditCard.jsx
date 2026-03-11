@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useToast } from '../ToastProvider'
 import { useAuth } from '../security/AuthContext'
 import { getApiUrl } from '../../config/api'
@@ -15,6 +15,10 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
   })
   const [selectedLabels, setSelectedLabels] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [translationData, setTranslationData] = useState(null)
+  const [showTranslationResult, setShowTranslationResult] = useState(false)
+  const translationTimeoutRef = useRef(null)
 
   // Update form data when card prop changes
   useEffect(() => {
@@ -36,6 +40,56 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
       }
     }
   }, [card])
+
+  // Translate word using AI
+  const translateWord = async () => {
+    if (!formData.word.trim() || formData.word.length < 2) return
+
+    try {
+      setIsTranslating(true)
+      setShowTranslationResult(true)
+      setTranslationData({
+        translation: '🔄 Translating...',
+        sampleSentence: 'Please wait while we get the translation from AI'
+      })
+
+      const response = await authenticatedFetch(getApiUrl('/deepRemember/translate-word'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors',
+        body: JSON.stringify({ word: formData.word })
+      })
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+
+      const data = await response.json()
+      if (data.success) {
+        setTranslationData(data)
+      } else {
+        setTranslationData({ translation: '❌ Translation failed', sampleSentence: 'Please try again or enter manually' })
+      }
+    } catch (error) {
+      setTranslationData({ translation: '❌ Translation error', sampleSentence: 'Please try again or enter manually' })
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  const handleAIClick = () => {
+    if (translationTimeoutRef.current) clearTimeout(translationTimeoutRef.current)
+    translateWord()
+  }
+
+  const useTranslationData = () => {
+    if (translationData) {
+      setFormData(prev => ({
+        ...prev,
+        translation: translationData.translation,
+        context: translationData.sampleSentence
+      }))
+      setShowTranslationResult(false)
+    }
+  }
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -149,9 +203,18 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
     }
   }
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (translationTimeoutRef.current) clearTimeout(translationTimeoutRef.current)
+    }
+  }, [])
+
   // Handle modal close
   const handleClose = () => {
     if (!isLoading) {
+      setShowTranslationResult(false)
+      setTranslationData(null)
       onClose()
     }
   }
@@ -183,16 +246,27 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
         <form onSubmit={handleSubmit} className="edit-card-form">
           <div className="form-group">
             <label htmlFor="word">Word/Phrase *</label>
-            <input
-              type="text"
-              id="word"
-              name="word"
-              value={formData.word}
-              onChange={handleInputChange}
-              placeholder="Enter the word or phrase"
-              required
-              disabled={isLoading}
-            />
+            <div className="input-with-ai-btn">
+              <input
+                type="text"
+                id="word"
+                name="word"
+                value={formData.word}
+                onChange={handleInputChange}
+                placeholder="Enter the word or phrase"
+                required
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                className="ai-button"
+                onClick={handleAIClick}
+                disabled={!formData.word.trim() || formData.word.length < 2 || isTranslating || isLoading}
+                title="Get AI translation"
+              >
+                <strong>AI</strong>
+              </button>
+            </div>
           </div>
 
           <div className="form-group">
@@ -235,6 +309,38 @@ const EditCard = ({ isOpen, onClose, card, currentUserId, onCardUpdated }) => {
               />
             </div>
           </div>
+
+          {/* AI Translation Result */}
+          {showTranslationResult && translationData && (
+            <div className="translation-result">
+              <div className="translation-header">
+                <h4>🤖 AI Translation:</h4>
+                <button
+                  type="button"
+                  className="btn-refresh-translation"
+                  onClick={handleAIClick}
+                  disabled={!formData.word.trim() || formData.word.length < 2 || isTranslating}
+                  title="Refresh translation"
+                >
+                  {isTranslating ? '🔄' : '↻'}
+                </button>
+              </div>
+              <div className="translation-content" onClick={!isTranslating ? useTranslationData : undefined}>
+                <div>
+                  <strong>Translation:</strong> <span className="translation-text">{translationData.translation}</span>
+                </div>
+                <div>
+                  <strong>Sample Sentences:</strong>
+                  <div className="sample-sentences">{translationData.sampleSentence}</div>
+                </div>
+                {isTranslating ? (
+                  <div className="translation-hint">🔄 Getting translation from AI...</div>
+                ) : (
+                  <div className="translation-hint">💡 Click to use this translation</div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="form-actions">
             <button 

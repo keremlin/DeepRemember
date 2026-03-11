@@ -188,6 +188,128 @@
   transform: none;
 }
 
+/* AI Button */
+.input-with-ai-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-with-ai-btn input {
+  flex: 1;
+  padding-right: 55px;
+}
+
+.input-with-ai-btn .ai-button {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  z-index: 1;
+}
+
+.input-with-ai-btn .ai-button:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
+.input-with-ai-btn .ai-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Translation Result */
+.translation-result {
+  background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
+  border: 1px solid #bee5eb;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: -8px;
+}
+
+.translation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.translation-header h4 {
+  margin: 0;
+  color: #0c5460;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-refresh-translation {
+  background: none;
+  border: 1px solid #0c5460;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #0c5460;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-translation:hover:not(:disabled) {
+  background: #0c5460;
+  color: white;
+}
+
+.btn-refresh-translation:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.translation-content {
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  font-size: 14px;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.translation-content:hover {
+  background: rgba(12, 84, 96, 0.05);
+}
+
+.translation-text {
+  color: #0c5460;
+  font-weight: 500;
+}
+
+.sample-sentences {
+  margin-top: 4px;
+  color: #555;
+  font-style: italic;
+  white-space: pre-line;
+}
+
+.translation-hint {
+  font-size: 12px;
+  color: #6c757d;
+  font-style: italic;
+}
+
 /* Custom scrollbar for modal */
 .edit-card-modal::-webkit-scrollbar {
   width: 8px;
