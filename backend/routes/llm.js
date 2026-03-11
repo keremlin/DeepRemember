@@ -2,6 +2,7 @@ const express = require('express');
 const AuthMiddleware = require('../security/authMiddleware');
 const { Groq } = require('../llm/groq');
 const { Ollama } = require('../llm/ollama');
+const config = require('../config/app');
 
 const router = express.Router();
 const authMiddleware = new AuthMiddleware();
@@ -36,8 +37,8 @@ const mapOllamaModels = (data) => {
 };
 
 router.get('/models', authMiddleware.verifyToken, async (req, res) => {
-  const requestedProvider = (req.query.provider || process.env.LLM_PROVIDER || 'ollama').toLowerCase();
-  const defaultModel = process.env.LLM_MODEL || '';
+  const requestedProvider = (req.query.provider || config.LLM_PROVIDER || 'ollama').toLowerCase();
+  const defaultModel = config.LLM_MODEL || '';
 
   try {
     let models = [];
@@ -45,9 +46,9 @@ router.get('/models', authMiddleware.verifyToken, async (req, res) => {
     switch (requestedProvider) {
       case 'groq': {
         const groqClient = new Groq({
-          baseUrl: process.env.LLM_BASE_URL,
+          baseUrl: config.LLM_BASE_URL,
           model: defaultModel,
-          apiKey: process.env.LLM_API_KEY
+          apiKey: config.LLM_API_KEY
         });
 
         const response = await groqClient.client.models.list();
@@ -55,7 +56,7 @@ router.get('/models', authMiddleware.verifyToken, async (req, res) => {
         break;
       }
       case 'ollama': {
-        const baseUrl = normalizeBaseUrl(process.env.LLM_BASE_URL || 'http://localhost:11434');
+        const baseUrl = normalizeBaseUrl(config.LLM_BASE_URL || 'http://localhost:11434');
         const response = await fetch(`${baseUrl}/api/tags`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }

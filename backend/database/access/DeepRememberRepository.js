@@ -1141,6 +1141,67 @@ class DeepRememberRepository {
   }
 
   /**
+   * Apply SRS scheduling to a card and persist the result
+   * @param {string} userId - User ID
+   * @param {string} cardId - Card ID
+   * @param {number} rating - Rating 1-5 (1-2=Again/Hard, 3=Good, 4-5=Easy/Perfect)
+   * @returns {Promise<Object|null>} Updated card or null if not found
+   */
+  async answerCard(userId, cardId, rating) {
+    try {
+      const allCards = await this.getUserCards(userId);
+      const card = allCards.find(c => c.id === cardId);
+
+      if (!card) return null;
+
+      const currentTime = Date.now();
+      const dueTime = new Date(card.due).getTime();
+      const elapsedDays = Math.max(0, (currentTime - dueTime) / (1000 * 60 * 60 * 24));
+
+      let newState = card.state;
+      let newStability = card.stability;
+      let newDue;
+
+      if (rating <= 2) {
+        newState = 0;
+        newStability = Math.max(0, card.stability * 0.8);
+        newDue = new Date(currentTime + 5 * 60 * 1000); // 5 minutes
+      } else if (rating === 3) {
+        if (card.state === 0) {
+          newState = 1;
+          newStability = 1.5;
+          newDue = new Date(currentTime + 24 * 60 * 60 * 1000); // 1 day
+        } else {
+          newStability = card.stability * 1.2;
+          newDue = new Date(currentTime + card.stability * 24 * 60 * 60 * 1000);
+        }
+      } else {
+        newStability = card.stability * 1.5;
+        newDue = new Date(currentTime + card.stability * 24 * 60 * 60 * 1000);
+      }
+
+      const updatedCard = {
+        ...card,
+        state: newState,
+        due: newDue.toISOString(),
+        stability: Math.max(0.1, newStability),
+        difficulty: Math.max(0.1, Math.min(1.0, card.difficulty + (rating - 3) * 0.1)),
+        elapsed_days: elapsedDays,
+        scheduled_days: Math.max(0, (newDue.getTime() - currentTime) / (1000 * 60 * 60 * 24)),
+        reps: card.reps + 1,
+        lapses: card.lapses + (rating <= 2 ? 1 : 0),
+        lastReviewed: new Date().toISOString()
+      };
+
+      await this.updateCard(userId, cardId, updatedCard);
+      return updatedCard;
+    } catch (error) {
+      console.error('[SRS-REPO] Answer card error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get activity statistics grouped by activity for a user
    * @param {string} userId - User ID
    * @param {string} period - Time period: 'today', 'this_week', 'this_month', or null for all time

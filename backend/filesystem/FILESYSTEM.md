@@ -6,20 +6,27 @@ The FileSystem module provides an abstraction layer for file system operations i
 
 ## Architecture
 
-The filesystem module consists of three main components:
+The filesystem module consists of these main components:
 
 1. **IFileSystem.js** - Interface defining the contract for file system operations
-2. **NodeFileSystem.js** - Concrete implementation using Node.js native `fs` module
-3. **FileSystemFactory.js** - Factory for creating file system instances
+2. **NodeFileSystem.js** - Local file system using Node.js native `fs` module
+3. **GoogleDrive.js** - Cloud storage using Google Drive API with OAuth 2.0
+4. **FileSystemFactory.js** - Factory for creating file system instances
 
 ## File Structure
 
 ```
 backend/filesystem/
-├── IFileSystem.js          # Interface definition
-├── NodeFileSystem.js       # Node.js implementation
-├── FileSystemFactory.js    # Factory for creating instances
-└── FILESYSTEM.md          # This documentation
+├── IFileSystem.js              # Interface definition
+├── NodeFileSystem.js           # Node.js local implementation
+├── GoogleDrive.js              # Google Drive implementation
+├── FileSystemFactory.js        # Factory for creating instances
+├── initializeFolders.js        # Folder structure initialization
+├── FILESYSTEM.md               # This documentation
+├── GOOGLE_CLOUD_SETUP.md       # Google Cloud Console setup guide
+├── GOOGLE_DRIVE_ENV.md         # Environment variables for Google Drive
+├── FIX_OAUTH_403.md            # Troubleshooting OAuth issues
+└── fallback-storage.md         # Local fallback for cloud storage
 ```
 
 ## Interface (IFileSystem.js)
@@ -196,29 +203,51 @@ if (fileSystem.existsSync(path)) {
 - Ready for additional implementations (cloud, memory, etc.)
 - Extensible architecture
 
+## Google Drive Implementation
+
+The `GoogleDrive` class provides cloud storage using Google Drive API with OAuth 2.0 authentication.
+
+### Features
+
+- **Full IFileSystem interface**: Compatible with all existing code
+- **OAuth 2.0 authentication**: Secure token-based access
+- **Automatic token refresh**: Handles expired access tokens
+- **Local fallback**: Falls back to local storage for sync operations
+- **File/folder caching**: Reduces API calls for better performance
+
+### Setup
+
+1. Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com)
+2. Run the OAuth setup script:
+   ```bash
+   cd backend
+   npm run setup-google-oauth
+   ```
+3. Configure environment variables (see [GOOGLE_DRIVE_ENV.md](GOOGLE_DRIVE_ENV.md))
+4. Set `FS_TYPE=google` in your `.env`
+
+### Usage
+
+```javascript
+const FileSystemFactory = require('../filesystem/FileSystemFactory');
+
+// Uses FS_TYPE environment variable
+const fs = FileSystemFactory.createDefault();
+
+// Or explicitly create Google Drive filesystem
+const googleFs = FileSystemFactory.createFileSystem('google');
+```
+
+### Documentation
+
+- [Google Cloud Setup](GOOGLE_CLOUD_SETUP.md) - Complete setup guide
+- [Environment Variables](GOOGLE_DRIVE_ENV.md) - All configuration options
+- [Fallback Storage](fallback-storage.md) - Local backup system
+- [Fix OAuth 403](FIX_OAUTH_403.md) - Troubleshooting
+
 ## Future Implementations
 
-The factory is designed to easily accommodate future file system implementations:
-
-### Potential Implementations
-
-1. **MemoryFileSystem**
-   ```javascript
-   case 'memory':
-     return new MemoryFileSystem(config);
-   ```
-
-2. **CloudFileSystem**
-   ```javascript
-   case 'cloud':
-     return new CloudFileSystem(config);
-   ```
-
-3. **MockFileSystem**
-   ```javascript
-   case 'mock':
-     return new MockFileSystem(config);
-   ```
+Potential additional implementations:
 
 ### Adding New Implementations
 
@@ -232,9 +261,34 @@ To add a new file system implementation:
 
 ## Environment Variables
 
+### Node.js FileSystem
+
 | Variable | Description | Default | Example |
 |----------|-------------|---------|---------|
-| `FS_TYPE` | File system type to use | `node` | `FS_TYPE=node` |
+| `FS_TYPE` | File system type | `node` | `FS_TYPE=node` |
+| `FS_ROOT_DIR` | Root directory | `.` | `FS_ROOT_DIR=/app/data` |
+
+### Google Drive FileSystem
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `FS_TYPE` | Set to `google` or `googledrive` | Yes |
+| `GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID | Yes |
+| `GOOGLE_CLIENT_SECRET` | OAuth 2.0 Client Secret | Yes |
+| `GOOGLE_REDIRECT_URI` | OAuth redirect URI | Yes |
+| `GOOGLE_ACCESS_TOKEN` | OAuth access token | Yes* |
+| `GOOGLE_REFRESH_TOKEN` | OAuth refresh token | Yes* |
+| `GOOGLE_DRIVE_ROOT_FOLDER_ID` | Root folder ID | No (default: `root`) |
+| `GOOGLE_DRIVE_BASE_PATH` | Base path in Drive | No (default: `/DeepRemember`) |
+
+*Tokens are obtained after completing the OAuth flow. See [GOOGLE_DRIVE_ENV.md](GOOGLE_DRIVE_ENV.md) for details.
+
+## Available File System Types
+
+| Type Aliases | Implementation |
+|--------------|----------------|
+| `node`, `fs`, `filesystem` | NodeFileSystem (local) |
+| `google`, `googledrive`, `gdrive` | GoogleDrive (cloud) |
 
 ## Error Handling
 

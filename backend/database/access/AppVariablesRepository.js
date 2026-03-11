@@ -202,30 +202,35 @@ class AppVariablesRepository {
       }
 
       // Build update query dynamically
+      // NOTE: keyname must be added LAST to params so it aligns with the
+      // final positional ? in the WHERE clause.
       const updateFields = [];
-      const params = { keyname: keyname };
+      const setParams = {};
 
       if (variableData.value !== undefined) {
         updateFields.push('value = ?');
-        params.value = variableData.value;
+        setParams.value = variableData.value;
       }
 
       if (variableData.type !== undefined) {
         updateFields.push('type = ?');
-        params.type = variableData.type;
+        setParams.type = variableData.type;
       }
 
       if (variableData.description !== undefined) {
         updateFields.push('description = ?');
-        params.description = variableData.description;
+        setParams.description = variableData.description;
       }
 
       if (updateFields.length === 0) {
         return true; // Nothing to update
       }
 
+      // keyname goes last — it's the WHERE clause value
+      const params = { ...setParams, keyname: keyname };
+
       // update_date is automatically updated by trigger
-      const sql = `UPDATE app_variables SET 
+      const sql = `UPDATE app_variables SET
         ${updateFields.join(', ')}, update_date = CURRENT_TIMESTAMP
         WHERE keyname = ?`;
 

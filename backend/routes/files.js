@@ -7,6 +7,7 @@ const { filesDir } = require('../middleware/uploadConfig');
 const SstFactory = require('../stt/SstFactory');
 const https = require('https');
 const http = require('http');
+const config = require('../config/app');
 
 const router = express.Router();
 
@@ -89,7 +90,7 @@ router.get('/files/:filename', async (req, res) => {
     const filename = req.params.filename;
     const filePath = `files/${filename}`;
     
-    if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+    if (config.FS_TYPE && config.FS_TYPE.toLowerCase() === 'google') {
       // Google Drive: Check fallback storage first, then try Drive
       const fs = require('fs');
       const fallbackPath = path.resolve(__dirname, '../fallback-storage', filePath);
@@ -187,7 +188,7 @@ router.get('/voice/:filename', async (req, res) => {
     const filename = req.params.filename;
     const filePath = `voice/${filename}`;
     
-    if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+    if (config.FS_TYPE && config.FS_TYPE.toLowerCase() === 'google') {
       // Google Drive: Check fallback storage first, then try Drive
       const fs = require('fs');
       const fallbackPath = path.resolve(__dirname, '../fallback-storage', filePath);
@@ -385,7 +386,7 @@ router.post('/generate-podcast-subtitle', async (req, res) => {
     console.log(`[PODCAST] Subtitle generated: ${subtitleFilename}`);
 
     // Upload subtitle to storage (local or cloud)
-    if (process.env.FS_TYPE && process.env.FS_TYPE.toLowerCase() === 'google') {
+    if (config.FS_TYPE && config.FS_TYPE.toLowerCase() === 'google') {
       // Google Drive: Upload from temp to cloud
       if (fs.existsSync(tempSubtitlePath)) {
         try {

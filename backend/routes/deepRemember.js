@@ -27,7 +27,7 @@ const ttsService = TtsFactory.createTtsService();
 const sstService = SstFactory.createSstService();
 
 const isGoogleDriveFs = () => {
-  const fsType = (process.env.FS_TYPE || '').toLowerCase().trim();
+  const fsType = (appConfig.FS_TYPE || '').toLowerCase().trim();
   return fsType.startsWith('google');
 };
 
@@ -1932,7 +1932,7 @@ router.delete('/delete-card/:userId/:cardId', authMiddleware.verifyToken, authMi
 });
 
 // Get all cards in memory (for debugging/logging)
-router.get('/debug/all-cards', async (req, res) => {
+router.get('/debug/all-cards', authMiddleware.verifyToken, async (req, res) => {
   try {
     if (useDatabase && deepRememberRepository) {
       // Use database
@@ -1980,7 +1980,7 @@ router.get('/debug/all-cards', async (req, res) => {
 });
 
 // Simple log endpoint (JSON format)
-router.get('/debug/log', async (req, res) => {
+router.get('/debug/log', authMiddleware.verifyToken, async (req, res) => {
   try {
     const now = new Date();
     

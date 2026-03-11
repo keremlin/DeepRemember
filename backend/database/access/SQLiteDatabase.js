@@ -265,6 +265,31 @@ class SQLiteDatabase extends IDatabase {
       CREATE INDEX IF NOT EXISTS idx_artikle_uwa_word_base_id ON artikle_user_word_answer(word_base_id);
     `;
 
+    const createAppVariablesTable = `
+      CREATE TABLE IF NOT EXISTS app_variables (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        keyname TEXT UNIQUE NOT NULL,
+        value TEXT,
+        type TEXT NOT NULL CHECK (type IN ('text', 'json', 'number')),
+        create_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        update_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        description TEXT
+      )
+    `;
+
+    const createSpendTimeTable = `
+      CREATE TABLE IF NOT EXISTS spend_time (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        start_datetime DATETIME NOT NULL,
+        end_datetime DATETIME,
+        length_seconds INTEGER NOT NULL DEFAULT 0,
+        activity TEXT DEFAULT 'review_card',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+      )
+    `;
+
     try {
       this.db.exec(createUsersTable);
       this.db.exec(createCardsTable);
@@ -278,6 +303,8 @@ class SQLiteDatabase extends IDatabase {
       this.db.exec(createGamesTable);
       this.db.exec(createGameDataTable);
       this.db.exec(createArtikleUserWordAnswerTable);
+      this.db.exec(createAppVariablesTable);
+      this.db.exec(createSpendTimeTable);
       this.db.exec(createIndexes);
       this.db.exec(createSentenceAnalysisIndexes);
       this.db.exec(createLabelIndexes);

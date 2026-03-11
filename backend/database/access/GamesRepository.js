@@ -300,6 +300,68 @@ class GamesRepository {
   }
 
   /**
+   * Select words for a new Artikel-game round using a weighted distribution:
+   *   40 % new words (no answer history for this user)
+   *   35 % wrong words (last_answer = 'wrong')
+   *   25 % correct words (last_answer = 'correct', oldest date_of_last_answer first)
+   *
+   * @param {string} userId
+   * @param {number} [count=30] Total words to return for the round
+   * @returns {Promise<Array>}
+   */
+  async getArtikelWordSelection(userId, count = 30) {
+    try {
+      const rows = await this.db.query(
+        `SELECT wb.id, wb.word, wb.article, wb.translate, wb.plural_sign, wb.female_form,
+                auw.last_answer, auw.date_of_last_answer
+         FROM word_base wb
+         LEFT JOIN artikle_user_word_answer auw
+           ON auw.word_base_id = wb.id AND auw.user_id = ?
+         WHERE LOWER(TRIM(wb.article)) IN ('der', 'die', 'das')`,
+        { user_id: userId }
+      );
+
+      const newWords     = [];
+      const wrongWords   = [];
+      const correctWords = [];
+
+      for (const row of (rows || [])) {
+        if (!row.last_answer) {
+          newWords.push(row);
+        } else if (row.last_answer === 'wrong') {
+          wrongWords.push(row);
+        } else {
+          correctWords.push(row);
+        }
+      }
+
+      // Correct words: oldest date first (most overdue for review)
+      correctWords.sort((a, b) => {
+        if (!a.date_of_last_answer) return -1;
+        if (!b.date_of_last_answer) return 1;
+        return new Date(a.date_of_last_answer) - new Date(b.date_of_last_answer);
+      });
+
+      const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+
+      const newTarget     = Math.round(count * 0.40);
+      const wrongTarget   = Math.round(count * 0.35);
+      const correctTarget = count - newTarget - wrongTarget; // ~25 %
+
+      const selected = [
+        ...shuffle(newWords).slice(0, newTarget),
+        ...shuffle(wrongWords).slice(0, wrongTarget),
+        ...correctWords.slice(0, correctTarget)
+      ];
+
+      return shuffle(selected).map(this._mapArtikelWordSelectionRow);
+    } catch (error) {
+      console.error('[Games-REPO] getArtikelWordSelection error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all per-word answer stats for a user
    * @param {string} userId
    * @returns {Promise<Array>}
@@ -339,6 +401,19 @@ class GamesRepository {
       gameId: row.game_id,
       date: row.date,
       score: row.score
+    };
+  }
+
+  _mapArtikelWordSelectionRow(row) {
+    return {
+      id: row.id,
+      word: row.word,
+      article: row.article,
+      translate: row.translate || null,
+      pluralSign: row.plural_sign || null,
+      femaleForm: row.female_form || null,
+      lastAnswer: row.last_answer || null,
+      dateOfLastAnswer: row.date_of_last_answer || null
     };
   }
 
