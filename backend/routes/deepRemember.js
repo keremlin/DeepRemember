@@ -810,11 +810,17 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
             
             if (data.response) {
                 try {
+                    // Strip <think>...</think> blocks and code fences (Qwen3)
+                    const cleanedAutoComplete = data.response
+                        .replace(/<think>[\s\S]*?<\/think>/g, '')
+                        .replace(/```(?:json)?\s*/g, '')
+                        .replace(/```/g, '')
+                        .trim();
                     // Try to extract JSON from the response (handle multiline)
-                    let jsonMatch = data.response.match(/\{[\s\S]*\}/);
+                    let jsonMatch = cleanedAutoComplete.match(/\{[\s\S]*\}/);
                     if (!jsonMatch) {
                         // Try to find JSON that might be wrapped in code blocks
-                        jsonMatch = data.response.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+                        jsonMatch = cleanedAutoComplete.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
                         if (jsonMatch) {
                             jsonMatch = [jsonMatch[1]];
                         }
@@ -889,7 +895,7 @@ router.post('/translate-word', authMiddleware.verifyToken, async (req, res) => {
             return res.status(400).json({ error: 'word is required' });
         }
 
-        const prompt = `/no_think answer in this format {"translation":"string", "phrase":"phrase", "isWord":"boolean", "sampleSentecesOfThisWord":["stringSentence01","stringSentence02","StringSentence03"]} , what is the translation of "${word}" and make some simple sentences in German with this word. Also `;
+        const prompt = `/no_think answer in this format {"translation":"<translation of the word>", "phrase":"<example phrase>", "isWord":true, "sampleSentecesOfThisWord":["<sentence1>","<sentence2>","<sentence3>"]} , what is the translation of "${word}" and make some simple sentences in German with this word. Also `;
         
         console.log('[DeepRemember] Sending prompt to Ollama:', prompt);
         
@@ -1066,8 +1072,8 @@ router.post('/translate', authMiddleware.verifyToken, async (req, res) => {
         }
 
         const prompt = type === 'word'
-            ? `answer in this format {"translation":"string", "word":"realWord"} , what is the translation of the word "${text}"`
-            : `answer in this format {"translation":"string", "sentence":"realSentence"} , what is the translation of "${text}"`;
+            ? `answer ONLY with valid JSON in this exact format {"translation":"<translation here>", "word":"<original word>"} , what is the translation of the word "${text}"`
+            : `answer ONLY with valid JSON in this exact format {"translation":"<translation here>", "sentence":"<original sentence>"} , what is the translation of "${text}"`;
 
         console.log('[DeepRemember] Sending unified translate prompt to LLM:', { type: type || 'sentence', prompt });
 
@@ -1076,7 +1082,12 @@ router.post('/translate', authMiddleware.verifyToken, async (req, res) => {
         let translation = 'No translation found.';
         if (data && data.response) {
             try {
-                const match = data.response.match(/\{[^}]+\}/);
+                const cleanedResponse = data.response
+                    .replace(/<think>[\s\S]*?<\/think>/g, '')
+                    .replace(/```(?:json)?\s*/g, '')
+                    .replace(/```/g, '')
+                    .trim();
+                const match = cleanedResponse.match(/\{[\s\S]*?\}/);
                 if (match) {
                     const parsed = JSON.parse(match[0]);
                     translation = parsed.translation || translation;
